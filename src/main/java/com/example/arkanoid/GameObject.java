@@ -1,5 +1,5 @@
 
-
+package com.example.arkanoid;
 public abstract class GameObject {
     protected double x, y, width, height;
     public GameObject(double x, double y, double w, double h){

@@ -1,4 +1,4 @@
-
+package com.example.arkanoid;
 
 import javafx.scene.canvas.GraphicsContext;
 
@@ -30,12 +30,12 @@ public class GameManager {
 
     private void createBricks(){
         bricks.clear();
-        int rows = 5, cols = 10;
+        int rows = 7, cols = 10;
         double brickW = (width - 100.0) / cols;
         double brickH = 22;
         for (int r=0;r<rows;r++){
             for (int c=0;c<cols;c++){
-                double x = 50 + c * (brickW + 5);
+                double x = 30 + c * (brickW + 5);
                 double y = 60 + r * (brickH + 6);
                 bricks.add(new Brick(x,y,brickW,brickH, (r%2==0)?1:2));
             }
@@ -76,15 +76,14 @@ public class GameManager {
         }
 
         // collision: ball <-> paddle
-        if (checkCollision(ball, paddle) && ball.getY() + ball.getHeight() <= paddle.getY() + 30){
+        if (checkCollisionCircleRect(ball, paddle) && ball.getY() + ball.getHeight() <= paddle.getY() + 30){
             ball.bounceOffPaddle(paddle);
         }
 
         // collision: ball <-> bricks
-        for (Iterator<Brick> it = bricks.iterator(); it.hasNext();){
-            Brick b = it.next();
+        for (Brick b : bricks) {
             if (b.isDestroyed()) continue;
-            if (checkCollision(ball, b)){
+            if (checkCollisionCircleRect(ball, b)) {
                 boolean destroyed = b.takeHit();
                 // simple reflect Y
                 ball.dy = -ball.dy;
@@ -99,12 +98,20 @@ public class GameManager {
         // optional: remove destroyed bricks (render will skip them)
     }
 
-    private boolean checkCollision(GameObject a, GameObject b){
-        return a.getX() < b.getX() + b.getWidth() &&
-                a.getX() + a.getWidth() > b.getX() &&
-                a.getY() < b.getY() + b.getHeight() &&
-                a.getY() + a.getHeight() > b.getY();
+    private boolean checkCollisionCircleRect(Ball ball, GameObject rect) {
+        double cx = ball.getX() + ball.getWidth()/2;
+        double cy = ball.getY() + ball.getHeight()/2;
+        double radius = ball.getWidth()/2;
+
+        double closestX = Math.max(rect.getX(), Math.min(cx, rect.getX() + rect.getWidth()));
+        double closestY = Math.max(rect.getY(), Math.min(cy, rect.getY() + rect.getHeight()));
+
+        double dx = cx - closestX;
+        double dy = cy - closestY;
+
+        return (dx * dx + dy * dy) <= (radius * radius);
     }
+
 
     public void render(GraphicsContext gc){
         // draw HUD

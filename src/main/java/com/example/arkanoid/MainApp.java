@@ -1,4 +1,4 @@
-
+package com.example.arkanoid;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -50,7 +50,7 @@ public class MainApp extends Application {
 
                 gm.update(delta);
                 // clear
-                gc.setFill(Color.BLACK);
+                gc.setFill(Color.BLUE);
                 gc.fillRect(0,0, WIDTH, HEIGHT);
 
                 gm.render(gc);
