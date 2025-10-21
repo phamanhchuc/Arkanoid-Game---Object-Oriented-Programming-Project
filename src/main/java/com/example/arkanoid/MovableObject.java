@@ -1,4 +1,3 @@
-
 package com.example.arkanoid;
 public abstract class MovableObject extends GameObject {
     protected double dx = 0, dy = 0;
