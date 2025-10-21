@@ -1,21 +1,54 @@
 package com.example.arkanoid;
+
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
+import javafx.scene.image.Image; // Thêm import
 
 public class Ball extends MovableObject {
-    private double speed = 350;
+    private double speed = 750;
     private double radius;
     private int sceneW, sceneH;
-    private boolean stuck = true; // initially stuck on paddle
+    private boolean stuck = true;
+    private double playAreaOffsetX;
+    private double playAreaWidth;
 
-    public Ball(double x, double y, double r, int sceneW, int sceneH){
-        super(x - r, y - r, r*2, r*2);
+    // Thêm phương thức này vào lớp Ball
+    public void setPlayArea(double offsetX, double width) {
+        this.playAreaOffsetX = offsetX;
+        this.playAreaWidth = width;
+    }
+
+    public Ball(double x, double y, double r, int sceneW, int sceneH) {
+        super(x - r, y - r, r * 2, r * 2);
         this.radius = r;
         this.sceneW = sceneW;
         this.sceneH = sceneH;
-        dx = 0; dy = 0;
+        dx = 0;
+        dy = 0;
+        // Tải hình ảnh của quả bóng
+        try {
+            // Đảm bảo đường dẫn này chính xác!
+            image = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Ball1.png"));
+        } catch (Exception e) {
+            System.err.println("Lỗi: Không thể tải ảnh cho Ball.");
+            e.printStackTrace();
+        }
     }
 
+    // ... (các phương thức khác giữ nguyên)
+
+    @Override
+    public void render(GraphicsContext gc) {
+        // Vẽ hình ảnh thay vì hình tròn
+        if (image != null) {
+            gc.drawImage(image, x, y, width, height);
+        } else {
+            // Dự phòng: Vẽ hình tròn màu trắng nếu không tải được ảnh
+            gc.setFill(javafx.scene.paint.Color.WHITE);
+            gc.fillOval(x, y, width, height);
+        }
+    }
+
+    // ... (phần còn lại của lớp giữ nguyên)
     public void launch(){
         if (stuck){
             stuck = false;
@@ -31,20 +64,27 @@ public class Ball extends MovableObject {
     }
 
     @Override
-    public void update(double dt){
+    public void update(double dt) {
         if (stuck) return;
         move(dt);
-        // wall collisions
-        if (x <= 0) { x = 0; dx = -dx; }
-        if (x + width >= sceneW) { x = sceneW - width; dx = -dx; }
-        if (y <= 0) { y = 0; dy = -dy; }
-        // if fall below bottom, mark off-screen (GameManager handles lives)
+        // Va chạm tường trong khu vực chơi
+        if (x <= playAreaOffsetX) {
+            x = playAreaOffsetX;
+            dx = -dx;
+        }
+        if (x + width >= playAreaOffsetX + playAreaWidth) {
+            x = playAreaOffsetX + playAreaWidth - width;
+            dx = -dx;
+        }
+        if (y <= 0) {
+            y = 0;
+            dy = -dy;
+        }
     }
 
     public boolean isOutOfBounds(){ return y > sceneH; }
 
     public void bounceOffPaddle(Paddle p){
-        // simple bounce: reflect Y and add some X depending on hit position
         double paddleCenter = p.getX() + p.getWidth()/2;
         double ballCenter = x + radius;
         double rel = (ballCenter - paddleCenter) / (p.getWidth()/2); // -1..1
@@ -53,11 +93,5 @@ public class Ball extends MovableObject {
         sp = Math.max(sp, speed);
         dx = sp * Math.sin(angle);
         dy = -Math.abs(sp * Math.cos(angle));
-    }
-
-    @Override
-    public void render(GraphicsContext gc){
-        gc.setFill(Color.WHITE);
-        gc.fillOval(x, y, width, height);
     }
 }
