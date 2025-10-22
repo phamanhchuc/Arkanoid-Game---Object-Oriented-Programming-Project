@@ -4,6 +4,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 
@@ -12,18 +13,20 @@ import java.util.List;
 import java.util.Set;
 
 public class GameManager {
-    // --- Biến mới để định nghĩa khu vực chơi ---
-    private final int playAreaWidth = 800; // Chiều rộng cố định của khu vực chơi
-    private double playAreaOffsetX; // Khoảng lề bên trái
+    private final int playAreaWidth = 800;
+    private double playAreaOffsetX;
 
     private int screenWidth, screenHeight;
     private Paddle paddle;
     private Ball ball;
     private List<Brick> bricks = new ArrayList<>();
+    // --- Danh sách mới cho các dây leo ---
+    private List<BorderElement> borders = new ArrayList<>();
     private int score = 0;
     private int lives = 3;
     private boolean running = false;
     private String playerName;
+
     private Image backgroundImage;
     private boolean gameOver = false;
 
@@ -31,8 +34,6 @@ public class GameManager {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.playerName = playerName != null ? playerName : "Player 1";
-
-        // Tính toán khoảng lề để căn giữa khu vực chơi
         this.playAreaOffsetX = (screenWidth - playAreaWidth) / 2.0;
 
         try {
@@ -46,15 +47,13 @@ public class GameManager {
     }
 
     public void initGame() {
-        // --- Cập nhật vị trí Paddle để nó nằm trong khu vực chơi ---
         paddle = new Paddle(
                 playAreaOffsetX + playAreaWidth / 2.0 - 60,
                 screenHeight - 40,
                 120,
                 20,
-                screenWidth // Vẫn truyền screenWidth để paddle không đi ra ngoài màn hình
+                screenWidth
         );
-        // Cần truyền cả offset để paddle biết giới hạn di chuyển
         paddle.setPlayArea(playAreaOffsetX, playAreaWidth);
 
 
@@ -63,15 +62,16 @@ public class GameManager {
                 paddle.getX() + paddle.getWidth() / 2 - ballRadius,
                 paddle.getY() - (ballRadius * 2),
                 ballRadius,
-                screenWidth, // Truyền kích thước màn hình
+                screenWidth,
                 screenHeight
         );
-        // Báo cho bóng biết giới hạn của khu vực chơi
         ball.setPlayArea(playAreaOffsetX, playAreaWidth);
 
 
         ball.stickTo(paddle);
         createBricks();
+        // --- Gọi phương thức tạo dây leo ---
+        createBorders();
         score = 0;
         lives = 3;
         running = false;
@@ -81,19 +81,42 @@ public class GameManager {
     private void createBricks() {
         bricks.clear();
         int rows = 5, cols = 10;
-        // Chiều rộng gạch được tính dựa trên playAreaWidth
         double brickW = (playAreaWidth - 100.0) / cols;
         double brickH = 22;
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
-                // Vị trí X của gạch được tính thêm khoảng lề
                 double x = playAreaOffsetX + 30 + c * (brickW + 5);
                 double y = 60 + r * (brickH + 6);
-                bricks.add(new Brick(x, y, brickW, brickH, 2));
+                bricks.add(new Brick(x, y, brickW, brickH, 3));
             }
         }
     }
 
+    // --- Phương thức mới để tạo dây leo ---
+    private void createBorders() {
+        borders.clear();
+        double ivyWidth = BorderElement.BORDER_WIDTH;
+        double ivyHeight = BorderElement.BORDER_HEIGHT;
+
+        // Nếu ảnh chưa được tải hoặc chiều cao = 0, không làm gì cả
+        if (ivyHeight <= 0) {
+            System.err.println("Không thể tạo viền do ảnh ivy chưa được tải.");
+            return;
+        }
+
+        // Tọa độ X cho viền trái và phải
+        // --- THAY ĐỔI VỊ TRÍ TỌA ĐỘ ---
+        double x_left = playAreaOffsetX - ivyWidth + 75; // Đặt ở rìa ngoài bên trái
+        double x_right = playAreaOffsetX + playAreaWidth - 75; // Đặt ở rìa ngoài bên phải
+
+        // Dùng vòng lặp để "xếp" các dây leo từ trên xuống dưới
+        for (double y = 0; y < screenHeight; y += ivyHeight) {
+            borders.add(new BorderElement(x_left, y, ivyWidth, ivyHeight));
+            borders.add(new BorderElement(x_right, y, ivyWidth, ivyHeight));
+        }
+    }
+
+    // ... (Các phương thức khác giữ nguyên) ...
     public void startGame() {
         if (!running && !gameOver) {
             running = true;
@@ -135,6 +158,11 @@ public class GameManager {
             return;
         }
 
+        // Cập nhật các đối tượng trang trí (nếu cần)
+        // for (BorderElement b : borders) {
+        //     b.update(dt);
+        // }
+
         if (!running) {
             paddle.update(dt);
             ball.stickTo(paddle);
@@ -168,7 +196,7 @@ public class GameManager {
                 if (b.takeHit()) {
                     score += 100;
                 } else {
-                    score += 50;
+                    score += 25;
                 }
                 break;
             }
@@ -223,22 +251,26 @@ public class GameManager {
         return (dx * dx + dy * dy) <= (radius * radius);
     }
 
+
     public void render(GraphicsContext gc) {
-        // --- LOGIC VẼ NỀN ĐÃ ĐƯỢC CẬP NHẬT ---
-        // 1. Vẽ ảnh nền cho toàn bộ màn hình (sẽ là nền cho 2 cánh)
+        // 1. Vẽ ảnh nền (hai bên cánh)
         if (backgroundImage != null) {
             gc.drawImage(backgroundImage, 0, 0, screenWidth, screenHeight);
         } else {
-            // Dự phòng: Vẽ nền đen cho toàn bộ màn hình nếu không có ảnh
             gc.setFill(Color.BLACK);
             gc.fillRect(0, 0, screenWidth, screenHeight);
         }
 
-        // 2. Vẽ nền đen cho khu vực chơi, đè lên ảnh nền
-        gc.setFill(Color.BLACK);
+        // 2. Vẽ nền mờ cho khu vực chơi (đè lên nền pixel art)
+        gc.setFill(Color.rgb(0, 0, 0, 0.6));
         gc.fillRect(playAreaOffsetX, 0, playAreaWidth, screenHeight);
 
-        // 3. Vẽ thông tin người chơi (căn giữa theo khu vực chơi)
+        // --- 3. Vẽ các dây leo ---
+        for (BorderElement b : borders) {
+            b.render(gc);
+        }
+
+        // 4. Vẽ thông tin HUD
         gc.setFill(Color.WHITE);
         gc.setFont(new Font("Arial", 16));
         gc.setTextAlign(TextAlignment.CENTER);
@@ -247,14 +279,14 @@ public class GameManager {
         gc.fillText("Lives: " + lives, screenWidth / 2.0 + 150, 25);
         gc.setTextAlign(TextAlignment.LEFT);
 
-
-        // Vẽ các đối tượng game
+        // 5. Vẽ các đối tượng game
         paddle.render(gc);
         ball.render(gc);
         for (Brick b : bricks) {
             b.render(gc);
         }
 
+        // 6. Vẽ màn hình Game Over (nếu có)
         if (gameOver) {
             gc.setFill(Color.rgb(0, 0, 0, 0.7));
             gc.fillRect(0, 0, screenWidth, screenHeight);
