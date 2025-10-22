@@ -4,7 +4,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image; // Thêm import
 
 public class Ball extends MovableObject {
-    private double speed = 750;
+    private double speed = 550;
     private double radius;
     private int sceneW, sceneH;
     private boolean stuck = true;
