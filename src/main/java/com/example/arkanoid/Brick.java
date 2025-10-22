@@ -8,17 +8,16 @@ public class Brick extends GameObject {
     private int hits;
     private boolean destroyed = false;
 
-    // --- PHẦN MỚI: Tải các ảnh một lần duy nhất cho gạch 2-hit ---
-    private static final Image[] brickImages = new Image[2];
+    // --- PHẦN MỚI: Mảng chứa 3 trạng thái ảnh ---
+    // Index 2: còn 3 máu, Index 1: còn 2 máu, Index 0: còn 1 máu
+    private static final Image[] brickImages = new Image[3];
 
-    // Khối static này sẽ chạy một lần duy nhất khi lớp Brick được sử dụng lần đầu
     static {
         try {
-            // Tải ảnh cho gạch 2-hit
-            // Trạng thái khi còn 2 máu (nguyên vẹn)
-            brickImages[1] = new Image(Brick.class.getResourceAsStream("/com/example/arkanoid/images/brick1.1.png"));
-            // Trạng thái khi còn 1 máu (chạm lần 1)
-            brickImages[0] = new Image(Brick.class.getResourceAsStream("/com/example/arkanoid/images/brick1.1_cham 1.png"));
+            // Tải ảnh cho các trạng thái của gạch 3-hit
+            brickImages[2] = new Image(Brick.class.getResourceAsStream("/com/example/arkanoid/images/brick_state_3.png"));
+            brickImages[1] = new Image(Brick.class.getResourceAsStream("/com/example/arkanoid/images/brick_state_2.png"));
+            brickImages[0] = new Image(Brick.class.getResourceAsStream("/com/example/arkanoid/images/brick_state_1.png"));
         } catch (Exception e) {
             System.err.println("Lỗi nghiêm trọng: Không thể tải được ảnh cho Brick.");
             e.printStackTrace();
@@ -53,22 +52,21 @@ public class Brick extends GameObject {
 
         Image imageToDraw = null;
 
-        // --- Logic vẽ được đơn giản hóa ---
-        if (hits == 2) {
-            imageToDraw = brickImages[1]; // Ảnh nguyên vẹn
+        // --- Logic vẽ được cập nhật cho 3 trạng thái ---
+        if (hits == 3) {
+            imageToDraw = brickImages[2]; // Nguyên vẹn
+        } else if (hits == 2) {
+            imageToDraw = brickImages[1]; // Chạm 1 lần
         } else if (hits == 1) {
-            imageToDraw = brickImages[0]; // Ảnh chạm 1 lần
+            imageToDraw = brickImages[0]; // Chạm 2 lần
         }
 
-        // Vẽ ảnh đã chọn
         if (imageToDraw != null) {
             gc.drawImage(imageToDraw, x, y, width, height);
         } else {
-            // Dự phòng: Vẽ màu nếu không tải được ảnh
+            // Dự phòng
             gc.setFill(Color.DARKORANGE);
             gc.fillRect(x, y, width, height);
-            gc.setStroke(Color.BLACK);
-            gc.strokeRect(x, y, width, height);
         }
     }
 }
