@@ -4,13 +4,14 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.ImagePattern;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.Random;
 
 public class GameManager {
     private final int playAreaWidth = 800;
@@ -20,8 +21,8 @@ public class GameManager {
     private Paddle paddle;
     private Ball ball;
     private List<Brick> bricks = new ArrayList<>();
-    // --- Danh sách mới cho các dây leo ---
     private List<BorderElement> borders = new ArrayList<>();
+    private List<PowerUp> powerUps = new ArrayList<>();
     private int score = 0;
     private int lives = 3;
     private boolean running = false;
@@ -29,6 +30,7 @@ public class GameManager {
 
     private Image backgroundImage;
     private boolean gameOver = false;
+    private Random random = new Random();
 
     public GameManager(int screenWidth, int screenHeight, String playerName) {
         this.screenWidth = screenWidth;
@@ -70,8 +72,8 @@ public class GameManager {
 
         ball.stickTo(paddle);
         createBricks();
-        // --- Gọi phương thức tạo dây leo ---
         createBorders();
+        powerUps.clear();
         score = 0;
         lives = 3;
         running = false;
@@ -87,36 +89,30 @@ public class GameManager {
             for (int c = 0; c < cols; c++) {
                 double x = playAreaOffsetX + 30 + c * (brickW + 5);
                 double y = 60 + r * (brickH + 6);
-                bricks.add(new Brick(x, y, brickW, brickH, 3));
+                bricks.add(new Brick(x, y, brickW, brickH, 2));
             }
         }
     }
 
-    // --- Phương thức mới để tạo dây leo ---
     private void createBorders() {
         borders.clear();
         double ivyWidth = BorderElement.BORDER_WIDTH;
         double ivyHeight = BorderElement.BORDER_HEIGHT;
 
-        // Nếu ảnh chưa được tải hoặc chiều cao = 0, không làm gì cả
         if (ivyHeight <= 0) {
-            System.err.println("Không thể tạo viền do ảnh ivy chưa được tải.");
+            System.err.println("Không thể tạo viền do ảnh ivy chưa được tải hoặc kích thước không hợp lệ.");
             return;
         }
 
-        // Tọa độ X cho viền trái và phải
-        // --- THAY ĐỔI VỊ TRÍ TỌA ĐỘ ---
-        double x_left = playAreaOffsetX - ivyWidth + 75; // Đặt ở rìa ngoài bên trái
-        double x_right = playAreaOffsetX + playAreaWidth - 75; // Đặt ở rìa ngoài bên phải
+        double x_left = playAreaOffsetX - ivyWidth + 75;
+        double x_right = playAreaOffsetX + playAreaWidth - 75;
 
-        // Dùng vòng lặp để "xếp" các dây leo từ trên xuống dưới
         for (double y = 0; y < screenHeight; y += ivyHeight) {
             borders.add(new BorderElement(x_left, y, ivyWidth, ivyHeight));
             borders.add(new BorderElement(x_right, y, ivyWidth, ivyHeight));
         }
     }
 
-    // ... (Các phương thức khác giữ nguyên) ...
     public void startGame() {
         if (!running && !gameOver) {
             running = true;
@@ -158,11 +154,6 @@ public class GameManager {
             return;
         }
 
-        // Cập nhật các đối tượng trang trí (nếu cần)
-        // for (BorderElement b : borders) {
-        //     b.update(dt);
-        // }
-
         if (!running) {
             paddle.update(dt);
             ball.stickTo(paddle);
@@ -186,7 +177,9 @@ public class GameManager {
         }
 
         boolean allBricksDestroyed = true;
-        for (Brick b : bricks) {
+        Iterator<Brick> brickIterator = bricks.iterator();
+        while (brickIterator.hasNext()) {
+            Brick b = brickIterator.next();
             if (b.isDestroyed()) {
                 continue;
             }
@@ -195,8 +188,21 @@ public class GameManager {
                 resolveBallBrickCollision(ball, b);
                 if (b.takeHit()) {
                     score += 100;
+                    // THAY ĐỔI: Luôn tạo PowerUp loại LIFE
+                    if (random.nextDouble() < 0.2) { // 20% cơ hội rơi vật phẩm
+                        double powerUpWidth = 50;
+                        double powerUpHeight = 70;
+                        PowerUp newPowerUp = new PowerUp(
+                                b.getX() + (b.getWidth() - powerUpWidth) / 2,
+                                b.getY() + (b.getHeight() - powerUpHeight) / 2,
+                                powerUpWidth,
+                                powerUpHeight,
+                                PowerUp.PowerUpType.LIFE // CHỈ ĐỊNH RÕ LOẠI LIFE
+                        );
+                        powerUps.add(newPowerUp);
+                    }
                 } else {
-                    score += 25;
+                    score += 50;
                 }
                 break;
             }
@@ -206,6 +212,41 @@ public class GameManager {
             System.out.println("YOU WIN!");
             running = false;
         }
+
+        Iterator<PowerUp> powerUpIterator = powerUps.iterator();
+        while (powerUpIterator.hasNext()) {
+            PowerUp pu = powerUpIterator.next();
+            if (pu.isCollected()) {
+                powerUpIterator.remove();
+                continue;
+            }
+            pu.update(dt);
+
+            if (checkCollisionRectRect(pu, paddle)) {
+                applyPowerUpEffect(pu);
+                pu.setCollected(true);
+            }
+
+            if (pu.getY() > screenHeight) {
+                pu.setCollected(true);
+            }
+        }
+    }
+
+    private boolean checkCollisionRectRect(GameObject r1, GameObject r2) {
+        return r1.getX() < r2.getX() + r2.getWidth() &&
+                r1.getX() + r1.getWidth() > r2.getX() &&
+                r1.getY() < r2.getY() + r2.getHeight() &&
+                r1.getY() + r1.getHeight() > r2.getY();
+    }
+
+    private void applyPowerUpEffect(PowerUp pu) {
+        // THAY ĐỔI: Chỉ xử lý PowerUp loại LIFE
+        if (pu.getType() == PowerUp.PowerUpType.LIFE) {
+            lives++;
+            System.out.println("Bạn nhận được thêm 1 mạng! Tổng mạng: " + lives);
+        }
+        // Các loại khác sẽ không làm gì nếu không được định nghĩa ở đây
     }
 
     private void resolveBallBrickCollision(Ball ball, Brick brick) {
@@ -253,7 +294,6 @@ public class GameManager {
 
 
     public void render(GraphicsContext gc) {
-        // 1. Vẽ ảnh nền (hai bên cánh)
         if (backgroundImage != null) {
             gc.drawImage(backgroundImage, 0, 0, screenWidth, screenHeight);
         } else {
@@ -261,16 +301,13 @@ public class GameManager {
             gc.fillRect(0, 0, screenWidth, screenHeight);
         }
 
-        // 2. Vẽ nền mờ cho khu vực chơi (đè lên nền pixel art)
         gc.setFill(Color.rgb(0, 0, 0, 0.6));
         gc.fillRect(playAreaOffsetX, 0, playAreaWidth, screenHeight);
 
-        // --- 3. Vẽ các dây leo ---
         for (BorderElement b : borders) {
             b.render(gc);
         }
 
-        // 4. Vẽ thông tin HUD
         gc.setFill(Color.WHITE);
         gc.setFont(new Font("Arial", 16));
         gc.setTextAlign(TextAlignment.CENTER);
@@ -279,14 +316,16 @@ public class GameManager {
         gc.fillText("Lives: " + lives, screenWidth / 2.0 + 150, 25);
         gc.setTextAlign(TextAlignment.LEFT);
 
-        // 5. Vẽ các đối tượng game
         paddle.render(gc);
         ball.render(gc);
         for (Brick b : bricks) {
             b.render(gc);
         }
 
-        // 6. Vẽ màn hình Game Over (nếu có)
+        for (PowerUp pu : powerUps) {
+            pu.render(gc);
+        }
+
         if (gameOver) {
             gc.setFill(Color.rgb(0, 0, 0, 0.7));
             gc.fillRect(0, 0, screenWidth, screenHeight);
@@ -304,4 +343,3 @@ public class GameManager {
         }
     }
 }
-
