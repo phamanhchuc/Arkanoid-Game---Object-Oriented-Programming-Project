@@ -4,14 +4,15 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.Random;
+import java.util.Set;
 
 public class GameManager {
     private final int playAreaWidth = 800;
@@ -23,6 +24,8 @@ public class GameManager {
     private List<Brick> bricks = new ArrayList<>();
     private List<BorderElement> borders = new ArrayList<>();
     private List<PowerUp> powerUps = new ArrayList<>();
+    private Random random = new Random();
+
     private int score = 0;
     private int lives = 3;
     private boolean running = false;
@@ -30,7 +33,8 @@ public class GameManager {
 
     private Image backgroundImage;
     private boolean gameOver = false;
-    private Random random = new Random();
+
+    private HighScores highScores;
 
     public GameManager(int screenWidth, int screenHeight, String playerName) {
         this.screenWidth = screenWidth;
@@ -44,6 +48,8 @@ public class GameManager {
             System.err.println("Lỗi: Không thể tải ảnh nền.");
             e.printStackTrace();
         }
+
+        highScores = new HighScores();
 
         initGame();
     }
@@ -89,7 +95,7 @@ public class GameManager {
             for (int c = 0; c < cols; c++) {
                 double x = playAreaOffsetX + 30 + c * (brickW + 5);
                 double y = 60 + r * (brickH + 6);
-                bricks.add(new Brick(x, y, brickW, brickH, 2));
+                bricks.add(new Brick(x, y, brickW, brickH, 3)); // Tạo gạch 3-hit
             }
         }
     }
@@ -100,12 +106,12 @@ public class GameManager {
         double ivyHeight = BorderElement.BORDER_HEIGHT;
 
         if (ivyHeight <= 0) {
-            System.err.println("Không thể tạo viền do ảnh ivy chưa được tải hoặc kích thước không hợp lệ.");
+            System.err.println("Không thể tạo viền do ảnh ivy chưa được tải.");
             return;
         }
 
-        double x_left = playAreaOffsetX - ivyWidth + 75;
-        double x_right = playAreaOffsetX + playAreaWidth - 75;
+        double x_left = playAreaOffsetX - ivyWidth + 75; // Đặt ở rìa ngoài bên trái
+        double x_right = playAreaOffsetX + playAreaWidth - 75; // Đặt ở rìa ngoài bên phải
 
         for (double y = 0; y < screenHeight; y += ivyHeight) {
             borders.add(new BorderElement(x_left, y, ivyWidth, ivyHeight));
@@ -167,6 +173,7 @@ public class GameManager {
             running = false;
             if (lives <= 0) {
                 gameOver = true;
+                saveCurrentScore(); // Lưu điểm khi thua
             } else {
                 ball.stickTo(paddle);
             }
@@ -177,9 +184,7 @@ public class GameManager {
         }
 
         boolean allBricksDestroyed = true;
-        Iterator<Brick> brickIterator = bricks.iterator();
-        while (brickIterator.hasNext()) {
-            Brick b = brickIterator.next();
+        for (Brick b : bricks) {
             if (b.isDestroyed()) {
                 continue;
             }
@@ -188,8 +193,7 @@ public class GameManager {
                 resolveBallBrickCollision(ball, b);
                 if (b.takeHit()) {
                     score += 100;
-                    // THAY ĐỔI: Luôn tạo PowerUp loại LIFE
-                    if (random.nextDouble() < 0.2) { // 20% cơ hội rơi vật phẩm
+                    if (random.nextDouble() < 0.2) { // 20% cơ hội rơi vật phẩm LIFE
                         double powerUpWidth = 50;
                         double powerUpHeight = 70;
                         PowerUp newPowerUp = new PowerUp(
@@ -197,12 +201,12 @@ public class GameManager {
                                 b.getY() + (b.getHeight() - powerUpHeight) / 2,
                                 powerUpWidth,
                                 powerUpHeight,
-                                PowerUp.PowerUpType.LIFE // CHỈ ĐỊNH RÕ LOẠI LIFE
+                                PowerUp.PowerUpType.LIFE
                         );
                         powerUps.add(newPowerUp);
                     }
                 } else {
-                    score += 50;
+                    score += 25; // Điểm khi làm vỡ 1 lớp
                 }
                 break;
             }
@@ -211,6 +215,7 @@ public class GameManager {
         if (allBricksDestroyed) {
             System.out.println("YOU WIN!");
             running = false;
+            saveCurrentScore(); // Lưu điểm khi thắng
         }
 
         Iterator<PowerUp> powerUpIterator = powerUps.iterator();
@@ -228,7 +233,16 @@ public class GameManager {
             }
 
             if (pu.getY() > screenHeight) {
-                pu.setCollected(true);
+                pu.setCollected(true); // Xóa powerup nếu rơi ra khỏi màn hình
+            }
+        }
+    }
+
+    private void saveCurrentScore() {
+        if (playerName != null && score > 0) {
+            boolean isNewHighScore = highScores.addScore(playerName, score);
+            if (isNewHighScore) {
+                System.out.println("Điểm mới đã được lưu vào top 5!");
             }
         }
     }
@@ -241,12 +255,11 @@ public class GameManager {
     }
 
     private void applyPowerUpEffect(PowerUp pu) {
-        // THAY ĐỔI: Chỉ xử lý PowerUp loại LIFE
         if (pu.getType() == PowerUp.PowerUpType.LIFE) {
             lives++;
             System.out.println("Bạn nhận được thêm 1 mạng! Tổng mạng: " + lives);
         }
-        // Các loại khác sẽ không làm gì nếu không được định nghĩa ở đây
+        // Thêm các hiệu ứng khác ở đây nếu cần
     }
 
     private void resolveBallBrickCollision(Ball ball, Brick brick) {
@@ -343,3 +356,4 @@ public class GameManager {
         }
     }
 }
+
