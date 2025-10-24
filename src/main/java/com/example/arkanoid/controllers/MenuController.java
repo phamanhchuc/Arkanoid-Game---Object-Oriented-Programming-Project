@@ -2,21 +2,20 @@ package com.example.arkanoid.controllers;
 
 import com.example.arkanoid.HighScores;
 import com.example.arkanoid.ScoreEntry;
+import javafx.animation.ParallelTransition; // <-- IMPORT MỚI
+import javafx.animation.RotateTransition; // <-- IMPORT MỚI
+import javafx.animation.ScaleTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text; // Thêm lại import Text
-import javafx.stage.Screen;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.IOException;
 import java.util.List;
@@ -28,49 +27,109 @@ public class MenuController {
     @FXML private Button buttonSetting;
     @FXML private Button buttonRanking;
     @FXML private Button buttonGuide;
+    @FXML private Button backButtonGuide;
+    @FXML private Button backButtonRanking;
 
     @FXML private ImageView guideImageView;
-    @FXML private Button backButtonGuide;
-
     @FXML private ImageView startImage;
     @FXML private ImageView settingImage;
-    @FXML private ImageView rankingImage; // Ảnh nút Ranking
+    @FXML private ImageView rankingImage;
     @FXML private ImageView guideImageBtn;
     @FXML private ImageView mainBackground;
+    @FXML private ImageView rankingImageView;
 
-    // --- Thêm lại FXML cho các thành phần Ranking inline ---
-    @FXML private ImageView rankingImageView; // Ảnh nền BXH
     @FXML private Text rank1Text;
     @FXML private Text rank2Text;
     @FXML private Text rank3Text;
-    @FXML private Button backButtonRanking;
 
     private HighScores highScores;
 
 
     @FXML
     private void initialize() {
+        // Gán sự kiện setOnAction (như cũ)
         buttonStart.setOnAction(e -> handleStartGame());
         buttonSetting.setOnAction(e -> handleSettings());
         buttonRanking.setOnAction(e -> handleRanking());
         buttonGuide.setOnAction(e -> handleGuide());
         backButtonGuide.setOnAction(e -> handleBackFromGuide());
-        // --- Thêm lại sự kiện nút back Ranking ---
         backButtonRanking.setOnAction(e -> handleBackFromRanking());
+
+        // --- CODE MỚI: ÁP DỤNG HIỆU ỨNG CHO CÁC NÚT ---
+
+        // 1. Áp dụng hiệu ứng JIGGLE (lắc lư) cho các nút menu chính (có ảnh)
+        addJiggleAnimation(buttonStart, startImage);
+        addJiggleAnimation(buttonSetting, settingImage);
+        addJiggleAnimation(buttonRanking, rankingImage);
+        addJiggleAnimation(buttonGuide, guideImageBtn);
+
+        // 2. Áp dụng hiệu ứng CLICK (thu nhỏ nút) cho các nút "Back" (không có ảnh)
+        addClickAnimation(backButtonGuide);
+        addClickAnimation(backButtonRanking);
+        // --- KẾT THÚC CODE MỚI ---
 
         highScores = new HighScores();
     }
 
+    /**
+     * HÀM MỚI: Thêm hiệu ứng JIGGLE (lắc + thu nhỏ) cho HÌNH ẢNH
+     * khi nhấn vào NÚT
+     */
+    private void addJiggleAnimation(Button button, ImageView image) {
+        // --- Tạo hiệu ứng khi nhấn xuống ---
+        // 1. Thu nhỏ ảnh
+        ScaleTransition pressScale = new ScaleTransition(Duration.millis(100), image);
+        pressScale.setToX(0.9);
+        pressScale.setToY(0.9);
+        // 2. Xoay ảnh (lắc lư)
+        RotateTransition pressRotate = new RotateTransition(Duration.millis(100), image);
+        pressRotate.setToAngle(-5); // Xoay 5 độ
+        // 3. Chạy cả 2 song song
+        ParallelTransition pressTransition = new ParallelTransition(pressScale, pressRotate);
+
+        // --- Tạo hiệu ứng khi thả ra ---
+        // 1. Phóng to ảnh về 100%
+        ScaleTransition releaseScale = new ScaleTransition(Duration.millis(100), image);
+        releaseScale.setToX(1.0);
+        releaseScale.setToY(1.0);
+        // 2. Xoay ảnh về 0
+        RotateTransition releaseRotate = new RotateTransition(Duration.millis(100), image);
+        releaseRotate.setToAngle(0);
+        // 3. Chạy cả 2 song song
+        ParallelTransition releaseTransition = new ParallelTransition(releaseScale, releaseRotate);
+
+        // Áp dụng sự kiện (lên NÚT)
+        button.setOnMousePressed(event -> pressTransition.playFromStart());
+        button.setOnMouseReleased(event -> releaseTransition.playFromStart());
+    }
+
+    /**
+     * HÀM CŨ: (Giữ lại) Thêm hiệu ứng nhấn và thả cho một nút (dùng cho nút Back)
+     */
+    private void addClickAnimation(Button button) {
+        ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), button);
+        pressTransition.setToX(0.9);
+        pressTransition.setToY(0.9);
+
+        ScaleTransition releaseTransition = new ScaleTransition(Duration.millis(100), button);
+        releaseTransition.setToX(1.0);
+        releaseTransition.setToY(1.0);
+
+        button.setOnMousePressed(event -> pressTransition.playFromStart());
+        button.setOnMouseReleased(event -> releaseTransition.playFromStart());
+    }
+
+    //
+    // --- (Toàn bộ các hàm handle... và set... của bạn giữ nguyên, không thay đổi gì) ---
+    //
     private void handleStartGame() {
         try {
             Stage stage = (Stage) buttonStart.getScene().getWindow();
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/arkanoid/main-view.fxml"));
             Parent gameRoot = loader.load();
-            Rectangle2D screenBounds = Screen.getPrimary().getBounds();
-            Scene gameScene = new Scene(gameRoot, screenBounds.getWidth(), screenBounds.getHeight());
+            Scene gameScene = new Scene(gameRoot, 1200, 955.5);
             stage.setScene(gameScene);
             stage.setTitle("Arkanoid Game");
-            stage.setFullScreen(true);
 
         } catch (IOException ex) {
             System.err.println("Lỗi: Không thể tải file main-view.fxml.");
@@ -85,24 +144,16 @@ public class MenuController {
         System.out.println("Nút Settings đã được nhấn!");
     }
 
-    // --- QUAY LẠI LOGIC HIỂN THỊ RANKING INLINE ---
     private void handleRanking() {
         System.out.println("Nút Ranking đã được nhấn!");
         try {
-            // Tải ảnh nền BXH
             Image rankingBg = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/ranking.jpg"));
             if (rankingBg != null) {
                 rankingImageView.setImage(rankingBg);
-
-                // Lấy top 3 điểm
                 List<ScoreEntry> topScores = highScores.getScores();
-
-                // Cập nhật Text (tối đa 3 người)
                 rank1Text.setText(getRankText(topScores, 0));
                 rank2Text.setText(getRankText(topScores, 1));
                 rank3Text.setText(getRankText(topScores, 2));
-
-                // Hiện BXH, ẩn menu
                 setRankingVisible(true);
             } else {
                 System.err.println("Lỗi: Không tìm thấy ảnh ranking.jpg");
@@ -113,18 +164,14 @@ public class MenuController {
         }
     }
 
-    // --- Thêm lại phương thức getRankText ---
     private String getRankText(List<ScoreEntry> scores, int index) {
         if (index < scores.size()) {
             ScoreEntry entry = scores.get(index);
-            // Trả về chuỗi định dạng, ví dụ: "1. PlayerName: 12345"
-            // (Số thứ tự 1, 2, 3 tương ứng với các Text rank1, rank2, rank3)
             return (index + 1) + ". " + entry.getPlayerName() + ": " + entry.getScore();
         } else {
             return (index + 1) + ". N/A";
         }
     }
-
 
     private void handleGuide() {
         System.out.println("Nút Guide đã được nhấn!");
@@ -146,7 +193,6 @@ public class MenuController {
         setGuideVisible(false);
     }
 
-    // --- Thêm lại phương thức quay lại từ Ranking ---
     private void handleBackFromRanking() {
         setRankingVisible(false);
     }
@@ -157,7 +203,6 @@ public class MenuController {
         setMainMenuVisible(!isVisible);
     }
 
-    // --- Thêm lại phương thức ẩn/hiện Ranking ---
     private void setRankingVisible(boolean isVisible) {
         rankingImageView.setVisible(isVisible);
         rank1Text.setVisible(isVisible);
@@ -175,8 +220,7 @@ public class MenuController {
         buttonGuide.setVisible(isVisible);
         startImage.setVisible(isVisible);
         settingImage.setVisible(isVisible);
-        rankingImage.setVisible(isVisible); // Ảnh nút Ranking
+        rankingImage.setVisible(isVisible);
         guideImageBtn.setVisible(isVisible);
     }
 }
-

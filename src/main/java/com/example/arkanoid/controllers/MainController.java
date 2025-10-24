@@ -26,15 +26,9 @@ public class MainController {
     @FXML
     private void initialize() {
         GraphicsContext gc = gameCanvas.getGraphicsContext2D();
-
-        // --- THAY ĐỔI Ở ĐÂY: Dùng getBounds() thay vì getVisualBounds() ---
-        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
-        gameCanvas.setWidth(screenBounds.getWidth());
-        gameCanvas.setHeight(screenBounds.getHeight());
-
-        // Khởi tạo GameManager với kích thước toàn màn hình
-        gameManager = new GameManager((int) screenBounds.getWidth(), (int) screenBounds.getHeight(), GameData.playerName);
-
+        gameCanvas.setWidth(1200);
+        gameCanvas.setHeight(955.5);
+        gameManager = new GameManager(1200, 956, GameData.playerName);
         gameLoop = new AnimationTimer() {
             private long lastTime = 0;
 
@@ -47,9 +41,14 @@ public class MainController {
                 double delta = (now - lastTime) / 1_000_000_000.0;
                 lastTime = now;
 
-                gameManager.processInput(activeKeys);
+                gameManager.processInput(activeKeys); // Xử lý phím (hoặc bỏ qua nếu chuột di chuyển)
                 gameManager.update(delta);
-                gameManager.render(gc);
+
+                // Chỉ render nếu game chưa dừng
+                // (tránh lỗi nếu người dùng quay lại menu)
+                if (gameManager.isRunning() || !gameManager.isGameOver()) {
+                    gameManager.render(gc);
+                }
             }
         };
 
@@ -57,11 +56,37 @@ public class MainController {
         setupInputHandlers();
     }
 
+    // --- CẬP NHẬT SETUPINPUTHANDLERS ---
+    // Trong file MainController.java
+
     private void setupInputHandlers() {
         gameCanvas.setFocusTraversable(true);
-        gameCanvas.setOnKeyPressed(e -> activeKeys.add(e.getCode()));
+
+        // Khi nhấn phím, tắt chế độ chuột
+        gameCanvas.setOnKeyPressed(e -> {
+            activeKeys.add(e.getCode());
+            gameManager.setMouseControl(false);
+        });
+
         gameCanvas.setOnKeyReleased(e -> activeKeys.remove(e.getCode()));
+
+        // Lắng nghe di chuyển chuột
+        gameCanvas.setOnMouseMoved(e -> {
+            gameManager.setMouseControl(true); // Bật chế độ chuột
+            gameManager.processMouseMovement(e.getX()); // Gửi tọa độ X
+        });
+
+        // --- CODE MỚI: LẮNG NGHE CLICK CHUỘT ĐỂ BẮT ĐẦU ---
+        gameCanvas.setOnMousePressed(e -> {
+            gameManager.startGame(); //
+        });
+        // --- KẾT THÚC CODE MỚI ---
+
         gameCanvas.requestFocus();
     }
-}
 
+    // (Hàm này có thể được gọi từ MenuController nếu bạn muốn dừng game)
+    public void stopGameLoop() {
+        gameLoop.stop();
+    }
+}

@@ -7,9 +7,9 @@
 <AnchorPane xmlns="http://javafx.com/javafx/25"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.example.arkanoid.controllers.MainController"
-            prefWidth="1280" prefHeight="720">
+            prefWidth="1200" prefHeight="955.5">
 
     <children>
-        <Canvas fx:id="gameCanvas" width="1280" height="720" />
+        <Canvas fx:id="gameCanvas" width="1200" height="955.5" />
     </children>
 </AnchorPane>
