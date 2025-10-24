@@ -2,18 +2,23 @@ package com.example.arkanoid.controllers;
 
 import com.example.arkanoid.HighScores;
 import com.example.arkanoid.ScoreEntry;
-import javafx.animation.ParallelTransition; // <-- IMPORT MỚI
-import javafx.animation.RotateTransition; // <-- IMPORT MỚI
+import javafx.animation.ParallelTransition;
+import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -55,50 +60,64 @@ public class MenuController {
         backButtonGuide.setOnAction(e -> handleBackFromGuide());
         backButtonRanking.setOnAction(e -> handleBackFromRanking());
 
-        // --- CODE MỚI: ÁP DỤNG HIỆU ỨNG CHO CÁC NÚT ---
+        // --- CODE CẬP NHẬT ---
 
-        // 1. Áp dụng hiệu ứng JIGGLE (lắc lư) cho các nút menu chính (có ảnh)
-        addJiggleAnimation(buttonStart, startImage);
+        // 1. Áp dụng hiệu ứng THU PHÓNG (không xoay) cho nút Start
+        addScaleAnimation(buttonStart, startImage);
+
+        // 2. Áp dụng hiệu ứng JIGGLE (lắc lư) cho các nút menu khác
         addJiggleAnimation(buttonSetting, settingImage);
         addJiggleAnimation(buttonRanking, rankingImage);
         addJiggleAnimation(buttonGuide, guideImageBtn);
 
-        // 2. Áp dụng hiệu ứng CLICK (thu nhỏ nút) cho các nút "Back" (không có ảnh)
+        // 3. Áp dụng hiệu ứng CLICK (thu nhỏ nút) cho các nút "Back"
         addClickAnimation(backButtonGuide);
         addClickAnimation(backButtonRanking);
-        // --- KẾT THÚC CODE MỚI ---
+        // --- KẾT THÚC CODE CẬP NHẬT ---
 
         highScores = new HighScores();
     }
 
     /**
-     * HÀM MỚI: Thêm hiệu ứng JIGGLE (lắc + thu nhỏ) cho HÌNH ẢNH
-     * khi nhấn vào NÚT
+     * HÀM MỚI: Chỉ thu nhỏ/phóng to HÌNH ẢNH (không xoay)
+     * Giống như hiệu ứng Login.
+     */
+    private void addScaleAnimation(Button button, ImageView image) {
+        // Tạo hiệu ứng khi nhấn xuống (thu nhỏ còn 90%)
+        ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), image);
+        pressTransition.setToX(0.9);
+        pressTransition.setToY(0.9);
+
+        // Tạo hiệu ứng khi thả ra (trở về 100%)
+        ScaleTransition releaseTransition = new ScaleTransition(Duration.millis(100), image);
+        releaseTransition.setToX(1.0);
+        releaseTransition.setToY(1.0);
+
+        // Áp dụng sự kiện (lên NÚT)
+        button.setOnMousePressed(event -> pressTransition.playFromStart());
+        button.setOnMouseReleased(event -> releaseTransition.playFromStart());
+    }
+
+    /**
+     * HÀM CŨ: (Giữ lại) Thêm hiệu ứng JIGGLE (lắc + thu nhỏ)
      */
     private void addJiggleAnimation(Button button, ImageView image) {
-        // --- Tạo hiệu ứng khi nhấn xuống ---
-        // 1. Thu nhỏ ảnh
+        // Thu nhỏ + Xoay khi nhấn
         ScaleTransition pressScale = new ScaleTransition(Duration.millis(100), image);
         pressScale.setToX(0.9);
         pressScale.setToY(0.9);
-        // 2. Xoay ảnh (lắc lư)
         RotateTransition pressRotate = new RotateTransition(Duration.millis(100), image);
-        pressRotate.setToAngle(-5); // Xoay 5 độ
-        // 3. Chạy cả 2 song song
+        pressRotate.setToAngle(-5);
         ParallelTransition pressTransition = new ParallelTransition(pressScale, pressRotate);
 
-        // --- Tạo hiệu ứng khi thả ra ---
-        // 1. Phóng to ảnh về 100%
+        // Trở về bình thường khi thả
         ScaleTransition releaseScale = new ScaleTransition(Duration.millis(100), image);
         releaseScale.setToX(1.0);
         releaseScale.setToY(1.0);
-        // 2. Xoay ảnh về 0
         RotateTransition releaseRotate = new RotateTransition(Duration.millis(100), image);
         releaseRotate.setToAngle(0);
-        // 3. Chạy cả 2 song song
         ParallelTransition releaseTransition = new ParallelTransition(releaseScale, releaseRotate);
 
-        // Áp dụng sự kiện (lên NÚT)
         button.setOnMousePressed(event -> pressTransition.playFromStart());
         button.setOnMouseReleased(event -> releaseTransition.playFromStart());
     }
