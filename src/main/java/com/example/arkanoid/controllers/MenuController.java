@@ -1,24 +1,24 @@
 package com.example.arkanoid.controllers;
 
 import com.example.arkanoid.HighScores;
+import com.example.arkanoid.MainApp;
 import com.example.arkanoid.ScoreEntry;
 import javafx.animation.ParallelTransition;
 import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.Region; // <-- THÊM IMPORT NÀY
+import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -34,7 +34,6 @@ public class MenuController {
     @FXML private Button buttonGuide;
     @FXML private Button backButtonGuide;
     @FXML private Button backButtonRanking;
-
     @FXML private ImageView guideImageView;
     @FXML private ImageView startImage;
     @FXML private ImageView settingImage;
@@ -42,113 +41,60 @@ public class MenuController {
     @FXML private ImageView guideImageBtn;
     @FXML private ImageView mainBackground;
     @FXML private ImageView rankingImageView;
-
     @FXML private Text rank1Text;
     @FXML private Text rank2Text;
     @FXML private Text rank3Text;
 
     private HighScores highScores;
 
-
     @FXML
     private void initialize() {
-        // Gán sự kiện setOnAction (như cũ)
         buttonStart.setOnAction(e -> handleStartGame());
         buttonSetting.setOnAction(e -> handleSettings());
         buttonRanking.setOnAction(e -> handleRanking());
         buttonGuide.setOnAction(e -> handleGuide());
         backButtonGuide.setOnAction(e -> handleBackFromGuide());
         backButtonRanking.setOnAction(e -> handleBackFromRanking());
-
-        // --- CODE CẬP NHẬT ---
-
-        // 1. Áp dụng hiệu ứng THU PHÓNG (không xoay) cho nút Start
         addScaleAnimation(buttonStart, startImage);
-
-        // 2. Áp dụng hiệu ứng JIGGLE (lắc lư) cho các nút menu khác
         addJiggleAnimation(buttonSetting, settingImage);
         addJiggleAnimation(buttonRanking, rankingImage);
         addJiggleAnimation(buttonGuide, guideImageBtn);
-
-        // 3. Áp dụng hiệu ứng CLICK (thu nhỏ nút) cho các nút "Back"
         addClickAnimation(backButtonGuide);
         addClickAnimation(backButtonRanking);
-        // --- KẾT THÚC CODE CẬP NHẬT ---
-
         highScores = new HighScores();
     }
 
-    /**
-     * HÀM MỚI: Chỉ thu nhỏ/phóng to HÌNH ẢNH (không xoay)
-     * Giống như hiệu ứng Login.
-     */
-    private void addScaleAnimation(Button button, ImageView image) {
-        // Tạo hiệu ứng khi nhấn xuống (thu nhỏ còn 90%)
-        ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), image);
-        pressTransition.setToX(0.9);
-        pressTransition.setToY(0.9);
-
-        // Tạo hiệu ứng khi thả ra (trở về 100%)
-        ScaleTransition releaseTransition = new ScaleTransition(Duration.millis(100), image);
-        releaseTransition.setToX(1.0);
-        releaseTransition.setToY(1.0);
-
-        // Áp dụng sự kiện (lên NÚT)
-        button.setOnMousePressed(event -> pressTransition.playFromStart());
-        button.setOnMouseReleased(event -> releaseTransition.playFromStart());
-    }
-
-    /**
-     * HÀM CŨ: (Giữ lại) Thêm hiệu ứng JIGGLE (lắc + thu nhỏ)
-     */
-    private void addJiggleAnimation(Button button, ImageView image) {
-        // Thu nhỏ + Xoay khi nhấn
-        ScaleTransition pressScale = new ScaleTransition(Duration.millis(100), image);
-        pressScale.setToX(0.9);
-        pressScale.setToY(0.9);
-        RotateTransition pressRotate = new RotateTransition(Duration.millis(100), image);
-        pressRotate.setToAngle(-5);
-        ParallelTransition pressTransition = new ParallelTransition(pressScale, pressRotate);
-
-        // Trở về bình thường khi thả
-        ScaleTransition releaseScale = new ScaleTransition(Duration.millis(100), image);
-        releaseScale.setToX(1.0);
-        releaseScale.setToY(1.0);
-        RotateTransition releaseRotate = new RotateTransition(Duration.millis(100), image);
-        releaseRotate.setToAngle(0);
-        ParallelTransition releaseTransition = new ParallelTransition(releaseScale, releaseRotate);
-
-        button.setOnMousePressed(event -> pressTransition.playFromStart());
-        button.setOnMouseReleased(event -> releaseTransition.playFromStart());
-    }
-
-    /**
-     * HÀM CŨ: (Giữ lại) Thêm hiệu ứng nhấn và thả cho một nút (dùng cho nút Back)
-     */
-    private void addClickAnimation(Button button) {
-        ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), button);
-        pressTransition.setToX(0.9);
-        pressTransition.setToY(0.9);
-
-        ScaleTransition releaseTransition = new ScaleTransition(Duration.millis(100), button);
-        releaseTransition.setToX(1.0);
-        releaseTransition.setToY(1.0);
-
-        button.setOnMousePressed(event -> pressTransition.playFromStart());
-        button.setOnMouseReleased(event -> releaseTransition.playFromStart());
-    }
-
-    //
-    // --- (Toàn bộ các hàm handle... và set... của bạn giữ nguyên, không thay đổi gì) ---
-    //
+    // Đây là hàm gây ra lỗi của bạn
     private void handleStartGame() {
         try {
             Stage stage = (Stage) buttonStart.getScene().getWindow();
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/arkanoid/main-view.fxml"));
-            Parent gameRoot = loader.load();
-            Scene gameScene = new Scene(gameRoot, 1200, 955.5);
-            stage.setScene(gameScene);
+
+            // --- SỬA LỖI Ở ĐÂY: Đổi 'Parent' thành 'Region' ---
+            Region gameRoot = loader.load(); // <-- Lỗi ở dòng này
+
+            StackPane rootPane = new StackPane();
+            rootPane.getChildren().add(gameRoot);
+            rootPane.setStyle("-fx-background-color: black;");
+            rootPane.setAlignment(Pos.CENTER);
+
+            // Dòng này giờ sẽ hoạt động
+            gameRoot.setMaxSize(MainApp.DESIGN_WIDTH, MainApp.DESIGN_HEIGHT);
+
+            Scene gameScene = stage.getScene();
+            gameScene.setRoot(rootPane);
+
+            MainApp.scaleToFit(gameRoot, gameScene);
+
             stage.setTitle("Arkanoid Game");
+
+            Node canvas = gameRoot.lookup("#gameCanvas");
+            if (canvas != null) {
+                canvas.requestFocus();
+            } else {
+                gameRoot.requestFocus();
+            }
 
         } catch (IOException ex) {
             System.err.println("Lỗi: Không thể tải file main-view.fxml.");
@@ -241,5 +187,44 @@ public class MenuController {
         settingImage.setVisible(isVisible);
         rankingImage.setVisible(isVisible);
         guideImageBtn.setVisible(isVisible);
+    }
+
+    private void addScaleAnimation(Button button, ImageView image) {
+        ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), image);
+        pressTransition.setToX(0.9);
+        pressTransition.setToY(0.9);
+        ScaleTransition releaseTransition = new ScaleTransition(Duration.millis(100), image);
+        releaseTransition.setToX(1.0);
+        releaseTransition.setToY(1.0);
+        button.setOnMousePressed(event -> pressTransition.playFromStart());
+        button.setOnMouseReleased(event -> releaseTransition.playFromStart());
+    }
+
+    private void addJiggleAnimation(Button button, ImageView image) {
+        ScaleTransition pressScale = new ScaleTransition(Duration.millis(100), image);
+        pressScale.setToX(0.9);
+        pressScale.setToY(0.9);
+        RotateTransition pressRotate = new RotateTransition(Duration.millis(100), image);
+        pressRotate.setToAngle(-5);
+        ParallelTransition pressTransition = new ParallelTransition(pressScale, pressRotate);
+        ScaleTransition releaseScale = new ScaleTransition(Duration.millis(100), image);
+        releaseScale.setToX(1.0);
+        releaseScale.setToY(1.0);
+        RotateTransition releaseRotate = new RotateTransition(Duration.millis(100), image);
+        releaseRotate.setToAngle(0);
+        ParallelTransition releaseTransition = new ParallelTransition(releaseScale, releaseRotate);
+        button.setOnMousePressed(event -> pressTransition.playFromStart());
+        button.setOnMouseReleased(event -> releaseTransition.playFromStart());
+    }
+
+    private void addClickAnimation(Button button) {
+        ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), button);
+        pressTransition.setToX(0.9);
+        pressTransition.setToY(0.9);
+        ScaleTransition releaseTransition = new ScaleTransition(Duration.millis(100), button);
+        releaseTransition.setToX(1.0);
+        releaseTransition.setToY(1.0);
+        button.setOnMousePressed(event -> pressTransition.playFromStart());
+        button.setOnMouseReleased(event -> releaseTransition.playFromStart());
     }
 }
