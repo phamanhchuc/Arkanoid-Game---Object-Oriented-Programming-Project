@@ -1,14 +1,17 @@
 package com.example.arkanoid.controllers;
 
 import com.example.arkanoid.GameData;
-import javafx.animation.FadeTransition; // <-- IMPORT MỚI
+import com.example.arkanoid.MainApp;
+import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Region; // <-- THÊM IMPORT NÀY
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -19,17 +22,12 @@ public class LoginController {
 
     @FXML
     private TextField userNameText;
-
     @FXML
     private Button buttonLogin;
 
     @FXML
     private void initialize() {
         buttonLogin.setOnAction(e -> handleLogin());
-
-        // Chúng ta sẽ áp dụng hiệu ứng cho ảnh bên trong nút (trong FXML)
-        // nên không cần gọi addClickAnimation(buttonLogin) ở đây nữa,
-        // trừ khi bạn dùng Cách 1 (Nút đè lên Ảnh)
     }
 
     private void handleLogin() {
@@ -38,39 +36,36 @@ public class LoginController {
             userNameText.setPromptText("Please enter your name!");
             return;
         }
-
         GameData.playerName = playerName;
 
         try {
             Stage stage = (Stage) buttonLogin.getScene().getWindow();
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/arkanoid/main-menu.fxml"));
-            Parent menuRoot = loader.load();
 
-            // --- CODE MỚI: THÊM HIỆU ỨNG FADE IN ---
+            // --- SỬA LỖI Ở ĐÂY: Đổi 'Parent' thành 'Region' ---
+            Region menuRoot = loader.load();
 
-            // 1. Đặt nội dung menu thành trong suốt
-            menuRoot.setOpacity(0);
+            StackPane rootPane = new StackPane();
+            rootPane.getChildren().add(menuRoot);
+            rootPane.setStyle("-fx-background-color: black;");
+            rootPane.setAlignment(Pos.CENTER);
 
-            // 2. Tạo StackPane nền đen (để giữ kích thước 1200x955.5)
-            StackPane centeringPane = new StackPane();
-            centeringPane.setStyle("-fx-background-color: black;");
-            centeringPane.getChildren().add(menuRoot);
+            // Dòng này giờ sẽ hoạt động
+            menuRoot.setMaxSize(MainApp.DESIGN_WIDTH, MainApp.DESIGN_HEIGHT);
 
-            // 3. Tạo Scene mới
-            Scene menuScene = new Scene(centeringPane, 1200, 955.5);
+            Scene menuScene = stage.getScene();
+            menuScene.setRoot(rootPane);
 
-            // 4. ĐẶT SCENE MỚI LÊN SÂN KHẤU (QUAN TRỌNG)
-            stage.setScene(menuScene);
+            MainApp.scaleToFit(menuRoot, menuScene);
+
             stage.setTitle("Arkanoid - Main Menu");
 
-            // 5. Tạo hiệu ứng mờ dần (trong 0.5 giây)
+            menuRoot.setOpacity(0);
             FadeTransition ft = new FadeTransition(Duration.millis(500), menuRoot);
-            ft.setFromValue(0.0); // Bắt đầu từ trong suốt
-            ft.setToValue(1.0);   // Kết thúc ở rõ nét
-            ft.play(); // Chạy hiệu ứng
-
-            // --- KẾT THÚC CODE MỚI ---
+            ft.setFromValue(0.0);
+            ft.setToValue(1.0);
+            ft.play();
 
         } catch (IOException ex) {
             System.err.println("Lỗi: Không thể tải file main-menu.fxml.");
@@ -78,8 +73,6 @@ public class LoginController {
         }
     }
 
-    // Hàm này có thể giữ lại nếu bạn dùng cho các nút khác,
-    // nhưng hiện tại nó không được gọi vì nút Login đã dùng <graphic>
     private void addClickAnimation(Button button) {
         ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), button);
         pressTransition.setToX(0.9);

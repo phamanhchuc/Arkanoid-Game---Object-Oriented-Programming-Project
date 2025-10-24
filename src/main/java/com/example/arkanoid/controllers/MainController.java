@@ -26,9 +26,13 @@ public class MainController {
     @FXML
     private void initialize() {
         GraphicsContext gc = gameCanvas.getGraphicsContext2D();
+
+        // Kích thước của Canvas (khớp với FXML)
         gameCanvas.setWidth(1200);
         gameCanvas.setHeight(955.5);
+
         gameManager = new GameManager(1200, 956, GameData.playerName);
+
         gameLoop = new AnimationTimer() {
             private long lastTime = 0;
 
@@ -41,23 +45,21 @@ public class MainController {
                 double delta = (now - lastTime) / 1_000_000_000.0;
                 lastTime = now;
 
-                gameManager.processInput(activeKeys); // Xử lý phím (hoặc bỏ qua nếu chuột di chuyển)
+                gameManager.processInput(activeKeys);
                 gameManager.update(delta);
 
-                // Chỉ render nếu game chưa dừng
-                // (tránh lỗi nếu người dùng quay lại menu)
-                if (gameManager.isRunning() || !gameManager.isGameOver()) {
-                    gameManager.render(gc);
-                }
+                // --- SỬA LỖI Ở ĐÂY ---
+                // Xóa bỏ câu lệnh 'if' sai.
+                // Luôn luôn gọi render() để GameManager tự quyết định
+                // vẽ game đang chạy hay vẽ màn hình "GAME OVER".
+                gameManager.render(gc);
+                // --- KẾT THÚC SỬA LỖI ---
             }
         };
 
         gameLoop.start();
         setupInputHandlers();
     }
-
-    // --- CẬP NHẬT SETUPINPUTHANDLERS ---
-    // Trong file MainController.java
 
     private void setupInputHandlers() {
         gameCanvas.setFocusTraversable(true);
@@ -76,17 +78,22 @@ public class MainController {
             gameManager.processMouseMovement(e.getX()); // Gửi tọa độ X
         });
 
-        // --- CODE MỚI: LẮNG NGHE CLICK CHUỘT ĐỂ BẮT ĐẦU ---
+        // Lắng nghe click chuột để bắt đầu
         gameCanvas.setOnMousePressed(e -> {
-            gameManager.startGame(); //
+            gameManager.startGame();
         });
-        // --- KẾT THÚC CODE MỚI ---
 
+        // Đảm bảo canvas được focus để nhận phím
         gameCanvas.requestFocus();
     }
 
-    // (Hàm này có thể được gọi từ MenuController nếu bạn muốn dừng game)
+    /**
+     * Phương thức này có thể được gọi từ MenuController
+     * nếu bạn muốn dừng game khi quay lại Menu (để tối ưu)
+     */
     public void stopGameLoop() {
-        gameLoop.stop();
+        if (gameLoop != null) {
+            gameLoop.stop();
+        }
     }
 }

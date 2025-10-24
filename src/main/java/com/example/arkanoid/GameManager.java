@@ -112,29 +112,24 @@ public class GameManager {
         return running;
     }
 
-    // --- PHƯƠNG THỨC ĐÃ ĐƯỢC THÊM ĐỂ SỬA LỖI ---
     public boolean isGameOver() {
         return gameOver;
     }
-    // --- KẾT THÚC PHẦN SỬA LỖI ---
 
     public Paddle getPaddle() {
         return paddle;
     }
 
-    // Phương thức mới để chuyển đổi input
     public void setMouseControl(boolean controlled) {
         this.mouseControlled = controlled;
     }
 
-    // Phương thức mới để xử lý chuột
     public void processMouseMovement(double mouseX) {
         if (paddle != null) {
             paddle.moveTo(mouseX);
         }
     }
 
-    // Cập nhật processInput (bàn phím)
     public void processInput(Set<KeyCode> keys) {
         if (gameOver) {
             if (keys.contains(KeyCode.SPACE) || keys.contains(KeyCode.R)) {
@@ -147,13 +142,11 @@ public class GameManager {
             startGame();
         }
 
-        // Nếu chuột đang điều khiển, bỏ qua bàn phím
         if (mouseControlled) {
-            paddle.stop(); // Đảm bảo paddle không di chuyển bằng phím
+            paddle.stop();
             return;
         }
 
-        // Logic bàn phím
         if (keys.contains(KeyCode.LEFT)) {
             paddle.moveLeft();
         } else if (keys.contains(KeyCode.RIGHT)) {
@@ -177,7 +170,6 @@ public class GameManager {
         paddle.update(dt);
         ball.update(dt);
 
-        // Tạo đuôi
         trailSpawnTimer += dt;
         if (trailSpawnTimer >= TRAIL_SPAWN_INTERVAL) {
             spawnBallTrailParticle();
@@ -187,9 +179,12 @@ public class GameManager {
         if (ball.isOutOfBounds()) {
             lives--;
             running = false;
+            SoundManager.playSound(SoundManager.Sound.MISSED_BALL); // <-- ÂM THANH
+
             if (lives <= 0) {
                 gameOver = true;
                 saveCurrentScore();
+                SoundManager.playSound(SoundManager.Sound.GAME_OVER); // <-- ÂM THANH
             } else {
                 ball.stickTo(paddle);
             }
@@ -197,6 +192,7 @@ public class GameManager {
 
         if (checkCollisionCircleRect(ball, paddle) && ball.getY() + ball.getHeight() <= paddle.getY() + 30) {
             ball.bounceOffPaddle(paddle);
+            SoundManager.playSound(SoundManager.Sound.HIT_PADDLE); // <-- ÂM THANH
         }
 
         boolean allBricksDestroyed = true;
@@ -207,6 +203,11 @@ public class GameManager {
             allBricksDestroyed = false;
             if (checkCollisionCircleRect(ball, b)) {
                 resolveBallBrickCollision(ball, b);
+
+                // (Chỉ phát âm thanh 1 lần khi gạch bị va chạm,
+                // không quan tâm nó vỡ hay chưa)
+                SoundManager.playSound(SoundManager.Sound.HIT_BRICK); // <-- ÂM THANH
+
                 if (b.takeHit()) {
                     score += 100;
                     if (random.nextDouble() < 0.2) {
@@ -232,6 +233,7 @@ public class GameManager {
             System.out.println("YOU WIN!");
             running = false;
             saveCurrentScore();
+            SoundManager.playSound(SoundManager.Sound.LEVEL_COMPLETED); // <-- ÂM THANH
         }
 
         Iterator<PowerUp> powerUpIterator = powerUps.iterator();
@@ -265,7 +267,6 @@ public class GameManager {
         double particleX = ball.getX() + ball.getWidth() / 2;
         double particleY = ball.getY() + ball.getHeight() / 2;
         double particleSize = ball.getWidth() * 0.8;
-        // Mã màu tím Magenta/Fuchsia
         Color trailColor = Color.rgb(255, 0, 255, 0.8);
         double lifespan = 0.3;
         particles.add(new Particle(particleX, particleY, particleSize, particleSize, trailColor, lifespan));
@@ -291,6 +292,7 @@ public class GameManager {
         if (pu.getType() == PowerUp.PowerUpType.LIFE) {
             lives++;
             System.out.println("Bạn nhận được thêm 1 mạng! Tổng mạng: " + lives);
+            SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP); // <-- ÂM THANH
         }
     }
 
@@ -348,10 +350,9 @@ public class GameManager {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.fillText("Player: " + playerName, screenWidth - 100, 25);
         gc.fillText("Score: " + score, screenWidth - 100, 50);
-                gc.fillText("Lives: " + lives, screenWidth - 100, 75);
+        gc.fillText("Lives: " + lives, screenWidth - 100, 75);
         gc.setTextAlign(TextAlignment.LEFT);
 
-        // Thứ tự vẽ
         for (Brick b : bricks) {
             b.render(gc);
         }

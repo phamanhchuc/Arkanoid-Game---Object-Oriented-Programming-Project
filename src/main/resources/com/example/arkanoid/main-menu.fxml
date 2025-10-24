@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.net.URL?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
@@ -11,46 +12,48 @@
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="955.5" prefWidth="1200.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.arkanoid.controllers.MenuController">
     <center>
         <AnchorPane fx:id="mainPane" prefHeight="955.5" prefWidth="1200.0" BorderPane.alignment="CENTER">
+            <stylesheets>
+                <URL value="@menu-styles.css" />
+            </stylesheets>
             <children>
-                <!-- Nền chính -->
                 <ImageView fx:id="mainBackground" fitHeight="955.5" fitWidth="1200.0" pickOnBounds="true" preserveRatio="true">
                     <image>
                         <Image url="@images/backgroundStart.png" />
                     </image>
                 </ImageView>
 
-                <!-- Các nút menu chính -->
                 <ImageView fx:id="startImage" fitHeight="150.0" fitWidth="499.0" layoutX="379.0" layoutY="665.0" pickOnBounds="true" preserveRatio="true">
                     <image>
                         <Image url="@images/startButton.png" />
                     </image>
                 </ImageView>
-                <ImageView fx:id="rankingImage" cache="true" fitHeight="49.0" fitWidth="62.0" layoutX="1042.0" layoutY="180.0" pickOnBounds="true" preserveRatio="true">
-                    <image>
-                        <Image url="@images/rankingButton.png" />
-                    </image>
-                </ImageView>
+                <Button fx:id="buttonStart" blendMode="MULTIPLY" layoutX="420.0" layoutY="679.0" mnemonicParsing="false" prefHeight="105.0" prefWidth="359.0" style="-fx-background-color: transparent;" />
+
                 <ImageView fx:id="settingImage" fitHeight="150.0" fitWidth="33.0" layoutX="1050.0" layoutY="118.0" pickOnBounds="true" preserveRatio="true">
                     <image>
                         <Image url="@images/settingButton.png" />
                     </image>
                 </ImageView>
+                <Button fx:id="buttonSetting" blendMode="MULTIPLY" layoutX="1031.0" layoutY="114.0" mnemonicParsing="false" prefHeight="39.0" prefWidth="71.0" style="-fx-background-color: transparent;" />
+
+                <ImageView fx:id="rankingImage" cache="true" fitHeight="49.0" fitWidth="62.0" layoutX="1042.0" layoutY="180.0" pickOnBounds="true" preserveRatio="true">
+                    <image>
+                        <Image url="@images/rankingButton.png" />
+                    </image>
+                </ImageView>
+                <Button fx:id="buttonRanking" blendMode="MULTIPLY" layoutX="1031.0" layoutY="184.0" mnemonicParsing="false" prefHeight="39.0" prefWidth="72.0" style="-fx-background-color: transparent;" />
+
                 <ImageView fx:id="guideImageBtn" fitHeight="42.0" fitWidth="35.0" layoutX="1050.0" layoutY="255.0" pickOnBounds="true" preserveRatio="true">
                     <image>
                         <Image url="@images/guideButton.png" />
                     </image>
                 </ImageView>
+                <Button fx:id="buttonGuide" blendMode="MULTIPLY" layoutX="1032.0" layoutY="255.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="70.0" style="-fx-background-color: transparent;" />
 
-                <Button fx:id="buttonStart" blendMode="MULTIPLY" layoutX="420.0" layoutY="679.0" mnemonicParsing="false" prefHeight="105.0" prefWidth="359.0" text="Start" />
-                <Button fx:id="buttonSetting" blendMode="MULTIPLY" layoutX="1031.0" layoutY="114.0" mnemonicParsing="false" prefHeight="39.0" prefWidth="71.0" text="Setting" />
-                <Button fx:id="buttonRanking" blendMode="MULTIPLY" layoutX="1031.0" layoutY="184.0" mnemonicParsing="false" prefHeight="39.0" prefWidth="72.0" text="Rank" />
-                <Button fx:id="buttonGuide" blendMode="MULTIPLY" layoutX="1032.0" layoutY="255.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="70.0" text="Guide" />
 
-                <!-- Phần hiển thị Hướng dẫn (ẩn lúc đầu) -->
                 <ImageView fx:id="guideImageView" fitHeight="955.5" fitWidth="1200.0" layoutX="0.0" layoutY="0.0" pickOnBounds="true" preserveRatio="true" visible="false" />
-                <Button fx:id="backButtonGuide" layoutX="955.0" layoutY="200.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="100.0" text="Quay lại guide" visible="false" />
+                <Button fx:id="backButtonGuide" layoutX="150.0" layoutY="135.0" mnemonicParsing="false" prefHeight="85.0" prefWidth="226.0" styleClass="back-button" visible="false" />
 
-                <!-- Phần hiển thị Bảng Xếp Hạng (ẩn lúc đầu) -->
                 <ImageView fx:id="rankingImageView" fitHeight="955.5" fitWidth="1200.0" layoutX="0.0" layoutY="0.0" pickOnBounds="true" preserveRatio="true" visible="false" />
                 <Text fx:id="rank1Text" layoutX="280.0" layoutY="200.0" strokeType="OUTSIDE" strokeWidth="0.0" text="1. N/A" visible="false" wrappingWidth="300.0">
                     <font><Font name="System Bold" size="22.0" /></font>
@@ -61,7 +64,7 @@
                 <Text fx:id="rank3Text" layoutX="280.0" layoutY="260.0" strokeType="OUTSIDE" strokeWidth="0.0" text="3. N/A" visible="false" wrappingWidth="300.0">
                     <font><Font name="System Bold" size="22.0" /></font>
                 </Text>
-                <Button fx:id="backButtonRanking" layoutX="350.0" layoutY="560.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="100.0" text="Quay lại" visible="false" />
+                <Button fx:id="backButtonRanking" layoutX="80.0" layoutY="860.0" mnemonicParsing="false" prefHeight="85.0" prefWidth="226.0" styleClass="back-button" visible="false" />
 
             </children>
         </AnchorPane>
