@@ -8,6 +8,13 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 
+// --- NEW IMPORTS ---
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+// --- END NEW IMPORTS ---
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -37,8 +44,10 @@ public class GameManager {
     private boolean gameOver = false;
     private HighScores highScores;
 
-    // Cờ để quản lý input chuột
     private boolean mouseControlled = false;
+
+    // Current level name (can be changed later)
+    private String currentLevel = "level1.txt";
 
     public GameManager(int screenWidth, int screenHeight, String playerName) {
         this.screenWidth = screenWidth;
@@ -76,7 +85,7 @@ public class GameManager {
         ball.setPlayArea(playAreaOffsetX, playAreaWidth);
 
         ball.stickTo(paddle);
-        createBricks();
+        createBricks(currentLevel); // <-- Pass level name
         powerUps.clear();
         particles.clear();
         trailSpawnTimer = 0;
@@ -84,22 +93,82 @@ public class GameManager {
         lives = 3;
         running = false;
         gameOver = false;
-        mouseControlled = false; // Reset cờ chuột
+        mouseControlled = false;
     }
 
-    private void createBricks() {
+    // --- UPDATED createBricks METHOD ---
+    private void createBricks(String levelFileName) {
         bricks.clear();
-        int rows = 5, cols = 10;
-        double brickW = (playAreaWidth - 100.0) / cols;
-        double brickH = 22;
+        String path = "/com/example/arkanoid/levels/" + levelFileName;
+        List<String[]> mapData = new ArrayList<>();
+        int cols = 0;
+
+        // --- Read the map file first ---
+        try (InputStream is = getClass().getResourceAsStream(path);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
+
+            if (is == null) {
+                System.err.println("Lỗi nghiêm trọng: Không tìm thấy file map: " + path);
+                return; // Stop if file not found
+            }
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim(); // Remove leading/trailing spaces
+                if (!line.isEmpty()) {
+                    String[] numbers = line.split("\\s+"); // Split by one or more spaces
+                    mapData.add(numbers);
+                    if (cols == 0) { // Determine number of columns from the first non-empty line
+                        cols = numbers.length;
+                    } else if (numbers.length != cols) {
+                        System.err.println("Cảnh báo: Hàng trong map file có số cột không đồng đều!");
+                    }
+                }
+            }
+        } catch (IOException | NullPointerException e) {
+            System.err.println("Lỗi khi đọc file map: " + path);
+            e.printStackTrace();
+            return; // Stop if reading failed
+        }
+
+        if (mapData.isEmpty() || cols == 0) {
+            System.err.println("Lỗi: Map file rỗng hoặc không hợp lệ: " + path);
+            return;
+        }
+
+        // --- Now create bricks based on mapData ---
+        int rows = mapData.size();
+        double horizontalPadding = 50.0; // Total padding left and right
+        double verticalPaddingTop = 60.0; // Space from top
+        double brickSpacingX = 0.0; // Space between bricks horizontally
+        double brickSpacingY = 0.0; // Space between bricks vertically
+
+        // Calculate brick width based on available space and number of columns
+        double brickW = (playAreaWidth - horizontalPadding * 2 - (cols - 1) * brickSpacingX) / cols;
+        double brickH = 22; // Keep height fixed for now
+
         for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
-                double x = playAreaOffsetX + 30 + c * (brickW + 5);
-                double y = 60 + r * (brickH + 6);
-                bricks.add(new Brick(x, y, brickW, brickH, 3));
+            String[] numbers = mapData.get(r);
+            for (int c = 0; c < numbers.length; c++) { // Use numbers.length for safety
+                int hitCount = 0;
+                try {
+                    hitCount = Integer.parseInt(numbers[c]);
+                } catch (NumberFormatException e) {
+                    System.err.println("Cảnh báo: Ký tự không hợp lệ trong map file tại hàng " + (r + 1) + ", cột " + (c + 1));
+                    continue; // Skip invalid entry
+                }
+
+                if (hitCount > 0) { // Only create brick if hitCount is 1, 2, or 3 etc.
+                    double x = playAreaOffsetX + horizontalPadding + c * (brickW + brickSpacingX);
+                    double y = verticalPaddingTop + r * (brickH + brickSpacingY);
+                    bricks.add(new Brick(x, y, brickW, brickH, hitCount)); // Use hitCount from file
+                }
             }
         }
+        System.out.println("Đã tải thành công map: " + levelFileName + " (" + rows + "x" + cols + ")");
     }
+    // --- END UPDATED METHOD ---
+
 
     public void startGame() {
         if (!running && !gameOver) {
@@ -179,12 +248,12 @@ public class GameManager {
         if (ball.isOutOfBounds()) {
             lives--;
             running = false;
-            SoundManager.playSound(SoundManager.Sound.MISSED_BALL); // <-- ÂM THANH
+            SoundManager.playSound(SoundManager.Sound.MISSED_BALL);
 
             if (lives <= 0) {
                 gameOver = true;
                 saveCurrentScore();
-                SoundManager.playSound(SoundManager.Sound.GAME_OVER); // <-- ÂM THANH
+                SoundManager.playSound(SoundManager.Sound.GAME_OVER);
             } else {
                 ball.stickTo(paddle);
             }
@@ -192,24 +261,26 @@ public class GameManager {
 
         if (checkCollisionCircleRect(ball, paddle) && ball.getY() + ball.getHeight() <= paddle.getY() + 30) {
             ball.bounceOffPaddle(paddle);
-            SoundManager.playSound(SoundManager.Sound.HIT_PADDLE); // <-- ÂM THANH
+            SoundManager.playSound(SoundManager.Sound.HIT_PADDLE);
         }
 
         boolean allBricksDestroyed = true;
-        for (Brick b : bricks) {
+        Iterator<Brick> brickIterator = bricks.iterator(); // Use iterator for safe removal
+        while(brickIterator.hasNext()) {
+            Brick b = brickIterator.next();
             if (b.isDestroyed()) {
+                // Optional: Remove destroyed bricks if you want effects
+                // brickIterator.remove();
                 continue;
             }
-            allBricksDestroyed = false;
+            allBricksDestroyed = false; // Found an active brick
             if (checkCollisionCircleRect(ball, b)) {
                 resolveBallBrickCollision(ball, b);
-
-                // (Chỉ phát âm thanh 1 lần khi gạch bị va chạm,
-                // không quan tâm nó vỡ hay chưa)
-                SoundManager.playSound(SoundManager.Sound.HIT_BRICK); // <-- ÂM THANH
+                SoundManager.playSound(SoundManager.Sound.HIT_BRICK);
 
                 if (b.takeHit()) {
                     score += 100;
+                    // Check if power-up should drop AFTER brick is destroyed
                     if (random.nextDouble() < 0.2) {
                         double powerUpWidth = 50;
                         double powerUpHeight = 70;
@@ -222,18 +293,24 @@ public class GameManager {
                         );
                         powerUps.add(newPowerUp);
                     }
+                    // Optional: If removing destroyed bricks: brickIterator.remove();
                 } else {
                     score += 25;
                 }
+                // Important: Break AFTER handling collision to avoid multiple hits per frame
                 break;
             }
         }
+
 
         if (allBricksDestroyed) {
             System.out.println("YOU WIN!");
             running = false;
             saveCurrentScore();
-            SoundManager.playSound(SoundManager.Sound.LEVEL_COMPLETED); // <-- ÂM THANH
+            SoundManager.playSound(SoundManager.Sound.LEVEL_COMPLETED);
+            // You could add logic here to load the next level, e.g.
+            // currentLevel = "level2.map";
+            // initGame(); // Restart with new level (or show a victory screen)
         }
 
         Iterator<PowerUp> powerUpIterator = powerUps.iterator();
@@ -246,12 +323,14 @@ public class GameManager {
             pu.update(dt);
             if (checkCollisionRectRect(pu, paddle)) {
                 applyPowerUpEffect(pu);
-                pu.setCollected(true);
-            }
-            if (pu.getY() > screenHeight) {
-                pu.setCollected(true);
+                pu.setCollected(true); // Mark as collected BEFORE removing
+                powerUpIterator.remove(); // Remove immediately after collecting
+            } else if (pu.getY() > screenHeight) { // Check if off-screen only if not collected
+                pu.setCollected(true); // Mark as collected to be removed next frame
+                powerUpIterator.remove(); // Remove immediately
             }
         }
+
 
         Iterator<Particle> particleIterator = particles.iterator();
         while (particleIterator.hasNext()) {
@@ -292,11 +371,12 @@ public class GameManager {
         if (pu.getType() == PowerUp.PowerUpType.LIFE) {
             lives++;
             System.out.println("Bạn nhận được thêm 1 mạng! Tổng mạng: " + lives);
-            SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP); // <-- ÂM THANH
+            SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
         }
     }
 
     private void resolveBallBrickCollision(Ball ball, Brick brick) {
+        // ... (Collision resolution logic - unchanged) ...
         double ballCenterX = ball.getX() + ball.getWidth() / 2;
         double ballCenterY = ball.getY() + ball.getHeight() / 2;
         double brickCenterX = brick.getX() + brick.getWidth() / 2;
@@ -308,22 +388,25 @@ public class GameManager {
 
         if (Math.abs(dx_centers / combinedHalfWidth) > Math.abs(dy_centers / combinedHalfHeight)) {
             ball.setDx(-ball.getDx());
+            // Adjust position slightly to prevent sticking
             if (dx_centers > 0) {
-                ball.setX(brick.getX() + brick.getWidth());
+                ball.setX(brick.getX() + brick.getWidth() + 0.1);
             } else {
-                ball.setX(brick.getX() - ball.getWidth());
+                ball.setX(brick.getX() - ball.getWidth() - 0.1);
             }
         } else {
             ball.setDy(-ball.getDy());
+            // Adjust position slightly to prevent sticking
             if (dy_centers > 0) {
-                ball.setY(brick.getY() + brick.getHeight());
+                ball.setY(brick.getY() + brick.getHeight() + 0.1);
             } else {
-                ball.setY(brick.getY() - ball.getHeight());
+                ball.setY(brick.getY() - ball.getHeight() - 0.1);
             }
         }
     }
 
     private boolean checkCollisionCircleRect(Ball ball, GameObject rect) {
+        // ... (Collision check logic - unchanged) ...
         double cx = ball.getX() + ball.getWidth() / 2;
         double cy = ball.getY() + ball.getHeight() / 2;
         double radius = ball.getWidth() / 2;
@@ -335,6 +418,7 @@ public class GameManager {
     }
 
     public void render(GraphicsContext gc) {
+        // ... (Render logic - mostly unchanged) ...
         if (backgroundImage != null) {
             gc.drawImage(backgroundImage, 0, 0, screenWidth, screenHeight);
         } else {
@@ -353,10 +437,14 @@ public class GameManager {
         gc.fillText("Lives: " + lives, screenWidth - 100, 75);
         gc.setTextAlign(TextAlignment.LEFT);
 
+        // Render bricks that haven't been destroyed
         for (Brick b : bricks) {
-            b.render(gc);
+            if (!b.isDestroyed()) { // Only render active bricks
+                b.render(gc);
+            }
         }
         for (PowerUp pu : powerUps) {
+            // PowerUps list only contains active ones now
             pu.render(gc);
         }
         paddle.render(gc);
@@ -366,6 +454,7 @@ public class GameManager {
         ball.render(gc);
 
         if (gameOver) {
+            // ... (Game Over rendering - unchanged) ...
             gc.setFill(Color.rgb(0, 0, 0, 0.7));
             gc.fillRect(0, 0, screenWidth, screenHeight);
             gc.setFill(Color.RED);
