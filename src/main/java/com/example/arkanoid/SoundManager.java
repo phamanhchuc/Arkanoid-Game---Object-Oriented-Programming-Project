@@ -2,83 +2,134 @@ package com.example.arkanoid;
 
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.util.Duration; // <-- THÊM IMPORT NÀY
+
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Lớp tĩnh để quản lý và phát âm thanh.
- * Tải trước tất cả âm thanh một lần để tối ưu hiệu suất.
- */
 public class SoundManager {
 
-    // Enum để định danh các âm thanh
+    // Enum cho hiệu ứng âm thanh ngắn
     public enum Sound {
         HIT_BRICK,
         HIT_PADDLE,
         HIT_WALL,
-        COLLECT_POWERUP, // Tương ứng với Game_coin_collect
+        COLLECT_POWERUP,
         LEVEL_COMPLETED,
         MISSED_BALL,
         GAME_OVER
     }
 
-    // Map để lưu các đối tượng Media đã tải
-    private static Map<Sound, Media> sounds = new HashMap<>();
+    // Enum MỚI cho nhạc nền (có thể thêm các bản nhạc khác sau)
+    public enum Music {
+        BACKGROUND_GAME // Tương ứng với man1.mp3
+    }
 
-    // Biến static này sẽ được thực thi 1 LẦN khi lớp được tải
+    private static Map<Sound, Media> sounds = new HashMap<>();
+    private static Map<Music, Media> musicTracks = new HashMap<>(); // <-- Map MỚI cho nhạc
+
+    // MediaPlayer riêng cho nhạc nền (để có thể dừng/lặp)
+    private static MediaPlayer backgroundMusicPlayer; // <-- Biến MỚI
+
     static {
         try {
-            // Tải tất cả các file âm thanh dựa trên tên file bạn cung cấp
-            sounds.put(Sound.HIT_BRICK, loadSound("ball_hits_bricks.mp3"));
-            sounds.put(Sound.HIT_PADDLE, loadSound("ball_hits_paddle.mp3"));
-            sounds.put(Sound.HIT_WALL, loadSound("ball_hits_wall.mp3"));
-            sounds.put(Sound.COLLECT_POWERUP, loadSound("Game_coin_collect.mp3"));
-            sounds.put(Sound.LEVEL_COMPLETED, loadSound("level-completed.mp3"));
-            sounds.put(Sound.MISSED_BALL, loadSound("missed_ball.mp3"));
-            sounds.put(Sound.GAME_OVER, loadSound("game_over.mp3"));
+            // Tải hiệu ứng âm thanh
+            sounds.put(Sound.HIT_BRICK, loadMedia("ball_hits_bricks.mp3"));
+            sounds.put(Sound.HIT_PADDLE, loadMedia("ball_hits_paddle.mp3"));
+            sounds.put(Sound.HIT_WALL, loadMedia("ball_hits_wall.mp3"));
+            sounds.put(Sound.COLLECT_POWERUP, loadMedia("Game_coin_collect.mp3"));
+            sounds.put(Sound.LEVEL_COMPLETED, loadMedia("level-completed.mp3"));
+            sounds.put(Sound.MISSED_BALL, loadMedia("missed_ball.mp3"));
+            sounds.put(Sound.GAME_OVER, loadMedia("game_over.mp3"));
 
-            System.out.println("SoundManager: Đã tải thành công " + sounds.size() + " file âm thanh.");
+            // Tải nhạc nền
+            musicTracks.put(Music.BACKGROUND_GAME, loadMedia("man1.mp3")); // <-- Tải man1.mp3
+
+            System.out.println("SoundManager: Đã tải " + sounds.size() + " SFX và " + musicTracks.size() + " bản nhạc.");
 
         } catch (Exception e) {
-            System.err.println("SoundManager: Lỗi nghiêm trọng khi tải file âm thanh!");
+            System.err.println("SoundManager: Lỗi nghiêm trọng khi tải file âm thanh/nhạc!");
             e.printStackTrace();
         }
     }
 
     /**
-     * Phương thức nội bộ để tải file âm thanh từ thư mục resources/sounds
+     * Phương thức nội bộ để tải file media (âm thanh hoặc nhạc)
      */
-    private static Media loadSound(String fileName) {
+    private static Media loadMedia(String fileName) {
         String path = "/com/example/arkanoid/sounds/" + fileName;
         try {
-            String soundUrl = SoundManager.class.getResource(path).toExternalForm();
-            return new Media(soundUrl);
+            String mediaUrl = SoundManager.class.getResource(path).toExternalForm();
+            return new Media(mediaUrl);
         } catch (NullPointerException e) {
-            System.err.println("Lỗi: Không tìm thấy file âm thanh: " + path);
-            // Trả về null để chương trình không bị crash
+            System.err.println("Lỗi: Không tìm thấy file media: " + path);
+            return null;
+        } catch (Exception e) {
+            System.err.println("Lỗi không xác định khi tải media: " + path);
+            e.printStackTrace();
             return null;
         }
     }
 
     /**
-     * Phương thức công khai để phát âm thanh
+     * Phát hiệu ứng âm thanh ngắn (SFX)
      */
     public static void playSound(Sound sound) {
         Media media = sounds.get(sound);
-
-        // Nếu âm thanh không tồn tại (do tải lỗi) thì không làm gì cả
         if (media == null) {
-            System.err.println("SoundManager: Bỏ qua phát âm thanh " + sound + " (chưa được tải).");
+            System.err.println("SoundManager: Bỏ qua SFX " + sound + " (chưa được tải).");
             return;
         }
-
         try {
-            // Tạo một MediaPlayer MỚI mỗi lần phát
-            // Điều này cho phép nhiều âm thanh (như tiếng nảy) phát chồng lên nhau
-            MediaPlayer mediaPlayer = new MediaPlayer(media);
-            mediaPlayer.play();
+            // Tạo MediaPlayer mới mỗi lần để SFX có thể chồng lên nhau
+            MediaPlayer sfxPlayer = new MediaPlayer(media);
+            sfxPlayer.play();
         } catch (Exception e) {
+            System.err.println("Lỗi khi phát SFX: " + sound);
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * PHƯƠNG THỨC MỚI: Bắt đầu phát nhạc nền (và lặp lại)
+     */
+    public static void playMusic(Music music) {
+        // Dừng nhạc cũ nếu đang phát
+        stopMusic();
+
+        Media media = musicTracks.get(music);
+        if (media == null) {
+            System.err.println("SoundManager: Bỏ qua nhạc " + music + " (chưa được tải).");
+            return;
+        }
+        try {
+            backgroundMusicPlayer = new MediaPlayer(media);
+            // Đặt chế độ lặp vô hạn
+            backgroundMusicPlayer.setOnEndOfMedia(() -> {
+                backgroundMusicPlayer.seek(Duration.ZERO);
+                backgroundMusicPlayer.play();
+            });
+            backgroundMusicPlayer.play();
+            System.out.println("SoundManager: Bắt đầu phát nhạc " + music);
+        } catch (Exception e) {
+            System.err.println("Lỗi khi phát nhạc: " + music);
+            e.printStackTrace();
+            backgroundMusicPlayer = null; // Đặt lại nếu có lỗi
+        }
+    }
+
+    /**
+     * PHƯƠNG THỨC MỚI: Dừng nhạc nền đang phát
+     */
+    public static void stopMusic() {
+        if (backgroundMusicPlayer != null) {
+            try {
+                backgroundMusicPlayer.stop();
+                backgroundMusicPlayer = null; // Giải phóng tài nguyên
+                System.out.println("SoundManager: Đã dừng nhạc nền.");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }
