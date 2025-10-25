@@ -6,26 +6,28 @@ import javafx.scene.paint.Color;
 
 public class PowerUp extends MovableObject {
     public enum PowerUpType {
-        LIFE
+        LIFE,
+        LOSE_LIFE
     }
 
     private PowerUpType type;
     private double fallSpeed = 200;
-    private boolean collected = false; // Đánh dấu nếu đã được thu thập
+    private boolean collected = false;
 
     public PowerUp(double x, double y, double width, double height, PowerUpType type) {
         super(x, y, width, height);
         this.type = type;
-        this.dy = fallSpeed; // Bắt đầu rơi xuống
+        this.dy = fallSpeed;
 
-        // Tải hình ảnh dựa trên loại PowerUp
         try {
             String imagePath = "";
             switch (type) {
                 case LIFE:
                     imagePath = "/com/example/arkanoid/images/1life.png";
+                    break; // <-- LỖI Ở ĐÂY: Bạn đã thiếu 'break;' này
+                case LOSE_LIFE:
+                    imagePath = "/com/example/arkanoid/images/lose_life.png";
                     break;
-                // Thêm các case khác nếu có thêm loại PowerUp
             }
             if (!imagePath.isEmpty()) {
                 image = new Image(getClass().getResourceAsStream(imagePath));
@@ -59,9 +61,15 @@ public class PowerUp extends MovableObject {
             if (image != null) {
                 gc.drawImage(image, x, y, width, height);
             } else {
-                // Dự phòng: Vẽ hình vuông màu nếu không tải được ảnh
-                gc.setFill(Color.GREEN);
+                // --- PHẦN SỬA LỖI NHỎ ---
+                // Vẽ màu dự phòng cho đúng loại
+                if (type == PowerUpType.LIFE) {
+                    gc.setFill(Color.GREEN);
+                } else if (type == PowerUpType.LOSE_LIFE) {
+                    gc.setFill(Color.RED);
+                }
                 gc.fillRect(x, y, width, height);
+                // --- KẾT THÚC PHẦN SỬA ---
             }
         }
     }

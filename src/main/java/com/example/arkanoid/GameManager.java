@@ -248,6 +248,7 @@ public class GameManager {
         if (ball.isOutOfBounds()) {
             lives--;
             running = false;
+            powerUps.clear();
             SoundManager.playSound(SoundManager.Sound.MISSED_BALL);
 
             if (lives <= 0) {
@@ -265,25 +266,29 @@ public class GameManager {
         }
 
         boolean allBricksDestroyed = true;
-        Iterator<Brick> brickIterator = bricks.iterator(); // Use iterator for safe removal
+        Iterator<Brick> brickIterator = bricks.iterator();
         while(brickIterator.hasNext()) {
             Brick b = brickIterator.next();
             if (b.isDestroyed()) {
-                // Optional: Remove destroyed bricks if you want effects
-                // brickIterator.remove();
                 continue;
             }
-            allBricksDestroyed = false; // Found an active brick
+            allBricksDestroyed = false;
             if (checkCollisionCircleRect(ball, b)) {
                 resolveBallBrickCollision(ball, b);
                 SoundManager.playSound(SoundManager.Sound.HIT_BRICK);
 
                 if (b.takeHit()) {
                     score += 100;
-                    // Check if power-up should drop AFTER brick is destroyed
-                    if (random.nextDouble() < 0.2) {
-                        double powerUpWidth = 50;
-                        double powerUpHeight = 70;
+
+                    // --- PHẦN LOGIC RƠI POWERUP ĐÃ SỬA ---
+                    // (Sửa lại logic của bạn, < 0.9 và < 0.1 là sai)
+                    // Logic đúng (ví dụ: 10% LIFE, 10% LOSE_LIFE):
+
+                    double dropChance = random.nextDouble();
+                    double powerUpWidth = 50;
+                    double powerUpHeight = 70;
+
+                    if (dropChance < 0.4) { // 10% cơ hội rơi LIFE (từ 0.0 -> 0.099)
                         PowerUp newPowerUp = new PowerUp(
                                 b.getX() + (b.getWidth() - powerUpWidth) / 2,
                                 b.getY() + (b.getHeight() - powerUpHeight) / 2,
@@ -292,12 +297,21 @@ public class GameManager {
                                 PowerUp.PowerUpType.LIFE
                         );
                         powerUps.add(newPowerUp);
+                    } else if (dropChance < 0.7) { // 10% cơ hội khác rơi LOSE_LIFE (từ 0.1 -> 0.199)
+                        PowerUp newPowerUp = new PowerUp(
+                                b.getX() + (b.getWidth() - powerUpWidth) / 2,
+                                b.getY() + (b.getHeight() - powerUpHeight) / 2,
+                                powerUpWidth,
+                                powerUpHeight,
+                                PowerUp.PowerUpType.LOSE_LIFE
+                        );
+                        powerUps.add(newPowerUp);
                     }
-                    // Optional: If removing destroyed bricks: brickIterator.remove();
+                    // --- HẾT PHẦN SỬA ---
+
                 } else {
                     score += 25;
                 }
-                // Important: Break AFTER handling collision to avoid multiple hits per frame
                 break;
             }
         }
@@ -308,9 +322,6 @@ public class GameManager {
             running = false;
             saveCurrentScore();
             SoundManager.playSound(SoundManager.Sound.LEVEL_COMPLETED);
-            // You could add logic here to load the next level, e.g.
-            // currentLevel = "level2.map";
-            // initGame(); // Restart with new level (or show a victory screen)
         }
 
         Iterator<PowerUp> powerUpIterator = powerUps.iterator();
@@ -323,11 +334,11 @@ public class GameManager {
             pu.update(dt);
             if (checkCollisionRectRect(pu, paddle)) {
                 applyPowerUpEffect(pu);
-                pu.setCollected(true); // Mark as collected BEFORE removing
-                powerUpIterator.remove(); // Remove immediately after collecting
-            } else if (pu.getY() > screenHeight) { // Check if off-screen only if not collected
-                pu.setCollected(true); // Mark as collected to be removed next frame
-                powerUpIterator.remove(); // Remove immediately
+                pu.setCollected(true);
+                powerUpIterator.remove();
+            } else if (pu.getY() > screenHeight) {
+                pu.setCollected(true);
+                powerUpIterator.remove();
             }
         }
 
@@ -340,6 +351,7 @@ public class GameManager {
                 particleIterator.remove();
             }
         }
+
     }
 
     private void spawnBallTrailParticle() {
@@ -372,6 +384,16 @@ public class GameManager {
             lives++;
             System.out.println("Bạn nhận được thêm 1 mạng! Tổng mạng: " + lives);
             SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
+        }
+        else if (pu.getType() == PowerUp.PowerUpType.LOSE_LIFE) {
+            lives--;
+            System.out.println("Bạn bị mất 1 mạng! Tổng mạng: " + lives);
+            // Kiểm tra ngay lập tức xem có thua không
+            if (lives <= 0) {
+                gameOver = true;
+                running = false; // Dừng game
+                saveCurrentScore(); // Lưu điểm
+            }
         }
     }
 
