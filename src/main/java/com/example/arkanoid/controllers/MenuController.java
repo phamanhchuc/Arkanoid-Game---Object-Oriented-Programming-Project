@@ -3,7 +3,8 @@ package com.example.arkanoid.controllers;
 import com.example.arkanoid.HighScores;
 import com.example.arkanoid.MainApp;
 import com.example.arkanoid.ScoreEntry;
-import javafx.animation.Interpolator; // <-- IMPORT MỚI
+import com.example.arkanoid.SoundManager; // <-- THÊM IMPORT NÀY
+import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
 import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
@@ -16,9 +17,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane; // <-- Import AnchorPane if not already there
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.Region; // <-- Import Region
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -28,8 +29,7 @@ import java.util.List;
 
 public class MenuController {
 
-    // --- KHAI BÁO BIẾN @FXML (Đầy đủ) ---
-    @FXML private AnchorPane mainPane; // This is the AnchorPane INSIDE the StackPane
+    @FXML private AnchorPane mainPane;
     @FXML private Button buttonStart;
     @FXML private Button buttonSetting;
     @FXML private Button buttonRanking;
@@ -49,91 +49,70 @@ public class MenuController {
 
     private HighScores highScores;
 
-    // --- KHỞI TẠO ---
     @FXML
     private void initialize() {
-        // Gán sự kiện setOnAction
         buttonStart.setOnAction(e -> handleStartGame());
         buttonSetting.setOnAction(e -> handleSettings());
         buttonRanking.setOnAction(e -> handleRanking());
         buttonGuide.setOnAction(e -> handleGuide());
         backButtonGuide.setOnAction(e -> handleBackFromGuide());
         backButtonRanking.setOnAction(e -> handleBackFromRanking());
-
-        // Áp dụng hiệu ứng animation
         addScaleAnimation(buttonStart, startImage);
         addJiggleAnimation(buttonSetting, settingImage);
         addJiggleAnimation(buttonRanking, rankingImage);
         addJiggleAnimation(buttonGuide, guideImageBtn);
         addClickAnimation(backButtonGuide);
         addClickAnimation(backButtonRanking);
-
         highScores = new HighScores();
     }
 
-    // --- HÀM XỬ LÝ START GAME (ĐÃ THÊM ANIMATION XOÁY) ---
     private void handleStartGame() {
-        // Lấy node gốc của menu (chính là AnchorPane chứa mọi thứ)
-        Node menuContent = mainPane; // Hoặc buttonStart.getScene().getRoot().getChildrenUnmodifiable().get(0) nếu mainPane là null
+        // --- BẮT ĐẦU PHÁT NHẠC NGAY KHI CLICK ---
+        SoundManager.playMusic(SoundManager.Music.BACKGROUND_GAME);
+        // --- KẾT THÚC ---
+
+        Node menuContent = mainPane;
         if (menuContent == null) {
             System.err.println("Không thể tìm thấy nội dung menu để tạo animation.");
-            loadGameScene(); // Tải game ngay lập tức nếu có lỗi
+            loadGameScene();
             return;
         }
 
-        // 1. Tạo hiệu ứng xoay (ví dụ: 2 vòng)
         RotateTransition rotate = new RotateTransition(Duration.millis(800), menuContent);
-        rotate.setByAngle(360 * 2); // Xoay 720 độ
-        rotate.setInterpolator(Interpolator.EASE_IN); // Tăng tốc khi xoay
+        rotate.setByAngle(360 * 2);
+        rotate.setInterpolator(Interpolator.EASE_IN);
 
-        // 2. Tạo hiệu ứng thu nhỏ (về 0)
         ScaleTransition scale = new ScaleTransition(Duration.millis(800), menuContent);
         scale.setToX(0);
         scale.setToY(0);
-        scale.setInterpolator(Interpolator.EASE_IN); // Tăng tốc khi thu nhỏ
+        scale.setInterpolator(Interpolator.EASE_IN);
 
-        // 3. Chạy cả hai hiệu ứng cùng lúc
         ParallelTransition swirl = new ParallelTransition(rotate, scale);
-
-        // 4. SAU KHI animation kết thúc, mới tải và chuyển sang màn hình game
         swirl.setOnFinished(event -> loadGameScene());
-
-        // 5. Bắt đầu chạy animation
         swirl.play();
     }
 
-    /**
-     * Hàm riêng để tải và chuyển sang màn hình game
-     * (Được gọi sau khi animation xoáy hoàn thành)
-     */
     private void loadGameScene() {
         try {
-            // Lấy Stage từ một node bất kỳ trên màn hình hiện tại
-            Stage stage = (Stage) mainPane.getScene().getWindow(); // Hoặc buttonStart.getScene().getWindow();
+            Stage stage = (Stage) mainPane.getScene().getWindow();
 
-            // 1. Tải FXML nội dung game
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/arkanoid/main-view.fxml"));
-            Region gameRoot = loader.load(); // Dùng Region
+            Region gameRoot = loader.load();
 
-            // 2. Tạo StackPane bọc
             StackPane rootPane = new StackPane();
             rootPane.getChildren().add(gameRoot);
             rootPane.setStyle("-fx-background-color: black;");
             rootPane.setAlignment(Pos.CENTER);
 
-            // 3. Ép nội dung giữ nguyên kích thước thiết kế
             gameRoot.setMaxSize(MainApp.DESIGN_WIDTH, MainApp.DESIGN_HEIGHT);
 
-            // 4. Lấy Scene hiện tại và set Root mới
             Scene gameScene = stage.getScene();
             gameScene.setRoot(rootPane);
 
-            // 5. Áp dụng co giãn
             MainApp.scaleToFit(gameRoot, gameScene);
 
             stage.setTitle("Arkanoid Game");
 
-            // 6. Sửa lỗi Focus (để nhận phím/chuột)
             Node canvas = gameRoot.lookup("#gameCanvas");
             if (canvas != null) {
                 canvas.requestFocus();
@@ -150,10 +129,10 @@ public class MenuController {
         }
     }
 
-
-    // --- CÁC HÀM XỬ LÝ SỰ KIỆN KHÁC (GIỮ NGUYÊN) ---
     private void handleSettings() {
         System.out.println("Nút Settings đã được nhấn!");
+        // Cân nhắc dừng nhạc ở đây nếu bạn mở màn hình settings riêng
+        // SoundManager.stopMusic();
     }
 
     private void handleRanking() {
@@ -209,7 +188,6 @@ public class MenuController {
         setRankingVisible(false);
     }
 
-    // --- CÁC HÀM ẨN/HIỆN (GIỮ NGUYÊN) ---
     private void setGuideVisible(boolean isVisible) {
         guideImageView.setVisible(isVisible);
         backButtonGuide.setVisible(isVisible);
@@ -237,7 +215,6 @@ public class MenuController {
         guideImageBtn.setVisible(isVisible);
     }
 
-    // --- CÁC HÀM HỖ TRỢ ANIMATION (GIỮ NGUYÊN) ---
     private void addScaleAnimation(Button button, ImageView image) {
         ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), image);
         pressTransition.setToX(0.9);
