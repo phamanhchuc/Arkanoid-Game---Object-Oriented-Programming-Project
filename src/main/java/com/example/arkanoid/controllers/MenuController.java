@@ -52,6 +52,8 @@ public class MenuController {
     @FXML private VBox settingsPane;
     @FXML private Slider volumeSlider;
     @FXML private Button backButtonSettings;
+    @FXML private ImageView settingsBackground;
+
 
     private HighScores highScores;
 
@@ -85,6 +87,29 @@ public class MenuController {
                 SoundManager.setMasterVolume(newValue.doubleValue());
             });
         }
+
+        // ---- Đổi màu nút âm lượng ----
+        volumeSlider.valueProperty().addListener((obs, oldVal, newVal) -> {
+            double val = newVal.doubleValue();
+            String color;
+
+            if (val <= 0.2) {
+                color = "#6ab04c"; // xanh nhạt
+            } else if (val <= 0.4) {
+                color = "#2ecc71"; // xanh tươi
+            } else if (val <= 0.6) {
+                color = "#f1c40f"; // vàng
+            } else if (val <= 0.8) {
+                color = "#e67e22"; // cam
+            } else {
+                color = "#e74c3c"; // đỏ
+            }
+
+            Node thumb = volumeSlider.lookup(".thumb");
+            if (thumb != null) {
+                thumb.setStyle("-fx-background-color: " + color + ";");
+            }
+        });
     }
 
     // --- CÁC HÀM XỬ LÝ SỰ KIỆN ---
@@ -249,6 +274,7 @@ public class MenuController {
 
         // Ẩn/Hiện panel Settings
         if (settingsPane != null) settingsPane.setVisible(showSettings);
+        if (settingsBackground != null) settingsBackground.setVisible(showSettings);
 
         // Ẩn/Hiện các thành phần của menu chính
         setMainMenuVisible(showMainMenu);
@@ -315,4 +341,5 @@ public class MenuController {
         button.setOnMousePressed(event -> pressTransition.playFromStart());
         button.setOnMouseReleased(event -> releaseTransition.playFromStart());
     }
+
 }
