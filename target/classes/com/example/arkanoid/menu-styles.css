@@ -46,3 +46,30 @@
 .volume-slider .thumb:hover {
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 3, 0.1, 0, 1);
 }
+
+/* =======================================
+   SLIDER ÂM LƯỢNG GAME-LIKE
+   ======================================= */
+.volume-slider {
+    -fx-pref-width: 300px;
+    -fx-pref-height: 12px;
+}
+
+/* Track */
+.volume-slider .track {
+    -fx-background-color: linear-gradient(to right, #888, #ccc);
+    -fx-background-radius: 6;
+}
+
+/* Thumb mặc định */
+.volume-slider .thumb {
+    -fx-background-radius: 50%;
+    -fx-background-color: #6ab04c; /* mặc định */
+    -fx-border-color: #333;
+    -fx-border-width: 1;
+}
+
+/* Hover */
+.volume-slider .thumb:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 3, 0.1, 0, 1);
+}
