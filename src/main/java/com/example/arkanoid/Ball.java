@@ -11,6 +11,7 @@ public class Ball extends MovableObject {
     private double playAreaOffsetX;
     private double playAreaWidth;
 
+
     private static final int NUM_FRAMES = 5;
     private static final double FRAME_DURATION_SECONDS = 0.03; // Tốc độ nhanh
     private int currentFrame = 0;
