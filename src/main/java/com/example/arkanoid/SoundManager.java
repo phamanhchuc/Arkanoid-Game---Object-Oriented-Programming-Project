@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SoundManager {
-
     public enum Sound {
         HIT_BRICK, HIT_PADDLE, HIT_WALL, COLLECT_POWERUP,
         LEVEL_COMPLETED, MISSED_BALL, GAME_OVER
