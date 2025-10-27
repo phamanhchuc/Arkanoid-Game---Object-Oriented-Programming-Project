@@ -3,7 +3,8 @@ package com.example.arkanoid.controllers;
 import com.example.arkanoid.HighScores;
 import com.example.arkanoid.MainApp;
 import com.example.arkanoid.ScoreEntry;
-import javafx.animation.Interpolator; // <-- IMPORT MỚI
+import com.example.arkanoid.SoundManager;
+import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
 import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
@@ -14,11 +15,13 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane; // <-- Import AnchorPane if not already there
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.Region; // <-- Import Region
+import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -28,8 +31,8 @@ import java.util.List;
 
 public class MenuController {
 
-    // --- KHAI BÁO BIẾN @FXML (Đầy đủ) ---
-    @FXML private AnchorPane mainPane; // This is the AnchorPane INSIDE the StackPane
+    // --- Biến FXML ---
+    @FXML private AnchorPane mainPane;
     @FXML private Button buttonStart;
     @FXML private Button buttonSetting;
     @FXML private Button buttonRanking;
@@ -46,19 +49,23 @@ public class MenuController {
     @FXML private Text rank1Text;
     @FXML private Text rank2Text;
     @FXML private Text rank3Text;
+    @FXML private VBox settingsPane;
+    @FXML private Slider volumeSlider;
+    @FXML private Button backButtonSettings;
 
     private HighScores highScores;
 
     // --- KHỞI TẠO ---
     @FXML
     private void initialize() {
-        // Gán sự kiện setOnAction
+        // Gán sự kiện OnAction
         buttonStart.setOnAction(e -> handleStartGame());
         buttonSetting.setOnAction(e -> handleSettings());
         buttonRanking.setOnAction(e -> handleRanking());
         buttonGuide.setOnAction(e -> handleGuide());
         backButtonGuide.setOnAction(e -> handleBackFromGuide());
         backButtonRanking.setOnAction(e -> handleBackFromRanking());
+        backButtonSettings.setOnAction(e -> handleBackFromSettings());
 
         // Áp dụng hiệu ứng animation
         addScaleAnimation(buttonStart, startImage);
@@ -67,80 +74,61 @@ public class MenuController {
         addJiggleAnimation(buttonGuide, guideImageBtn);
         addClickAnimation(backButtonGuide);
         addClickAnimation(backButtonRanking);
+        addClickAnimation(backButtonSettings);
 
         highScores = new HighScores();
+
+        // Thiết lập Slider âm lượng
+        if (volumeSlider != null) { // Thêm kiểm tra null
+            volumeSlider.setValue(SoundManager.getMasterVolume());
+            volumeSlider.valueProperty().addListener((observable, oldValue, newValue) -> {
+                SoundManager.setMasterVolume(newValue.doubleValue());
+            });
+        }
     }
 
-    // --- HÀM XỬ LÝ START GAME (ĐÃ THÊM ANIMATION XOÁY) ---
-    private void handleStartGame() {
-        // Lấy node gốc của menu (chính là AnchorPane chứa mọi thứ)
-        Node menuContent = mainPane; // Hoặc buttonStart.getScene().getRoot().getChildrenUnmodifiable().get(0) nếu mainPane là null
+    // --- CÁC HÀM XỬ LÝ SỰ KIỆN ---
+
+    private void handleStartGame() { /* ... Giữ nguyên như cũ ... */
+        SoundManager.playMusic(SoundManager.Music.BACKGROUND_GAME);
+        Node menuContent = mainPane;
         if (menuContent == null) {
             System.err.println("Không thể tìm thấy nội dung menu để tạo animation.");
-            loadGameScene(); // Tải game ngay lập tức nếu có lỗi
+            loadGameScene();
             return;
         }
-
-        // 1. Tạo hiệu ứng xoay (ví dụ: 2 vòng)
         RotateTransition rotate = new RotateTransition(Duration.millis(800), menuContent);
-        rotate.setByAngle(360 * 2); // Xoay 720 độ
-        rotate.setInterpolator(Interpolator.EASE_IN); // Tăng tốc khi xoay
-
-        // 2. Tạo hiệu ứng thu nhỏ (về 0)
+        rotate.setByAngle(360 * 2);
+        rotate.setInterpolator(Interpolator.EASE_IN);
         ScaleTransition scale = new ScaleTransition(Duration.millis(800), menuContent);
         scale.setToX(0);
         scale.setToY(0);
-        scale.setInterpolator(Interpolator.EASE_IN); // Tăng tốc khi thu nhỏ
-
-        // 3. Chạy cả hai hiệu ứng cùng lúc
+        scale.setInterpolator(Interpolator.EASE_IN);
         ParallelTransition swirl = new ParallelTransition(rotate, scale);
-
-        // 4. SAU KHI animation kết thúc, mới tải và chuyển sang màn hình game
         swirl.setOnFinished(event -> loadGameScene());
-
-        // 5. Bắt đầu chạy animation
         swirl.play();
     }
 
-    /**
-     * Hàm riêng để tải và chuyển sang màn hình game
-     * (Được gọi sau khi animation xoáy hoàn thành)
-     */
-    private void loadGameScene() {
+    private void loadGameScene() { /* ... Giữ nguyên như cũ ... */
         try {
-            // Lấy Stage từ một node bất kỳ trên màn hình hiện tại
-            Stage stage = (Stage) mainPane.getScene().getWindow(); // Hoặc buttonStart.getScene().getWindow();
-
-            // 1. Tải FXML nội dung game
+            Stage stage = (Stage) mainPane.getScene().getWindow();
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/arkanoid/main-view.fxml"));
-            Region gameRoot = loader.load(); // Dùng Region
-
-            // 2. Tạo StackPane bọc
+            Region gameRoot = loader.load();
             StackPane rootPane = new StackPane();
             rootPane.getChildren().add(gameRoot);
             rootPane.setStyle("-fx-background-color: black;");
             rootPane.setAlignment(Pos.CENTER);
-
-            // 3. Ép nội dung giữ nguyên kích thước thiết kế
             gameRoot.setMaxSize(MainApp.DESIGN_WIDTH, MainApp.DESIGN_HEIGHT);
-
-            // 4. Lấy Scene hiện tại và set Root mới
             Scene gameScene = stage.getScene();
             gameScene.setRoot(rootPane);
-
-            // 5. Áp dụng co giãn
             MainApp.scaleToFit(gameRoot, gameScene);
-
             stage.setTitle("Arkanoid Game");
-
-            // 6. Sửa lỗi Focus (để nhận phím/chuột)
             Node canvas = gameRoot.lookup("#gameCanvas");
             if (canvas != null) {
                 canvas.requestFocus();
             } else {
                 gameRoot.requestFocus();
             }
-
         } catch (IOException ex) {
             System.err.println("Lỗi: Không thể tải file main-view.fxml.");
             ex.printStackTrace();
@@ -150,36 +138,52 @@ public class MenuController {
         }
     }
 
-
-    // --- CÁC HÀM XỬ LÝ SỰ KIỆN KHÁC (GIỮ NGUYÊN) ---
     private void handleSettings() {
         System.out.println("Nút Settings đã được nhấn!");
+        showPanel(settingsPane); // Hiện panel settings
     }
 
     private void handleRanking() {
         System.out.println("Nút Ranking đã được nhấn!");
         try {
-            Image rankingBg = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/ranking.jpg"));
-            if (rankingBg != null) {
-                rankingImageView.setImage(rankingBg);
-                List<ScoreEntry> topScores = highScores.getScores();
-                rank1Text.setText(getRankText(topScores, 0));
-                rank2Text.setText(getRankText(topScores, 1));
-                rank3Text.setText(getRankText(topScores, 2));
-                setRankingVisible(true);
-            } else {
-                System.err.println("Lỗi: Không tìm thấy ảnh ranking.jpg");
+            // Xác định Node chứa toàn bộ phần Ranking
+            // (Trong FXML của bạn, rankingImageView và các Text, Button nằm trực tiếp
+            // trong AnchorPane gốc, nên chúng ta cần ẩn/hiện từng cái hoặc
+            // nhóm chúng vào một Pane riêng. Cách dễ hơn là kiểm soát qua showPanel)
+            showPanel(rankingImageView); // Dùng rankingImageView làm đại diện
+
+            // Tải ảnh nền nếu cần
+            Image rankingBg = rankingImageView.getImage();
+            if (rankingBg == null) {
+                rankingBg = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/ranking.jpg"));
+                if (rankingBg != null) rankingImageView.setImage(rankingBg);
+                else {
+                    System.err.println("Lỗi: Không tìm thấy ảnh nền ranking.jpg");
+                    showPanel(null); // Quay lại menu nếu không tải được ảnh
+                    return;
+                }
             }
+            // Hiển thị điểm
+            List<ScoreEntry> topScores = highScores.getScores();
+            rank1Text.setText(getRankText(topScores, 0));
+            rank2Text.setText(getRankText(topScores, 1));
+            rank3Text.setText(getRankText(topScores, 2));
+
         } catch (Exception e) {
             System.err.println("Lỗi khi tải ảnh hoặc hiển thị BXH:");
             e.printStackTrace();
+            showPanel(null); // Quay lại menu nếu có lỗi
         }
     }
 
-    private String getRankText(List<ScoreEntry> scores, int index) {
-        if (index < scores.size()) {
+    private String getRankText(List<ScoreEntry> scores, int index) { /* ... Giữ nguyên như cũ ... */
+        if (scores != null && index >= 0 && index < scores.size()) {
             ScoreEntry entry = scores.get(index);
-            return (index + 1) + ". " + entry.getPlayerName() + ": " + entry.getScore();
+            if (entry != null) {
+                return (index + 1) + ". " + entry.getPlayerName() + ": " + entry.getScore();
+            } else {
+                return (index + 1) + ". Error";
+            }
         } else {
             return (index + 1) + ". N/A";
         }
@@ -188,57 +192,90 @@ public class MenuController {
     private void handleGuide() {
         System.out.println("Nút Guide đã được nhấn!");
         try {
-            Image guideImg = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/guideMenu.png"));
-            if (guideImg != null) {
-                guideImageView.setImage(guideImg);
-                setGuideVisible(true);
-            } else {
-                System.err.println("Lỗi: Không tìm thấy ảnh guideMenu.png");
+            // Chỉ hiển thị guide nếu ảnh nền guide tồn tại
+            Image guideImg = guideImageView.getImage();
+            if(guideImg == null){
+                guideImg = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/guideMenu.png"));
+                if(guideImg != null) guideImageView.setImage(guideImg);
+                else {
+                    System.err.println("Lỗi: Không tìm thấy ảnh guideMenu.png");
+                    showPanel(null); // Quay lại menu nếu không tải được ảnh
+                    return;
+                }
             }
+            showPanel(guideImageView); // Dùng guideImageView làm đại diện
+
         } catch (Exception e) {
             System.err.println("Lỗi khi tải ảnh hướng dẫn:");
             e.printStackTrace();
+            showPanel(null); // Quay lại menu nếu có lỗi
         }
     }
 
     private void handleBackFromGuide() {
-        setGuideVisible(false);
+        showPanel(null); // Quay lại menu chính
     }
 
     private void handleBackFromRanking() {
-        setRankingVisible(false);
+        showPanel(null); // Quay lại menu chính
     }
 
-    // --- CÁC HÀM ẨN/HIỆN (GIỮ NGUYÊN) ---
-    private void setGuideVisible(boolean isVisible) {
-        guideImageView.setVisible(isVisible);
-        backButtonGuide.setVisible(isVisible);
-        setMainMenuVisible(!isVisible);
+    private void handleBackFromSettings() {
+        showPanel(null); // Quay lại menu chính
     }
 
-    private void setRankingVisible(boolean isVisible) {
-        rankingImageView.setVisible(isVisible);
-        rank1Text.setVisible(isVisible);
-        rank2Text.setVisible(isVisible);
-        rank3Text.setVisible(isVisible);
-        backButtonRanking.setVisible(isVisible);
-        setMainMenuVisible(!isVisible);
+    // --- HÀM ẨN/HIỆN ĐÃ ĐƯỢC SỬA LỖI ---
+    /**
+     * Hàm MỚI để quản lý việc hiển thị các panel phụ (Guide, Ranking, Settings)
+     * @param panelToShow Panel đại diện cần hiển thị (ImageView hoặc VBox), hoặc null để hiển thị menu chính
+     */
+    private void showPanel(Node panelToShow) {
+        // --- LOGIC ẨN/HIỆN CHO TỪNG PANEL ---
+        boolean showGuide = (panelToShow == guideImageView);
+        boolean showRanking = (panelToShow == rankingImageView);
+        boolean showSettings = (panelToShow == settingsPane);
+        boolean showMainMenu = (panelToShow == null);
+
+        // Ẩn/Hiện panel Guide và nút back của nó
+        if (guideImageView != null) guideImageView.setVisible(showGuide);
+        if (backButtonGuide != null) backButtonGuide.setVisible(showGuide);
+
+        // Ẩn/Hiện panel Ranking và các thành phần con
+        if (rankingImageView != null) rankingImageView.setVisible(showRanking);
+        if (rank1Text != null) rank1Text.setVisible(showRanking);
+        if (rank2Text != null) rank2Text.setVisible(showRanking);
+        if (rank3Text != null) rank3Text.setVisible(showRanking);
+        if (backButtonRanking != null) backButtonRanking.setVisible(showRanking);
+
+        // Ẩn/Hiện panel Settings
+        if (settingsPane != null) settingsPane.setVisible(showSettings);
+
+        // Ẩn/Hiện các thành phần của menu chính
+        setMainMenuVisible(showMainMenu);
     }
 
+    /**
+     * Hàm này chỉ ẩn/hiện các nút/ảnh của menu chính
+     * SỬA LỖI: Không ẩn mainBackground ở đây nữa
+     */
     private void setMainMenuVisible(boolean isVisible) {
-        mainBackground.setVisible(isVisible);
-        buttonStart.setVisible(isVisible);
-        buttonSetting.setVisible(isVisible);
-        buttonRanking.setVisible(isVisible);
-        buttonGuide.setVisible(isVisible);
-        startImage.setVisible(isVisible);
-        settingImage.setVisible(isVisible);
-        rankingImage.setVisible(isVisible);
-        guideImageBtn.setVisible(isVisible);
+        // if (mainBackground != null) mainBackground.setVisible(isVisible); // <-- KHÔNG ẨN NỀN NỮA
+
+        // Chỉ ẩn/hiện các nút và ảnh của nút
+        if (buttonStart != null) buttonStart.setVisible(isVisible);
+        if (buttonSetting != null) buttonSetting.setVisible(isVisible);
+        if (buttonRanking != null) buttonRanking.setVisible(isVisible);
+        if (buttonGuide != null) buttonGuide.setVisible(isVisible);
+        if (startImage != null) startImage.setVisible(isVisible);
+        if (settingImage != null) settingImage.setVisible(isVisible);
+        if (rankingImage != null) rankingImage.setVisible(isVisible);
+        if (guideImageBtn != null) guideImageBtn.setVisible(isVisible);
     }
 
-    // --- CÁC HÀM HỖ TRỢ ANIMATION (GIỮ NGUYÊN) ---
+
+    // --- CÁC HÀM HỖ TRỢ ANIMATION (Giữ nguyên) ---
     private void addScaleAnimation(Button button, ImageView image) {
+        if (button == null || image == null) return;
         ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), image);
         pressTransition.setToX(0.9);
         pressTransition.setToY(0.9);
@@ -250,6 +287,7 @@ public class MenuController {
     }
 
     private void addJiggleAnimation(Button button, ImageView image) {
+        if (button == null || image == null) return;
         ScaleTransition pressScale = new ScaleTransition(Duration.millis(100), image);
         pressScale.setToX(0.9);
         pressScale.setToY(0.9);
@@ -267,6 +305,7 @@ public class MenuController {
     }
 
     private void addClickAnimation(Button button) {
+        if (button == null) return;
         ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), button);
         pressTransition.setToX(0.9);
         pressTransition.setToY(0.9);
