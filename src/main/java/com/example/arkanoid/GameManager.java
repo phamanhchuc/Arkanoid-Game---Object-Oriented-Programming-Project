@@ -8,12 +8,10 @@ import javafx.scene.paint.ImagePattern;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 
-// --- NEW IMPORTS ---
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-// --- END NEW IMPORTS ---
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -23,6 +21,7 @@ import java.util.Set;
 
 public class GameManager {
 
+    // (Giữ nguyên tất cả các biến ở đầu file)
     private final int playAreaWidth = 800;
     private double playAreaOffsetX;
     private int screenWidth, screenHeight;
@@ -31,11 +30,10 @@ public class GameManager {
     private List<Brick> bricks = new ArrayList<>();
     private List<PowerUp> powerUps = new ArrayList<>();
     private List<Particle> particles = new ArrayList<>();
+    private List<Projectile> projectiles = new ArrayList<>();
     private Random random = new Random();
-
     private double trailSpawnTimer = 0;
     private static final double TRAIL_SPAWN_INTERVAL = 0.015;
-
     private int score = 0;
     private int lives = 3;
     private boolean running = false;
@@ -43,12 +41,17 @@ public class GameManager {
     private Image backgroundImage;
     private boolean gameOver = false;
     private HighScores highScores;
-
     private boolean mouseControlled = false;
-
-    // Current level name (can be changed later)
+    private boolean crossBowActive = false;
+    private double crossBowTimer = 0.0;
+    private final double CROSS_BOW_DURATION = 8.0;
+    private double arrowSpawnTimer = 0.0;
+    private final double ARROW_SPAWN_INTERVAL = 0.7;
+    private final double ARROW_WIDTH = 10;
+    private final double ARROW_HEIGHT = 90;
     private String currentLevel = "level1.txt";
 
+    // (Giữ nguyên hàm GameManager constructor)
     public GameManager(int screenWidth, int screenHeight, String playerName) {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
@@ -64,12 +67,13 @@ public class GameManager {
         initGame();
     }
 
+    // (Giữ nguyên hàm initGame)
     public void initGame() {
         paddle = new Paddle(
                 playAreaOffsetX + playAreaWidth / 2.0 - 60,
                 screenHeight - 40,
                 120,
-                20,
+                40,
                 screenWidth
         );
         paddle.setPlayArea(playAreaOffsetX, playAreaWidth);
@@ -85,9 +89,14 @@ public class GameManager {
         ball.setPlayArea(playAreaOffsetX, playAreaWidth);
 
         ball.stickTo(paddle);
-        createBricks(currentLevel); // <-- Pass level name
+        createBricks(currentLevel);
         powerUps.clear();
         particles.clear();
+        projectiles.clear();
+        crossBowActive = false;
+        crossBowTimer = 0.0;
+        arrowSpawnTimer = 0.0;
+        paddle.setCrossBowActive(false);
         trailSpawnTimer = 0;
         score = 0;
         lives = 3;
@@ -96,29 +105,28 @@ public class GameManager {
         mouseControlled = false;
     }
 
-    // --- UPDATED createBricks METHOD ---
+    // (Giữ nguyên hàm createBricks)
     private void createBricks(String levelFileName) {
         bricks.clear();
         String path = "/com/example/arkanoid/levels/" + levelFileName;
         List<String[]> mapData = new ArrayList<>();
         int cols = 0;
 
-        // --- Read the map file first ---
         try (InputStream is = getClass().getResourceAsStream(path);
              BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
 
             if (is == null) {
                 System.err.println("Lỗi nghiêm trọng: Không tìm thấy file map: " + path);
-                return; // Stop if file not found
+                return;
             }
 
             String line;
             while ((line = reader.readLine()) != null) {
-                line = line.trim(); // Remove leading/trailing spaces
+                line = line.trim();
                 if (!line.isEmpty()) {
-                    String[] numbers = line.split("\\s+"); // Split by one or more spaces
+                    String[] numbers = line.split("\\s+");
                     mapData.add(numbers);
-                    if (cols == 0) { // Determine number of columns from the first non-empty line
+                    if (cols == 0) {
                         cols = numbers.length;
                     } else if (numbers.length != cols) {
                         System.err.println("Cảnh báo: Hàng trong map file có số cột không đồng đều!");
@@ -128,7 +136,7 @@ public class GameManager {
         } catch (IOException | NullPointerException e) {
             System.err.println("Lỗi khi đọc file map: " + path);
             e.printStackTrace();
-            return; // Stop if reading failed
+            return;
         }
 
         if (mapData.isEmpty() || cols == 0) {
@@ -136,39 +144,35 @@ public class GameManager {
             return;
         }
 
-        // --- Now create bricks based on mapData ---
         int rows = mapData.size();
-        double horizontalPadding = 50.0; // Total padding left and right
-        double verticalPaddingTop = 60.0; // Space from top
-        double brickSpacingX = 0.0; // Space between bricks horizontally
-        double brickSpacingY = 0.0; // Space between bricks vertically
+        double horizontalPadding = 50.0;
+        double verticalPaddingTop = 60.0;
+        double brickSpacingX = 0.0;
+        double brickSpacingY = 0.0;
 
-        // Calculate brick width based on available space and number of columns
         double brickW = (playAreaWidth - horizontalPadding * 2 - (cols - 1) * brickSpacingX) / cols;
-        double brickH = 22; // Keep height fixed for now
+        double brickH = 22;
 
         for (int r = 0; r < rows; r++) {
             String[] numbers = mapData.get(r);
-            for (int c = 0; c < numbers.length; c++) { // Use numbers.length for safety
+            for (int c = 0; c < numbers.length; c++) {
                 int hitCount = 0;
                 try {
                     hitCount = Integer.parseInt(numbers[c]);
                 } catch (NumberFormatException e) {
                     System.err.println("Cảnh báo: Ký tự không hợp lệ trong map file tại hàng " + (r + 1) + ", cột " + (c + 1));
-                    continue; // Skip invalid entry
+                    continue;
                 }
 
-                if (hitCount > 0) { // Only create brick if hitCount is 1, 2, or 3 etc.
+                if (hitCount > 0) {
                     double x = playAreaOffsetX + horizontalPadding + c * (brickW + brickSpacingX);
                     double y = verticalPaddingTop + r * (brickH + brickSpacingY);
-                    bricks.add(new Brick(x, y, brickW, brickH, hitCount)); // Use hitCount from file
+                    bricks.add(new Brick(x, y, brickW, brickH, hitCount));
                 }
             }
         }
         System.out.println("Đã tải thành công map: " + levelFileName + " (" + rows + "x" + cols + ")");
     }
-    // --- END UPDATED METHOD ---
-
 
     public void startGame() {
         if (!running && !gameOver) {
@@ -176,29 +180,15 @@ public class GameManager {
             ball.launch();
         }
     }
-
-    public boolean isRunning() {
-        return running;
-    }
-
-    public boolean isGameOver() {
-        return gameOver;
-    }
-
-    public Paddle getPaddle() {
-        return paddle;
-    }
-
-    public void setMouseControl(boolean controlled) {
-        this.mouseControlled = controlled;
-    }
-
+    public boolean isRunning() { return running; }
+    public boolean isGameOver() { return gameOver; }
+    public Paddle getPaddle() { return paddle; }
+    public void setMouseControl(boolean controlled) { this.mouseControlled = controlled; }
     public void processMouseMovement(double mouseX) {
         if (paddle != null) {
             paddle.moveTo(mouseX);
         }
     }
-
     public void processInput(Set<KeyCode> keys) {
         if (gameOver) {
             if (keys.contains(KeyCode.SPACE) || keys.contains(KeyCode.R)) {
@@ -206,16 +196,13 @@ public class GameManager {
             }
             return;
         }
-
         if (keys.contains(KeyCode.SPACE)) {
             startGame();
         }
-
         if (mouseControlled) {
             paddle.stop();
             return;
         }
-
         if (keys.contains(KeyCode.LEFT)) {
             paddle.moveLeft();
         } else if (keys.contains(KeyCode.RIGHT)) {
@@ -224,6 +211,7 @@ public class GameManager {
             paddle.stop();
         }
     }
+
 
     public void update(double dt) {
         if (gameOver) {
@@ -239,18 +227,38 @@ public class GameManager {
         paddle.update(dt);
         ball.update(dt);
 
+        // (Giữ nguyên logic crossbow update)
+        if (crossBowActive) {
+            crossBowTimer -= dt;
+            arrowSpawnTimer += dt;
+            if (arrowSpawnTimer >= ARROW_SPAWN_INTERVAL) {
+                spawnArrow();
+                arrowSpawnTimer -= ARROW_SPAWN_INTERVAL;
+            }
+            if (crossBowTimer <= 0) {
+                crossBowActive = false;
+                paddle.setCrossBowActive(false);
+                System.out.println("Nỏ đã hết hạn.");
+            }
+        }
+
+        // (Giữ nguyên logic particle trail)
         trailSpawnTimer += dt;
         if (trailSpawnTimer >= TRAIL_SPAWN_INTERVAL) {
             spawnBallTrailParticle();
             trailSpawnTimer -= TRAIL_SPAWN_INTERVAL;
         }
 
+        // (Giữ nguyên logic bóng văng ra ngoài)
         if (ball.isOutOfBounds()) {
             lives--;
             running = false;
             powerUps.clear();
             SoundManager.playSound(SoundManager.Sound.MISSED_BALL);
-
+            if (crossBowActive) {
+                crossBowActive = false;
+                paddle.setCrossBowActive(false);
+            }
             if (lives <= 0) {
                 gameOver = true;
                 saveCurrentScore();
@@ -260,11 +268,13 @@ public class GameManager {
             }
         }
 
+        // (Giữ nguyên logic bóng đập paddle)
         if (checkCollisionCircleRect(ball, paddle) && ball.getY() + ball.getHeight() <= paddle.getY() + 30) {
             ball.bounceOffPaddle(paddle);
             SoundManager.playSound(SoundManager.Sound.HIT_PADDLE);
         }
 
+        // --- BẮT ĐẦU SỬA LOGIC VA CHẠM BÓNG ---
         boolean allBricksDestroyed = true;
         Iterator<Brick> brickIterator = bricks.iterator();
         while(brickIterator.hasNext()) {
@@ -279,35 +289,7 @@ public class GameManager {
 
                 if (b.takeHit()) {
                     score += 100;
-
-                    // --- PHẦN LOGIC RƠI POWERUP ĐÃ SỬA ---
-                    // (Sửa lại logic của bạn, < 0.9 và < 0.1 là sai)
-                    // Logic đúng (ví dụ: 10% LIFE, 10% LOSE_LIFE):
-
-                    double dropChance = random.nextDouble();
-                    double powerUpWidth = 50;
-                    double powerUpHeight = 70;
-
-                    if (dropChance < 0.4) { // 10% cơ hội rơi LIFE (từ 0.0 -> 0.099)
-                        PowerUp newPowerUp = new PowerUp(
-                                b.getX() + (b.getWidth() - powerUpWidth) / 2,
-                                b.getY() + (b.getHeight() - powerUpHeight) / 2,
-                                powerUpWidth,
-                                powerUpHeight,
-                                PowerUp.PowerUpType.LIFE
-                        );
-                        powerUps.add(newPowerUp);
-                    } else if (dropChance < 0.7) { // 10% cơ hội khác rơi LOSE_LIFE (từ 0.1 -> 0.199)
-                        PowerUp newPowerUp = new PowerUp(
-                                b.getX() + (b.getWidth() - powerUpWidth) / 2,
-                                b.getY() + (b.getHeight() - powerUpHeight) / 2,
-                                powerUpWidth,
-                                powerUpHeight,
-                                PowerUp.PowerUpType.LOSE_LIFE
-                        );
-                        powerUps.add(newPowerUp);
-                    }
-                    // --- HẾT PHẦN SỬA ---
+                    trySpawnPowerUp(b);
 
                 } else {
                     score += 25;
@@ -316,14 +298,19 @@ public class GameManager {
             }
         }
 
-
+        // (Giữ nguyên logic allBricksDestroyed)
         if (allBricksDestroyed) {
             System.out.println("YOU WIN!");
             running = false;
             saveCurrentScore();
             SoundManager.playSound(SoundManager.Sound.LEVEL_COMPLETED);
+            if (crossBowActive) {
+                crossBowActive = false;
+                paddle.setCrossBowActive(false);
+            }
         }
 
+        // (Giữ nguyên logic powerUpIterator)
         Iterator<PowerUp> powerUpIterator = powerUps.iterator();
         while (powerUpIterator.hasNext()) {
             PowerUp pu = powerUpIterator.next();
@@ -342,7 +329,42 @@ public class GameManager {
             }
         }
 
+        // --- BẮT ĐẦU SỬA LOGIC VA CHẠM ĐẠN ---
+        Iterator<Projectile> projectileIterator = projectiles.iterator();
+        while (projectileIterator.hasNext()) {
+            Projectile p = projectileIterator.next();
+            p.update(dt);
 
+            if (p.getY() + p.getHeight() < 0) {
+                p.setDestroyed(true);
+            }
+
+            if (!p.isDestroyed()) {
+                for (Brick b : bricks) {
+                    if (!b.isDestroyed() && checkCollisionRectRect(p, b)) {
+                        if (b.takeHit()) {
+                            score += 100;
+
+                            // --- THÊM MỚI: GỌI HÀM TẠI ĐÂY ---
+                            trySpawnPowerUp(b);
+
+                        } else {
+                            score += 25;
+                        }
+                        p.setDestroyed(true);
+                        SoundManager.playSound(SoundManager.Sound.HIT_BRICK);
+                        break;
+                    }
+                }
+            }
+
+            if (p.isDestroyed()) {
+                projectileIterator.remove();
+            }
+        }
+
+
+        // (Giữ nguyên logic particleIterator)
         Iterator<Particle> particleIterator = particles.iterator();
         while (particleIterator.hasNext()) {
             Particle p = particleIterator.next();
@@ -351,8 +373,57 @@ public class GameManager {
                 particleIterator.remove();
             }
         }
-
     }
+
+    // ---  Phương thức bắn đạn (giữ nguyên) ---
+    private void spawnArrow() {
+        double arrowX = paddle.getX() + paddle.getWidth() / 2 - ARROW_WIDTH / 2;
+        double arrowY = paddle.getY() - ARROW_HEIGHT;
+        projectiles.add(new Projectile(arrowX, arrowY, ARROW_WIDTH, ARROW_HEIGHT));
+    }
+
+    // ==========================================================
+    private void trySpawnPowerUp(Brick b) {
+        double dropChance = random.nextDouble(); // Số ngẫu nhiên từ 0.0 đến 1.0
+        double powerUpWidth = 50;
+        double powerUpHeight = 70;
+
+        if (dropChance < 0.1) { //  cơ hội rơi LIFE
+            PowerUp newPowerUp = new PowerUp(
+                    b.getX() + (b.getWidth() - powerUpWidth) / 2,
+                    b.getY() + (b.getHeight() - powerUpHeight) / 2,
+                    powerUpWidth,
+                    powerUpHeight,
+                    PowerUp.PowerUpType.LIFE
+            );
+            powerUps.add(newPowerUp);
+        }
+        else if (dropChance < 0.6) { // cơ hội khác rơi LOSE_LIFE
+            PowerUp newPowerUp = new PowerUp(
+                    b.getX() + (b.getWidth() - powerUpWidth) / 2,
+                    b.getY() + (b.getHeight() - powerUpHeight) / 2,
+                    powerUpWidth,
+                    powerUpHeight,
+                    PowerUp.PowerUpType.LOSE_LIFE
+            );
+            powerUps.add(newPowerUp);
+        }
+
+        else if (dropChance < 0.7) { // CROSS_BOW
+            PowerUp newPowerUp = new PowerUp(
+                    b.getX() + (b.getWidth() - powerUpWidth) / 2,
+                    b.getY() + (b.getHeight() - powerUpHeight) / 2,
+                    powerUpWidth,
+                    powerUpHeight,
+                    PowerUp.PowerUpType.CROSS_BOW
+            );
+            powerUps.add(newPowerUp);
+        }
+        // Phần còn lại sẽ không rơi gì cả.
+    }
+    // ==========================================================
+
+
 
     private void spawnBallTrailParticle() {
         double particleX = ball.getX() + ball.getWidth() / 2;
@@ -388,17 +459,29 @@ public class GameManager {
         else if (pu.getType() == PowerUp.PowerUpType.LOSE_LIFE) {
             lives--;
             System.out.println("Bạn bị mất 1 mạng! Tổng mạng: " + lives);
-            // Kiểm tra ngay lập tức xem có thua không
             if (lives <= 0) {
                 gameOver = true;
-                running = false; // Dừng game
-                saveCurrentScore(); // Lưu điểm
+                running = false;
+                saveCurrentScore();
+                if (crossBowActive) {
+                    crossBowActive = false;
+                    paddle.setCrossBowActive(false);
+                }
             }
+        }
+        else if (pu.getType() == PowerUp.PowerUpType.CROSS_BOW) {
+            if (!crossBowActive) {
+                SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
+            }
+            crossBowActive = true;
+            crossBowTimer = CROSS_BOW_DURATION;
+            paddle.setCrossBowActive(true);
+            System.out.println("Nỏ đã được kích hoạt! " + CROSS_BOW_DURATION + " giây.");
+            arrowSpawnTimer = 0.0;
         }
     }
 
     private void resolveBallBrickCollision(Ball ball, Brick brick) {
-        // ... (Collision resolution logic - unchanged) ...
         double ballCenterX = ball.getX() + ball.getWidth() / 2;
         double ballCenterY = ball.getY() + ball.getHeight() / 2;
         double brickCenterX = brick.getX() + brick.getWidth() / 2;
@@ -410,7 +493,6 @@ public class GameManager {
 
         if (Math.abs(dx_centers / combinedHalfWidth) > Math.abs(dy_centers / combinedHalfHeight)) {
             ball.setDx(-ball.getDx());
-            // Adjust position slightly to prevent sticking
             if (dx_centers > 0) {
                 ball.setX(brick.getX() + brick.getWidth() + 0.1);
             } else {
@@ -418,7 +500,6 @@ public class GameManager {
             }
         } else {
             ball.setDy(-ball.getDy());
-            // Adjust position slightly to prevent sticking
             if (dy_centers > 0) {
                 ball.setY(brick.getY() + brick.getHeight() + 0.1);
             } else {
@@ -428,7 +509,6 @@ public class GameManager {
     }
 
     private boolean checkCollisionCircleRect(Ball ball, GameObject rect) {
-        // ... (Collision check logic - unchanged) ...
         double cx = ball.getX() + ball.getWidth() / 2;
         double cy = ball.getY() + ball.getHeight() / 2;
         double radius = ball.getWidth() / 2;
@@ -440,7 +520,6 @@ public class GameManager {
     }
 
     public void render(GraphicsContext gc) {
-        // ... (Render logic - mostly unchanged) ...
         if (backgroundImage != null) {
             gc.drawImage(backgroundImage, 0, 0, screenWidth, screenHeight);
         } else {
@@ -457,18 +536,29 @@ public class GameManager {
         gc.fillText("Player: " + playerName, screenWidth - 100, 25);
         gc.fillText("Score: " + score, screenWidth - 100, 50);
         gc.fillText("Lives: " + lives, screenWidth - 100, 75);
+
+        if (crossBowActive) {
+            gc.setFill(Color.YELLOW);
+            gc.fillText(String.format("Nỏ: %.1f s", crossBowTimer), screenWidth - 100, 100);
+        }
+
+
         gc.setTextAlign(TextAlignment.LEFT);
 
-        // Render bricks that haven't been destroyed
         for (Brick b : bricks) {
-            if (!b.isDestroyed()) { // Only render active bricks
+            if (!b.isDestroyed()) {
                 b.render(gc);
             }
         }
         for (PowerUp pu : powerUps) {
-            // PowerUps list only contains active ones now
             pu.render(gc);
         }
+
+        for (Projectile p : projectiles) {
+            p.render(gc);
+        }
+
+
         paddle.render(gc);
         for (Particle p : particles) {
             p.render(gc);
@@ -476,7 +566,6 @@ public class GameManager {
         ball.render(gc);
 
         if (gameOver) {
-            // ... (Game Over rendering - unchanged) ...
             gc.setFill(Color.rgb(0, 0, 0, 0.7));
             gc.fillRect(0, 0, screenWidth, screenHeight);
             gc.setFill(Color.RED);
