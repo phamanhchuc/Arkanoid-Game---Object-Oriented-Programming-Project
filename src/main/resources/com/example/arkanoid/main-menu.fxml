@@ -81,19 +81,19 @@
 
                 <ImageView fx:id="rankingImageView" fitHeight="955.5" fitWidth="1200.0" pickOnBounds="true" preserveRatio="true" visible="false" />
 
-                <Text fx:id="rank1Text" layoutX="500.0" layoutY="600.0" strokeType="OUTSIDE" strokeWidth="0.0" text="1. N/A" visible="false" wrappingWidth="300.0">
+                <Text fx:id="rank1Text" layoutX="500.0" layoutY="520.0" strokeType="OUTSIDE" strokeWidth="0.0" text="1. N/A" visible="false" wrappingWidth="300.0">
 
                     <font><Font name="System Bold" size="22.0" /></font>
 
                 </Text>
 
-                <Text fx:id="rank2Text" layoutX="700.0" layoutY="650.0" strokeType="OUTSIDE" strokeWidth="0.0" text="2. N/A" visible="false" wrappingWidth="300.0">
+                <Text fx:id="rank2Text" layoutX="720.0" layoutY="570.0" strokeType="OUTSIDE" strokeWidth="0.0" text="2. N/A" visible="false" wrappingWidth="300.0">
 
                     <font><Font name="System Bold" size="22.0" /></font>
 
                 </Text>
 
-                <Text fx:id="rank3Text" layoutX="280.0" layoutY="260.0" strokeType="OUTSIDE" strokeWidth="0.0" text="3. N/A" visible="false" wrappingWidth="300.0">
+                <Text fx:id="rank3Text" layoutX="320.0" layoutY="630.0" strokeType="OUTSIDE" strokeWidth="0.0" text="3. N/A" visible="false" wrappingWidth="300.0">
 
                     <font><Font name="System Bold" size="22.0" /></font>
 
@@ -123,7 +123,7 @@
 
                         <Slider fx:id="volumeSlider" blockIncrement="0.1" majorTickUnit="0.2" max="1" maxWidth="300.0" min="0" showTickLabels="true" showTickMarks="true" styleClass="volume-slider" value="1" />
 
-                        <Button fx:id="backButtonSettings" mnemonicParsing="false" prefHeight="85.0" prefWidth="226.0" styleClass="back-button" text="Quay lại" />
+                        <Button fx:id="backButtonSettings" mnemonicParsing="false" prefHeight="85.0" prefWidth="226.0" styleClass="back-button" />
 
                     </children>
 
