@@ -7,21 +7,18 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane xmlns="http://javafx.com/javafx/25"
-            xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.example.arkanoid.controllers.MainController"
-            prefWidth="1200" prefHeight="955.5">
+<AnchorPane prefHeight="955.5" prefWidth="1200" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.arkanoid.controllers.MainController">
 
     <children>
-        <Canvas fx:id="gameCanvas" width="1200" height="955.5" />
+        <Canvas fx:id="gameCanvas" height="955.5" width="1200" />
+          <ImageView fx:id="pauseBackground" fitHeight="1000.0" fitWidth="1000.0" layoutX="90.0" layoutY="150.0" pickOnBounds="true" preserveRatio="true" visible="false">
+              <image>
+                  <Image url="@images/menu_Pause.png" />
+              </image>
+          </ImageView>
 
-        <VBox fx:id="pausePane" alignment="CENTER" layoutX="350.0" layoutY="200.0" spacing="20.0" visible="false">
+        <VBox fx:id="pausePane" alignment="CENTER" layoutX="450.0" layoutY="300.0" spacing="20.0" visible="false">
             <children>
-                <ImageView fx:id="pauseBackground" fitHeight="500.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true">
-                    <image>
-                        <Image url="@images/menu_Pause.png" />
-                    </image>
-                </ImageView>
                 <Button fx:id="resumeButton" mnemonicParsing="false" style="-fx-background-color: transparent; -fx-padding: 0;">
                     <graphic>
                         <ImageView fitHeight="80.0" preserveRatio="true">
