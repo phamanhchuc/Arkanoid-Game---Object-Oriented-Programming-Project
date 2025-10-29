@@ -4,12 +4,13 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 
 public class Ball extends MovableObject {
-    private double speed = 550;
+    private double speed = 350;
     private double radius;
     private int sceneW, sceneH;
     private boolean stuck = true;
     private double playAreaOffsetX;
     private double playAreaWidth;
+
 
     private static final int NUM_FRAMES = 5;
     private static final double FRAME_DURATION_SECONDS = 0.03; // Tốc độ nhanh

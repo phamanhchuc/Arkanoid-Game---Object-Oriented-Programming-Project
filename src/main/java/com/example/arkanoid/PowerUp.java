@@ -7,7 +7,8 @@ import javafx.scene.paint.Color;
 public class PowerUp extends MovableObject {
     public enum PowerUpType {
         LIFE,
-        LOSE_LIFE
+        LOSE_LIFE,
+        CROSS_BOW
     }
 
     private PowerUpType type;
@@ -24,9 +25,12 @@ public class PowerUp extends MovableObject {
             switch (type) {
                 case LIFE:
                     imagePath = "/com/example/arkanoid/images/1life.png";
-                    break; // <-- LỖI Ở ĐÂY: Bạn đã thiếu 'break;' này
+                    break;
                 case LOSE_LIFE:
                     imagePath = "/com/example/arkanoid/images/lose_life.png";
+                    break;
+                case CROSS_BOW:
+                    imagePath = "/com/example/arkanoid/images/cross_bow_pickup.png";
                     break;
             }
             if (!imagePath.isEmpty()) {
@@ -61,15 +65,17 @@ public class PowerUp extends MovableObject {
             if (image != null) {
                 gc.drawImage(image, x, y, width, height);
             } else {
-                // --- PHẦN SỬA LỖI NHỎ ---
                 // Vẽ màu dự phòng cho đúng loại
                 if (type == PowerUpType.LIFE) {
                     gc.setFill(Color.GREEN);
                 } else if (type == PowerUpType.LOSE_LIFE) {
                     gc.setFill(Color.RED);
                 }
+                else if (type == PowerUpType.CROSS_BOW) {
+                    gc.setFill(Color.BLUE); // Màu dự phòng cho Crossbow
+                }
                 gc.fillRect(x, y, width, height);
-                // --- KẾT THÚC PHẦN SỬA ---
+
             }
         }
     }
