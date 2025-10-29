@@ -22,6 +22,8 @@ import javafx.scene.layout.VBox; // <-- Import VBox
 import javafx.stage.Stage; // Cần để quay về menu
 import javafx.util.Duration;
 
+import javafx.scene.image.ImageView;
+
 import java.io.IOException; // Cần để quay về menu
 import java.util.HashSet;
 import java.util.Set;
@@ -34,6 +36,8 @@ public class MainController {
     @FXML private Button resumeButton;
     @FXML private Button restartButton;
     @FXML private Button quitButton;
+    @FXML private ImageView pauseBackground;
+
 
     private GameManager gameManager;
     private AnimationTimer gameLoop;
@@ -127,28 +131,27 @@ public class MainController {
      * @param pause true để pause, false để resume
      */
     private void togglePause(boolean pause) {
-        // Chỉ cho phép pause/resume nếu game chưa kết thúc
         if (gameManager.isGameOver()) {
             return;
         }
 
         isPaused = pause;
-        pausePane.setVisible(isPaused); // Hiện/ẩn menu pause
+        pausePane.setVisible(isPaused);
+        pauseBackground.setVisible(isPaused); // Hiện/ẩn hình nền pause
 
         if (isPaused) {
-            gameManager.pauseGame(); // Yêu cầu GameManager dừng logic
-            // Có thể thêm hiệu ứng làm mờ gameCanvas ở đây nếu muốn
-            gameCanvas.setOpacity(0.5); // Ví dụ: làm mờ canvas game
-            SoundManager.stopMusic(); // Tạm dừng nhạc nền
+            gameManager.pauseGame();
+            gameCanvas.setOpacity(0.5);
+            SoundManager.stopMusic();
         } else {
-            gameManager.resumeGame(); // Yêu cầu GameManager tiếp tục logic (nếu cần)
-            gameCanvas.setOpacity(1.0); // Khôi phục độ rõ của canvas game
-            SoundManager.playMusic(SoundManager.Music.BACKGROUND_GAME); // Tiếp tục nhạc nền
-            // Đảm bảo canvas được focus lại để nhận phím/chuột sau khi resume
+            gameManager.resumeGame();
+            gameCanvas.setOpacity(1.0);
+            SoundManager.playMusic(SoundManager.Music.BACKGROUND_GAME);
             gameCanvas.requestFocus();
         }
         System.out.println("Game Paused: " + isPaused);
     }
+
 
     /**
      * Xử lý khi nhấn nút Restart trong menu Pause
