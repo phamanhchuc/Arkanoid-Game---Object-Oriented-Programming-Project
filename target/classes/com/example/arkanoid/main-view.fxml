@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.canvas.Canvas?>
-<?import javafx.scene.canvas.GraphicsContext?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
 
 <AnchorPane xmlns="http://javafx.com/javafx/25"
             xmlns:fx="http://javafx.com/fxml/1"
@@ -11,5 +14,36 @@
 
     <children>
         <Canvas fx:id="gameCanvas" width="1200" height="955.5" />
+
+        <VBox fx:id="pausePane" alignment="CENTER" layoutX="350.0" layoutY="200.0" spacing="20.0" visible="false">
+            <children>
+                <ImageView fx:id="pauseBackground" fitHeight="500.0" fitWidth="500.0" pickOnBounds="true" preserveRatio="true">
+                    <image>
+                        <Image url="@images/menu_Pause.png" />
+                    </image>
+                </ImageView>
+                <Button fx:id="resumeButton" mnemonicParsing="false" style="-fx-background-color: transparent; -fx-padding: 0;">
+                    <graphic>
+                        <ImageView fitHeight="80.0" preserveRatio="true">
+                            <image><Image url="@images/resume_Pause.png" /></image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+                <Button fx:id="restartButton" mnemonicParsing="false" style="-fx-background-color: transparent; -fx-padding: 0;">
+                    <graphic>
+                        <ImageView fitHeight="80.0" preserveRatio="true">
+                            <image><Image url="@images/restartGame_Pause.png" /></image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+                <Button fx:id="quitButton" mnemonicParsing="false" style="-fx-background-color: transparent; -fx-padding: 0;">
+                    <graphic>
+                        <ImageView fitHeight="80.0" preserveRatio="true">
+                            <image><Image url="@images/quitGame_Pause.png" /></image>
+                        </ImageView>
+                    </graphic>
+                </Button>
+            </children>
+        </VBox>
     </children>
 </AnchorPane>
