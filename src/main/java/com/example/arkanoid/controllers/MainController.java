@@ -31,7 +31,6 @@ import java.util.Set;
 public class MainController {
 
     @FXML private Canvas gameCanvas;
-    // --- THÊM BIẾN FXML CHO PAUSE MENU ---
     @FXML private VBox pausePane;
     @FXML private Button resumeButton;
     @FXML private Button restartButton;
@@ -42,8 +41,6 @@ public class MainController {
     private GameManager gameManager;
     private AnimationTimer gameLoop;
     private Set<KeyCode> activeKeys = new HashSet<>();
-
-    // --- CỜ ĐỂ THEO DÕI TRẠNG THÁI PAUSE ---
     private boolean isPaused = false;
 
     @FXML
@@ -62,13 +59,19 @@ public class MainController {
                 double delta = (now - lastTime) / 1_000_000_000.0;
                 lastTime = now;
 
-                // Chỉ xử lý input và update game nếu KHÔNG bị pause VÀ game chưa kết thúc
-                if (!isPaused && !gameManager.isGameOver()) {
-                    gameManager.processInput(activeKeys);
+                // --- SỬA LỖI Ở ĐÂY ---
+                // 1. Luôn xử lý input TRƯỚC TIÊN.
+                // GameManager.processInput sẽ tự xử lý trường hợp gameOver.
+                gameManager.processInput(activeKeys);
+
+                // 2. Chỉ update logic game nếu KHÔNG bị pause.
+                // GameManager.update sẽ tự xử lý trường hợp !running hoặc gameOver bên trong nó.
+                if (!isPaused) {
                     gameManager.update(delta);
                 }
+                // --- KẾT THÚC SỬA ---
 
-                // Luôn render (để vẽ game hoặc vẽ menu pause đè lên)
+                // Luôn render
                 gameManager.render(gc);
             }
         };
@@ -76,7 +79,7 @@ public class MainController {
         gameLoop.start();
         setupInputHandlers();
 
-        // --- GÁN SỰ KIỆN CHO CÁC NÚT PAUSE ---
+        // GÁN SỰ KIỆN CHO CÁC NÚT PAUSE
         resumeButton.setOnAction(e -> togglePause(false));
         restartButton.setOnAction(e -> handleRestart());
         quitButton.setOnAction(e -> handleQuit());
@@ -87,124 +90,113 @@ public class MainController {
         addClickAnimation(quitButton);
     }
 
+    // --- HÀM setupInputHandlers ĐÃ SỬA ---
     private void setupInputHandlers() {
         gameCanvas.setFocusTraversable(true);
 
         gameCanvas.setOnKeyPressed(e -> {
-            // --- XỬ LÝ PHÍM P ---
+            // Xử lý phím P trước tiên
             if (e.getCode() == KeyCode.P) {
                 togglePause(!isPaused); // Đảo ngược trạng thái pause
             } else {
-                // Chỉ xử lý các phím khác nếu game không bị pause
-                if (!isPaused) {
-                    activeKeys.add(e.getCode());
+                // LUÔN thêm các phím khác vào activeKeys
+                activeKeys.add(e.getCode());
+                // Tắt mouse control chỉ khi game đang chạy và không pause
+                if (!isPaused && gameManager.isRunning()) {
                     gameManager.setMouseControl(false);
                 }
+                // Giờ đây, khi gameOver=true, phím R/Space sẽ được thêm vào
+                // activeKeys và được GameManager.processInput xử lý ở frame tiếp theo.
             }
         });
 
         gameCanvas.setOnKeyReleased(e -> {
-            // Luôn xóa phím khỏi activeKeys khi thả ra
+            // Luôn xóa phím khi thả ra
             activeKeys.remove(e.getCode());
         });
 
         gameCanvas.setOnMouseMoved(e -> {
-            // Chỉ xử lý di chuyển chuột nếu game không bị pause
-            if (!isPaused) {
+            // Chỉ xử lý di chuyển chuột nếu game không bị pause VÀ CHƯA KẾT THÚC
+            if (!isPaused && !gameManager.isGameOver()) {
                 gameManager.setMouseControl(true);
                 gameManager.processMouseMovement(e.getX());
             }
         });
 
         gameCanvas.setOnMousePressed(e -> {
-            // Chỉ xử lý click chuột để bắt đầu nếu game không bị pause
-            if (!isPaused) {
+            // Chỉ xử lý click chuột để bắt đầu nếu game không bị pause VÀ CHƯA KẾT THÚC
+            if (!isPaused && !gameManager.isGameOver()) {
                 gameManager.startGame();
             }
         });
 
         gameCanvas.requestFocus();
     }
+    // --- KẾT THÚC SỬA ---
+
 
     /**
      * Hàm để bật/tắt trạng thái Pause
-     * @param pause true để pause, false để resume
      */
     private void togglePause(boolean pause) {
-        if (gameManager.isGameOver()) {
-            return;
-        }
+        if (gameManager.isGameOver()) return;
 
         isPaused = pause;
-        pausePane.setVisible(isPaused);
-        pauseBackground.setVisible(isPaused); // Hiện/ẩn hình nền pause
+        if(pausePane != null) pausePane.setVisible(isPaused);
+        if(pauseBackground != null) pauseBackground.setVisible(isPaused); // Hiện/ẩn hình nền pause
 
         if (isPaused) {
             gameManager.pauseGame();
-            gameCanvas.setOpacity(0.5);
+            if(gameCanvas != null) gameCanvas.setOpacity(0.5);
             SoundManager.stopMusic();
         } else {
             gameManager.resumeGame();
-            gameCanvas.setOpacity(1.0);
+            if(gameCanvas != null) gameCanvas.setOpacity(1.0);
             SoundManager.playMusic(SoundManager.Music.BACKGROUND_GAME);
-            gameCanvas.requestFocus();
+            if(gameCanvas != null) gameCanvas.requestFocus();
         }
         System.out.println("Game Paused: " + isPaused);
     }
 
 
     /**
-     * Xử lý khi nhấn nút Restart trong menu Pause
+     * Xử lý khi nhấn nút Restart
      */
     private void handleRestart() {
         System.out.println("Restarting game...");
-        togglePause(false); // Tắt menu pause
-        gameManager.initGame(); // Khởi tạo lại game từ đầu
-        // Không cần gọi gameManager.startGame() vì bóng sẽ tự dính vào paddle
+        if (isPaused) {
+            togglePause(false); // Tắt menu pause nếu đang bật
+        }
+        gameManager.initGame(); // Khởi tạo lại game
+        if (gameCanvas != null) gameCanvas.requestFocus(); // Focus lại canvas
     }
 
     /**
-     * Xử lý khi nhấn nút Quit trong menu Pause
+     * Xử lý khi nhấn nút Quit
      */
     private void handleQuit() {
         System.out.println("Quitting game...");
-        stopGameLoop(); // Dừng vòng lặp game hiện tại
-        SoundManager.stopMusic(); // Dừng hẳn nhạc nền
+        stopGameLoop();
+        SoundManager.stopMusic();
 
         try {
             Stage stage = (Stage) quitButton.getScene().getWindow();
-
-            // Tải lại main-menu.fxml
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/arkanoid/main-menu.fxml"));
-            Region menuRoot = loader.load(); // Dùng Region
-
-            // Tạo StackPane bọc như khi chuyển từ Login
-            StackPane rootPane = new StackPane();
-            rootPane.getChildren().add(menuRoot);
+            Region menuRoot = loader.load();
+            StackPane rootPane = new StackPane(menuRoot); // Cách viết gọn hơn
             rootPane.setStyle("-fx-background-color: black;");
             rootPane.setAlignment(Pos.CENTER);
-
             menuRoot.setMaxSize(MainApp.DESIGN_WIDTH, MainApp.DESIGN_HEIGHT);
-
-            // Lấy lại Scene và đặt root mới
             Scene menuScene = stage.getScene();
             menuScene.setRoot(rootPane);
-
-            // Áp dụng lại co giãn
             MainApp.scaleToFit(menuRoot, menuScene);
-
             stage.setTitle("Arkanoid - Main Menu");
-
-        } catch (IOException ex) {
-            System.err.println("Lỗi: Không thể quay về main-menu.fxml.");
-            ex.printStackTrace();
         } catch (Exception ex) {
-            System.err.println("Lỗi không xác định khi quay về menu.");
+            System.err.println("Lỗi khi quay về main-menu.fxml: " + ex.getMessage());
             ex.printStackTrace();
         }
     }
 
-    // --- HÀM ANIMATION CLICK (Tùy chọn cho nút Pause) ---
     private void addClickAnimation(Button button) {
         if (button == null) return;
         ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), button);
