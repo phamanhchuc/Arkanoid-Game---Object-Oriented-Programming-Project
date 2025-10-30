@@ -68,10 +68,28 @@ public class Ball extends MovableObject {
 
     public void launch(){
         if (stuck){
-            stuck = false;
-            dx = speed * Math.cos(Math.toRadians(60));
-            dy = -speed * Math.sin(Math.toRadians(60));
+            // Phóng theo góc mặc định (60 độ)
+            launchAtAngle(60);
         }
+    }
+
+    /**
+     * Phóng bóng (hoặc thiết lập vận tốc) theo một góc cụ thể (tính bằng độ).
+     * 0 độ là sang phải, 90 độ là lên trên, 180 độ là sang trái.
+     * @param angleDegrees Góc phóng (tính bằng độ)
+     */
+    public void launchAtAngle(double angleDegrees) {
+        stuck = false; // Đảm bảo bóng không còn dính
+        double angleRadians = Math.toRadians(angleDegrees);
+
+        // Lấy tốc độ hiện tại nếu có, nếu không thì dùng tốc độ mặc định
+        double currentSpeed = Math.sqrt(dx*dx + dy*dy);
+        if (currentSpeed < 1) { // Nếu đang đứng yên
+            currentSpeed = this.speed;
+        }
+
+        dx = currentSpeed * Math.cos(angleRadians);
+        dy = -currentSpeed * Math.sin(angleRadians); // - (âm) vì trục Y trong JavaFX đi xuống
     }
 
     public void stickTo(Paddle p){
