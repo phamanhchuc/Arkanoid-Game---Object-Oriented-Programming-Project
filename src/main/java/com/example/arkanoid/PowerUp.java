@@ -8,7 +8,9 @@ public class PowerUp extends MovableObject {
     public enum PowerUpType {
         LIFE,
         LOSE_LIFE,
-        CROSS_BOW
+        CROSS_BOW,
+        MULTI_BALL,
+        PIERCING_SHOT
     }
 
     private PowerUpType type;
@@ -31,6 +33,12 @@ public class PowerUp extends MovableObject {
                     break;
                 case CROSS_BOW:
                     imagePath = "/com/example/arkanoid/images/cross_bow_pickup.png";
+                    break;
+                case MULTI_BALL:
+                    imagePath = "/com/example/arkanoid/images/multi_ball_pickup.png";
+                    break;
+                case PIERCING_SHOT:
+                    imagePath = "/com/example/arkanoid/images/meomeobullet_pickup.png";
                     break;
             }
             if (!imagePath.isEmpty()) {
@@ -73,6 +81,12 @@ public class PowerUp extends MovableObject {
                 }
                 else if (type == PowerUpType.CROSS_BOW) {
                     gc.setFill(Color.BLUE); // Màu dự phòng cho Crossbow
+                }
+                else if (type == PowerUpType.MULTI_BALL) {
+                    gc.setFill(Color.ORANGE); // Màu dự phòng cho Multi-Ball
+                }
+                else if (type == PowerUpType.PIERCING_SHOT) {
+                    gc.setFill(Color.PURPLE); // Màu dự phòng cho đạn xuyên thấu
                 }
                 gc.fillRect(x, y, width, height);
 

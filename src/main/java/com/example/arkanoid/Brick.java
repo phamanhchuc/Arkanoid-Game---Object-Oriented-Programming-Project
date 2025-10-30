@@ -60,6 +60,16 @@ public class Brick extends GameObject {
         return indestructible;
     }
 
+    // --- THÊM MỚI HÀM NÀY ---
+    /**
+     * Lấy số hit (độ bền) còn lại của gạch.
+     * @return Số hit còn lại.
+     */
+    public int getHits() {
+        return this.hits;
+    }
+    // --- KẾT THÚC THÊM MỚI ---
+
 
     // Cập nhật takeHit()
     public boolean takeHit() {
