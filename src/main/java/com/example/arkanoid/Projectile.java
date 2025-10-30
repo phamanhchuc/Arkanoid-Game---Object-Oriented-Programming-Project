@@ -66,8 +66,8 @@ public class Projectile extends MovableObject {
         if (isPiercing) {
             this.dy = -300;
             this.image = meomeoBulletImage;
-            this.width = 50;  // Bạn có thể chỉnh kích thước ở đây
-            this.height = 100; // Bạn có thể chỉnh kích thước ở đây
+            this.width = 30;  // Bạn có thể chỉnh kích thước ở đây
+            this.height = 90; // Bạn có thể chỉnh kích thước ở đây
             this.x = x - (this.width / 2);
             this.y = y - this.height;
         } else {
