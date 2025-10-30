@@ -25,7 +25,7 @@ public class Projectile extends MovableObject {
     static {
         try {
             String arrowPath = "/com/example/arkanoid/images/arrow.png";
-            String meomeoPath = "/com/example/arkanoid/images/meomeobullet.png";
+            String meomeoPath = "/com/example/arkanoid/images/dagger.png";
 
             java.io.InputStream arrowStream = Projectile.class.getResourceAsStream(arrowPath);
             if (arrowStream == null) {
@@ -67,7 +67,7 @@ public class Projectile extends MovableObject {
             this.dy = -300;
             this.image = meomeoBulletImage;
             this.width = 50;  // Bạn có thể chỉnh kích thước ở đây
-            this.height = 150; // Bạn có thể chỉnh kích thước ở đây
+            this.height = 100; // Bạn có thể chỉnh kích thước ở đây
             this.x = x - (this.width / 2);
             this.y = y - this.height;
         } else {

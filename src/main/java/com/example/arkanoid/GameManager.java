@@ -437,15 +437,15 @@ public class GameManager {
         double powerUpHeight = 70;
         if (dropChance < 0.05) {//life
             powerUps.add(new PowerUp(b.getX() + (b.getWidth() - powerUpWidth) / 2, b.getY() + (b.getHeight() - powerUpHeight) / 2, powerUpWidth, powerUpHeight, PowerUp.PowerUpType.LIFE));
-        } else if (dropChance < 0.7) {//lose life
+        } else if (dropChance < 0.6) {//lose life
             powerUps.add(new PowerUp(b.getX() + (b.getWidth() - powerUpWidth) / 2, b.getY() + (b.getHeight() - powerUpHeight) / 2, powerUpWidth, powerUpHeight, PowerUp.PowerUpType.LOSE_LIFE));
-        } else if (dropChance < 0.8) {//cross bow
+        } else if (dropChance < 0.7) {//cross bow
             powerUps.add(new PowerUp(b.getX() + (b.getWidth() - powerUpWidth) / 2, b.getY() + (b.getHeight() - powerUpHeight) / 2, powerUpWidth, powerUpHeight, PowerUp.PowerUpType.CROSS_BOW));
         }
         else if (dropChance < 0.85) {//multi ball
             powerUps.add(new PowerUp(b.getX() + (b.getWidth() - powerUpWidth) / 2, b.getY() + (b.getHeight() - powerUpHeight) / 2, powerUpWidth, powerUpHeight, PowerUp.PowerUpType.MULTI_BALL));
         }
-        else if (dropChance < 0.9) { // meo meo
+        else if (dropChance < 0.95) { // meo meo
             powerUps.add(new PowerUp(b.getX() + (b.getWidth() - powerUpWidth) / 2, b.getY() + (b.getHeight() - powerUpHeight) / 2, powerUpWidth, powerUpHeight, PowerUp.PowerUpType.PIERCING_SHOT));
         }
     }
