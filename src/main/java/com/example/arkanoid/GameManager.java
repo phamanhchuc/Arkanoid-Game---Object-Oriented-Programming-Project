@@ -538,31 +538,14 @@ public class GameManager {
         }
     }
 
-    // --- HÀM XỬ LÝ VA CHẠM MỚI ---
-    // (Hàm này đã nhận 'Ball ball' nên không cần sửa)
+    // --- HÀM XỬ LÝ VA CHẠM ĐÃ SỬA LỖI ---
     private void resolveBallBrickCollisionImproved(Ball ball, Brick brick) {
-        // ... (Nội dung hàm này không đổi) ...
-        if (brick.isIndestructible()) {
-            double ballCenterX = ball.getX() + ball.getWidth() / 2;
-            double ballCenterY = ball.getY() + ball.getHeight() / 2;
-            double brickCenterX = brick.getX() + brick.getWidth() / 2;
-            double brickCenterY = brick.getY() + brick.getHeight() / 2;
-            double dx_centers = ballCenterX - brickCenterX;
-            double dy_centers = ballCenterY - brickCenterY;
-            double combinedHalfWidth = (ball.getWidth() + brick.getWidth()) / 2;
-            double combinedHalfHeight = (ball.getHeight() + brick.getHeight()) / 2;
 
-            if (Math.abs(dx_centers / combinedHalfWidth) > Math.abs(dy_centers / combinedHalfHeight)) {
-                ball.setDx(-ball.getDx());
-                ball.setX(ball.getX() + Math.signum(ball.getDx()) * 0.1); // Đẩy nhẹ
-            } else {
-                ball.setDy(-ball.getDy());
-                ball.setY(ball.getY() + Math.signum(ball.getDy()) * 0.1); // Đẩy nhẹ
-            }
-            return; // Không làm gì thêm
-        }
+        // --- SỬA LỖI: Đã xoá khối if (brick.isIndestructible()) ... ---
+        // Toàn bộ logic đẩy ra (overlap resolution) giờ sẽ
+        // được áp dụng cho CẢ gạch thường và gạch bất tử.
 
-        // Logic cho gạch thường: Đẩy ra khỏi vùng chồng lấn
+        // Logic cho gạch (áp dụng cho mọi loại gạch)
         double ballRadius = ball.getWidth() / 2;
         double ballCenterX = ball.getX() + ballRadius;
         double ballCenterY = ball.getY() + ballRadius;
@@ -607,7 +590,7 @@ public class GameManager {
             }
         }
     }
-    // --- KẾT THÚC HÀM MỚI ---
+    // --- KẾT THÚC HÀM SỬA ---
 
     // (Hàm này đã nhận 'Ball ball' nên không cần sửa)
     private boolean checkCollisionCircleRect(Ball ball, GameObject rect) {
