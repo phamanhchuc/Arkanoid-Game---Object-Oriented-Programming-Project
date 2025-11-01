@@ -1,0 +1,46 @@
+# === Các file/thư mục do người dùng yêu cầu ===
+# Thư mục cấu hình của IntelliJ IDEA
+.idea/
+# File rác của macOS
+.DS_Store
+
+
+# === File rác hệ điều hành ===
+# macOS
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+# Windows
+desktop.ini
+
+
+# === File biên dịch của Java ===
+# File class đã biên dịch
+*.class
+# Các file nén (jar, war, ear)
+*.jar
+*.war
+*.ear
+
+
+# === Thư mục Build của các công cụ ===
+# Maven
+target/
+# Gradle
+.gradle/
+build/
+# IntelliJ
+out/
+
+
+# === File Log ===
+*.log
+logs/
+
+
+# === File cấu hình IDE (chung) ===
+*.iml
+*.iws
+*.ipr
+nbproject/
