@@ -72,17 +72,28 @@ public class Particle extends MovableObject {
 
     @Override
     public void render(GraphicsContext gc) {
-        // --- LOGIC MỚI: Mờ dần (Fade out) ---
+        // --- SỬA LỖI TỐI ƯU HÓA (CHỐNG LAG) ---
+
         // Tính độ mờ (alpha)
         // Bắt đầu từ 1.0 (rõ) và giảm về 0.0 (trong suốt)
         double alpha = 1.0 - (timeAlive / lifespan);
         if (alpha < 0) alpha = 0;
 
-        // Tạo màu mới với độ mờ đã tính
-        Color fadedColor = new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
+        // 1. Lưu lại độ mờ hiện tại của canvas
+        double originalAlpha = gc.getGlobalAlpha();
 
-        gc.setFill(fadedColor);
-        // Dùng fillOval (hình tròn) để hiệu ứng mềm mại hơn
+        // 2. Set độ mờ mới (ảnh hưởng đến mọi thứ vẽ sau nó)
+        gc.setGlobalAlpha(alpha);
+
+        // 3. Set màu gốc (không tạo màu mới)
+        gc.setFill(this.color);
+
+        // 4. Vẽ (JavaFX sẽ tự động áp dụng độ mờ alpha)
         gc.fillOval(x, y, width, height);
+
+        // 5. Khôi phục lại độ mờ gốc (rất quan trọng)
+        gc.setGlobalAlpha(originalAlpha);
+
+        // --- KẾT THÚC SỬA ---
     }
 }

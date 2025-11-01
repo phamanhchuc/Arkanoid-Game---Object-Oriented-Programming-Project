@@ -36,7 +36,7 @@ public class GameManager {
     private List<Projectile> projectiles = new ArrayList<>();
     private Random random = new Random();
     private double trailSpawnTimer = 0;
-    private static final double TRAIL_SPAWN_INTERVAL = 0.005; // Giảm nhiều
+    private static final double TRAIL_SPAWN_INTERVAL = 0.03; // Giảm nhiều
     private int score = 0;
     private int lives = 3;
     private boolean running = false;
