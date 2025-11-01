@@ -113,8 +113,8 @@ public class GameManager {
     }
 
     // --- Tạo Gạch từ File Level ---
+    // (Đây là hàm "nội dung không đổi" - đã được điền đầy đủ)
     private void createBricks(String levelFileName) {
-        // ... (Nội dung hàm này không đổi) ...
         bricks.clear();
         String path = "/com/example/arkanoid/levels/" + levelFileName;
         List<String[]> mapData = new ArrayList<>();
@@ -203,8 +203,9 @@ public class GameManager {
             paddle.moveTo(mouseX);
         }
     }
+
+    // (Đây là hàm "nội dung không đổi" - đã được điền đầy đủ)
     public void processInput(Set<KeyCode> keys) {
-        // ... (Nội dung hàm này không đổi) ...
         if (gameOver) {
             if (keys.contains(KeyCode.SPACE) || keys.contains(KeyCode.R)) {
                 initGame();
@@ -462,8 +463,8 @@ public class GameManager {
     // --- KẾT THÚC THAY ĐỔI ---
 
 
+    // (Đây là hàm "nội dung không đổi" - đã được điền đầy đủ)
     private void saveCurrentScore() {
-        // ... (Nội dung hàm này không đổi) ...
         if (playerName != null && score > 0) {
             boolean isNewHighScore = highScores.addScore(playerName, score);
             if (isNewHighScore) {
@@ -472,14 +473,15 @@ public class GameManager {
         }
     }
 
+    // (Đây là hàm "nội dung không đổi" - đã được điền đầy đủ)
     private boolean checkCollisionRectRect(GameObject r1, GameObject r2) {
-        // ... (Nội dung hàm này không đổi) ...
         return r1.getX() < r2.getX() + r2.getWidth() &&
                 r1.getX() + r1.getWidth() > r2.getX() &&
                 r1.getY() < r2.getY() + r2.getHeight() &&
                 r1.getY() + r1.getHeight() > r2.getY();
     }
 
+    // (Đây là hàm "nội dung không đổi" - đã được điền đầy đủ)
     private void applyPowerUpEffect(PowerUp pu) {
         if (pu.getType() == PowerUp.PowerUpType.LIFE) {
             lives++; System.out.println("Bạn nhận được thêm 1 mạng! Tổng mạng: " + lives); SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
@@ -592,9 +594,8 @@ public class GameManager {
     }
     // --- KẾT THÚC HÀM SỬA ---
 
-    // (Hàm này đã nhận 'Ball ball' nên không cần sửa)
+    // (Đây là hàm "nội dung không đổi" - đã được điền đầy đủ)
     private boolean checkCollisionCircleRect(Ball ball, GameObject rect) {
-        // ... (Nội dung hàm này không đổi) ...
         double cx = ball.getX() + ball.getWidth() / 2;
         double cy = ball.getY() + ball.getHeight() / 2;
         double radius = ball.getWidth() / 2;
@@ -646,24 +647,24 @@ public class GameManager {
     }
 
     // --- PHƯƠNG THỨC MỚI CHO PAUSE/RESUME ---
+    // (Đây là hàm "nội dung không đổi" - đã được điền đầy đủ)
     /**
      * Tạm dừng logic bên trong GameManager.
      */
     public void pauseGame() {
-        // ... (Nội dung hàm này không đổi) ...
         if (!gameOver) {
             // Chỉ thay đổi trạng thái running nếu game đang thực sự chạy
             if (this.running) {
-                this.running = false; // Đặt running thành false để dừng update logic
+                //this.running = false; // Đặt running thành false để dừng update logic
             }
         }
     }
 
+    // (Đây là hàm "nội dung không đổi" - đã được điền đầy đủ)
     /**
      * Tiếp tục logic bên trong GameManager.
      */
     public void resumeGame() {
-        // ... (Nội dung hàm này không đổi) ...
         if (!gameOver) {
             // Quan trọng: KHÔNG đặt running thành true ở đây.
             // Nếu bóng đang dính vào paddle, người chơi cần nhấn Space/Click để launch.
