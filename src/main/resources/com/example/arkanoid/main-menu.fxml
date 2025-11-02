@@ -18,58 +18,69 @@
         <AnchorPane fx:id="mainPane" prefHeight="955.5" prefWidth="1200.0" BorderPane.alignment="CENTER">
 
             <stylesheets>
-
                 <URL value="@menu-styles.css" />
-
             </stylesheets>
 
             <children>
 
                 <ImageView fx:id="mainBackground" fitHeight="955.5" fitWidth="1200.0" pickOnBounds="true" preserveRatio="true">
-
                     <image> <Image url="@images/backgroundStart.png" /> </image>
-
                 </ImageView>
 
+                <ImageView fx:id="storyImageView" fitHeight="955.5" fitWidth="1200.0" pickOnBounds="true" preserveRatio="false" visible="false" />
 
+                <Text fx:id="storyText1" fill="WHITE" layoutX="50.0" layoutY="80.0" stroke="#a14da1" strokeWidth="1.5" style="-fx-font-family: 'Arial'; -fx-font-weight: bold;" visible="false" wrappingWidth="550.0">
+                    <font>
+                        <Font size="28.0" />
+                    </font>
+                </Text>
+
+                <Text fx:id="storyText2" fill="WHITE" layoutX="50.0" layoutY="800.0" stroke="#a14da1" strokeWidth="1.5" style="-fx-font-family: 'Arial'; -fx-font-weight: bold;" visible="false" wrappingWidth="550.0">
+                    <font>
+                        <Font size="28.0" />
+                    </font>
+                </Text>
+
+                <Text fx:id="storyText3" fill="WHITE" layoutX="620.0" layoutY="80.0" stroke="#a14da1" strokeWidth="1.5" style="-fx-font-family: 'Arial'; -fx-font-weight: bold;" visible="false" wrappingWidth="550.0">
+                    <font>
+                        <Font size="28.0" />
+                    </font>
+                </Text>
 
                 <ImageView fx:id="startImage" fitHeight="150.0" fitWidth="499.0" layoutX="379.0" layoutY="665.0" pickOnBounds="true" preserveRatio="true">
-
                     <image> <Image url="@images/startButton.png" /> </image>
 
                 </ImageView>
 
-                <Button fx:id="buttonStart" blendMode="MULTIPLY" layoutX="420.0" layoutY="679.0" mnemonicParsing="false" prefHeight="105.0" prefWidth="359.0" style="-fx-background-color: transparent;" />
+                <Button fx:id="buttonStart" blendMode="MULTIPLY" layoutX="420.0" layoutY="679.0" mnemonicParsing="false" prefHeight="105.0" prefWidth="359.0" style="-fx-background-color: transparent;"
+                />
 
 
 
                 <ImageView fx:id="settingImage" fitHeight="150.0" fitWidth="33.0" layoutX="1050.0" layoutY="118.0" pickOnBounds="true" preserveRatio="true">
-
                     <image> <Image url="@images/settingButton.png" /> </image>
-
                 </ImageView>
 
-                <Button fx:id="buttonSetting" blendMode="MULTIPLY" layoutX="1031.0" layoutY="114.0" mnemonicParsing="false" prefHeight="39.0" prefWidth="71.0" style="-fx-background-color: transparent;" />
+                <Button fx:id="buttonSetting" blendMode="MULTIPLY" layoutX="1031.0" layoutY="114.0" mnemonicParsing="false" prefHeight="39.0" prefWidth="71.0" style="-fx-background-color: transparent;"
+                />
 
 
 
                 <ImageView fx:id="rankingImage" cache="true" fitHeight="49.0" fitWidth="62.0" layoutX="1042.0" layoutY="180.0" pickOnBounds="true" preserveRatio="true">
-
                     <image> <Image url="@images/rankingButton.png" /> </image>
-
                 </ImageView>
 
-                <Button fx:id="buttonRanking" blendMode="MULTIPLY" layoutX="1031.0" layoutY="184.0" mnemonicParsing="false" prefHeight="39.0" prefWidth="72.0" style="-fx-background-color: transparent;" />
+                <Button fx:id="buttonRanking" blendMode="MULTIPLY" layoutX="1031.0" layoutY="184.0" mnemonicParsing="false" prefHeight="39.0" prefWidth="72.0" style="-fx-background-color: transparent;"
+                />
 
 
 
                 <ImageView fx:id="guideImageBtn" fitHeight="42.0" fitWidth="35.0" layoutX="1050.0" layoutY="255.0" pickOnBounds="true" preserveRatio="true">
-
                     <image> <Image url="@images/guideButton.png" /> </image>
-
                 </ImageView>
 
-                <Button fx:id="buttonGuide" blendMode="MULTIPLY" layoutX="1032.0" layoutY="255.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="70.0" style="-fx-background-color: transparent;" />
+                <Button fx:id="buttonGuide" blendMode="MULTIPLY" layoutX="1032.0" layoutY="255.0" mnemonicParsing="false" prefHeight="42.0" prefWidth="70.0" style="-fx-background-color: transparent;"
+                />
 
 
 
@@ -84,49 +95,39 @@
                 <Text fx:id="rank1Text" layoutX="500.0" layoutY="520.0" strokeType="OUTSIDE" strokeWidth="0.0" text="1. N/A" visible="false" wrappingWidth="300.0">
 
                     <font><Font name="System Bold" size="22.0" /></font>
-
                 </Text>
 
                 <Text fx:id="rank2Text" layoutX="720.0" layoutY="570.0" strokeType="OUTSIDE" strokeWidth="0.0" text="2. N/A" visible="false" wrappingWidth="300.0">
-
                     <font><Font name="System Bold" size="22.0" /></font>
 
                 </Text>
 
-                <Text fx:id="rank3Text" layoutX="320.0" layoutY="630.0" strokeType="OUTSIDE" strokeWidth="0.0" text="3. N/A" visible="false" wrappingWidth="300.0">
-
+                <Text fx:id="rank3Text" layoutX="320.0" layoutY="630.0" strokeType="OUTSIDE" strokeWidth="0.0" text="3.
+N/A" visible="false" wrappingWidth="300.0">
                     <font><Font name="System Bold" size="22.0" /></font>
-
                 </Text>
 
                 <Button fx:id="backButtonRanking" layoutX="500.0" layoutY="860.0" mnemonicParsing="false" prefHeight="85.0" prefWidth="226.0" styleClass="back-button" visible="false" />
 
 
 
-
-
-                <!-- SETTINGS BACKGROUND IMAGE (đặt sau cùng trong <children> của mainPane, trước VBox) -->
                 <ImageView fx:id="settingsBackground" fitHeight="500.0" fitWidth="750.0" layoutX="250.0" layoutY="200.0" pickOnBounds="true" preserveRatio="true" visible="false">
                     <image>
                         <Image url="@images/setting.png" />
                     </image>
+
                 </ImageView>
 
-                <!-- SETTINGS PANE (chỉ chứa nội dung, không chứa nền) -->
                 <VBox fx:id="settingsPane" alignment="CENTER" layoutX="300.0" layoutY="250.0" prefHeight="400.0" prefWidth="600.0" spacing="20.0" visible="false">
-
                     <children>
-
                         <Text fill="WHITE" text="Âm Lượng">
+
                             <font><Font name="System Bold" size="24.0" /></font>
                         </Text>
-
                         <Slider fx:id="volumeSlider" blockIncrement="0.1" majorTickUnit="0.2" max="1" maxWidth="300.0" min="0" showTickLabels="true" showTickMarks="true" styleClass="volume-slider" value="1" />
 
                         <Button fx:id="backButtonSettings" mnemonicParsing="false" prefHeight="85.0" prefWidth="226.0" styleClass="back-button" />
-
                     </children>
-
                 </VBox>
 
 

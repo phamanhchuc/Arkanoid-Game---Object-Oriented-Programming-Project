@@ -2,29 +2,30 @@ package com.example.arkanoid.controllers;
 
 import com.example.arkanoid.GameData;
 import com.example.arkanoid.GameManager;
-import com.example.arkanoid.MainApp; // Cần để quay về menu
-import com.example.arkanoid.SoundManager; // Cần để dừng nhạc
+import com.example.arkanoid.MainApp;
+import com.example.arkanoid.SoundManager;
 import javafx.animation.AnimationTimer;
 import javafx.animation.ScaleTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Pos; // Cần để quay về menu
-import javafx.scene.Node; // Cần để quay về menu
-import javafx.scene.Parent; // Cần để quay về menu
-import javafx.scene.Scene; // Cần để quay về menu
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Button; // <-- Import Button
+import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.Region; // Cần để quay về menu
-import javafx.scene.layout.StackPane; // Cần để quay về menu
-import javafx.scene.layout.VBox; // <-- Import VBox
-import javafx.stage.Stage; // Cần để quay về menu
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import javafx.scene.image.Image; // <-- Import
 import javafx.scene.image.ImageView;
 
-import java.io.IOException; // Cần để quay về menu
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -37,11 +38,14 @@ public class MainController {
     @FXML private Button quitButton;
     @FXML private ImageView pauseBackground;
 
+    @FXML private ImageView winImageView;
 
     private GameManager gameManager;
     private AnimationTimer gameLoop;
     private Set<KeyCode> activeKeys = new HashSet<>();
     private boolean isPaused = false;
+
+    private Image storyImage2;
 
     @FXML
     private void initialize() {
@@ -59,64 +63,65 @@ public class MainController {
                 double delta = (now - lastTime) / 1_000_000_000.0;
                 lastTime = now;
 
-                // --- SỬA LỖI Ở ĐÂY ---
-                // 1. Luôn xử lý input TRƯỚC TIÊN.
-                // GameManager.processInput sẽ tự xử lý trường hợp gameOver.
                 gameManager.processInput(activeKeys);
 
-                // 2. Chỉ update logic game nếu KHÔNG bị pause.
-                // GameManager.update sẽ tự xử lý trường hợp !running hoặc gameOver bên trong nó.
                 if (!isPaused) {
                     gameManager.update(delta);
                 }
-                // --- KẾT THÚC SỬA ---
 
-                // Luôn render
                 gameManager.render(gc);
+
+                if (gameManager.hasWonLevel()) {
+                    showWinScreen();
+                }
             }
         };
 
         gameLoop.start();
         setupInputHandlers();
 
-        // GÁN SỰ KIỆN CHO CÁC NÚT PAUSE
         resumeButton.setOnAction(e -> togglePause(false));
         restartButton.setOnAction(e -> handleRestart());
         quitButton.setOnAction(e -> handleQuit());
 
-        // Áp dụng hiệu ứng click cho nút pause (tùy chọn)
         addClickAnimation(resumeButton);
         addClickAnimation(restartButton);
         addClickAnimation(quitButton);
+
+        // --- SỬA LỖI ĐƯỜNG DẪN Ở ĐÂY ---
+        try {
+            // Lỗi ở dòng này: com.example... đã được sửa thành com/example...
+            storyImage2 = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/ảnh 2.png"));
+            if (storyImage2 == null || storyImage2.isError()) {
+                System.err.println("Lỗi: Không tìm thấy 'ảnh 2.png' trong MainController.");
+                storyImage2 = null;
+            }
+        } catch (Exception e) {
+            System.err.println("Lỗi nghiêm trọng khi tải ảnh 2.");
+            e.printStackTrace();
+        }
+        // --- KẾT THÚC SỬA ---
     }
 
-    // --- HÀM setupInputHandlers ĐÃ SỬA ---
     private void setupInputHandlers() {
         gameCanvas.setFocusTraversable(true);
 
         gameCanvas.setOnKeyPressed(e -> {
-            // Xử lý phím P trước tiên
             if (e.getCode() == KeyCode.P) {
-                togglePause(!isPaused); // Đảo ngược trạng thái pause
+                togglePause(!isPaused);
             } else {
-                // LUÔN thêm các phím khác vào activeKeys
                 activeKeys.add(e.getCode());
-                // Tắt mouse control chỉ khi game đang chạy và không pause
                 if (!isPaused && gameManager.isRunning()) {
                     gameManager.setMouseControl(false);
                 }
-                // Giờ đây, khi gameOver=true, phím R/Space sẽ được thêm vào
-                // activeKeys và được GameManager.processInput xử lý ở frame tiếp theo.
             }
         });
 
         gameCanvas.setOnKeyReleased(e -> {
-            // Luôn xóa phím khi thả ra
             activeKeys.remove(e.getCode());
         });
 
         gameCanvas.setOnMouseMoved(e -> {
-            // Chỉ xử lý di chuyển chuột nếu game không bị pause VÀ CHƯA KẾT THÚC
             if (!isPaused && !gameManager.isGameOver()) {
                 gameManager.setMouseControl(true);
                 gameManager.processMouseMovement(e.getX());
@@ -124,7 +129,6 @@ public class MainController {
         });
 
         gameCanvas.setOnMousePressed(e -> {
-            // Chỉ xử lý click chuột để bắt đầu nếu game không bị pause VÀ CHƯA KẾT THÚC
             if (!isPaused && !gameManager.isGameOver()) {
                 gameManager.startGame();
             }
@@ -132,18 +136,14 @@ public class MainController {
 
         gameCanvas.requestFocus();
     }
-    // --- KẾT THÚC SỬA ---
 
 
-    /**
-     * Hàm để bật/tắt trạng thái Pause
-     */
     private void togglePause(boolean pause) {
         if (gameManager.isGameOver()) return;
 
         isPaused = pause;
         if(pausePane != null) pausePane.setVisible(isPaused);
-        if(pauseBackground != null) pauseBackground.setVisible(isPaused); // Hiện/ẩn hình nền pause
+        if(pauseBackground != null) pauseBackground.setVisible(isPaused);
 
         if (isPaused) {
             gameManager.pauseGame();
@@ -159,21 +159,56 @@ public class MainController {
     }
 
 
-    /**
-     * Xử lý khi nhấn nút Restart
-     */
+    private void showWinScreen() {
+        if (gameLoop != null) {
+            gameLoop.stop(); // Dừng game
+        }
+
+        if (storyImage2 != null && winImageView != null) {
+            winImageView.setImage(storyImage2);
+            winImageView.setVisible(true); // Hiện ảnh 2
+            if (gameCanvas != null) {
+                gameCanvas.setVisible(false); // Ẩn game
+            }
+
+            // Thêm sự kiện click để đi tiếp (ví dụ: quay về menu)
+            winImageView.setOnMousePressed(event -> {
+                System.out.println("Đã xem ảnh thắng. Quay về menu.");
+                winImageView.setVisible(false);
+                gameCanvas.setVisible(true); // Hiện lại canvas
+                // (Quan trọng) Vô hiệu hóa sự kiện này để không bị lặp
+                winImageView.setOnMousePressed(null);
+                // Quay về menu (dùng lại hàm quit)
+                handleQuit();
+            });
+            winImageView.requestFocus(); // Nhận focus
+
+        } else {
+            // Nếu không có ảnh, quay về menu luôn
+            System.err.println("Không có ảnh 2, quay về menu.");
+            handleQuit();
+        }
+    }
+
     private void handleRestart() {
         System.out.println("Restarting game...");
         if (isPaused) {
-            togglePause(false); // Tắt menu pause nếu đang bật
+            togglePause(false);
         }
+
+        if (winImageView != null) {
+            winImageView.setVisible(false);
+            winImageView.setOnMousePressed(null); // Xóa sự kiện click
+        }
+        if (gameCanvas != null) {
+            gameCanvas.setVisible(true); // Hiện lại canvas
+            gameCanvas.requestFocus();
+        }
+
         gameManager.initGame(); // Khởi tạo lại game
-        if (gameCanvas != null) gameCanvas.requestFocus(); // Focus lại canvas
+        gameLoop.start(); // <-- PHẢI START LẠI GAMELOOP
     }
 
-    /**
-     * Xử lý khi nhấn nút Quit
-     */
     private void handleQuit() {
         System.out.println("Quitting game...");
         stopGameLoop();
@@ -183,7 +218,7 @@ public class MainController {
             Stage stage = (Stage) quitButton.getScene().getWindow();
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/arkanoid/main-menu.fxml"));
             Region menuRoot = loader.load();
-            StackPane rootPane = new StackPane(menuRoot); // Cách viết gọn hơn
+            StackPane rootPane = new StackPane(menuRoot);
             rootPane.setStyle("-fx-background-color: black;");
             rootPane.setAlignment(Pos.CENTER);
             menuRoot.setMaxSize(MainApp.DESIGN_WIDTH, MainApp.DESIGN_HEIGHT);

@@ -10,7 +10,8 @@ import java.util.Map;
 public class SoundManager {
     public enum Sound {
         HIT_BRICK, HIT_PADDLE, HIT_WALL, COLLECT_POWERUP,
-        LEVEL_COMPLETED, MISSED_BALL, GAME_OVER
+        LEVEL_COMPLETED, MISSED_BALL, GAME_OVER,
+        TYPING
     }
     public enum Music { BACKGROUND_GAME }
 
@@ -18,9 +19,9 @@ public class SoundManager {
     private static Map<Music, Media> musicTracks = new HashMap<>();
     private static MediaPlayer backgroundMusicPlayer;
 
-    // --- BIẾN MỚI ĐỂ LƯU ÂM LƯỢNG CHUNG ---
-    // Giá trị từ 0.0 (tắt tiếng) đến 1.0 (to nhất)
     private static double masterVolume = 1.0;
+
+    private static MediaPlayer typingSoundPlayer;
 
     static {
         try {
@@ -31,7 +32,13 @@ public class SoundManager {
             sounds.put(Sound.LEVEL_COMPLETED, loadMedia("level-completed.mp3"));
             sounds.put(Sound.MISSED_BALL, loadMedia("missed_ball.mp3"));
             sounds.put(Sound.GAME_OVER, loadMedia("game_over.mp3"));
+
+            sounds.put(Sound.TYPING, loadMedia("typing_sound.mp3")); // Tên file của bạn
+
             musicTracks.put(Music.BACKGROUND_GAME, loadMedia("man1.mp3"));
+
+            prepareTypingPlayer();
+
             System.out.println("SoundManager: Đã tải " + sounds.size() + " SFX và " + musicTracks.size() + " bản nhạc.");
         } catch (Exception e) {
             System.err.println("SoundManager: Lỗi nghiêm trọng khi tải file âm thanh/nhạc!");
@@ -44,38 +51,90 @@ public class SoundManager {
         try {
             String mediaUrl = SoundManager.class.getResource(path).toExternalForm();
             return new Media(mediaUrl);
-        } catch (Exception e) { // Bắt Exception chung cho an toàn
+        } catch (Exception e) {
             System.err.println("Lỗi khi tải media: " + path);
-            e.printStackTrace();
             return null;
         }
     }
 
-    /**
-     * Cập nhật để áp dụng masterVolume
-     */
     public static void playSound(Sound sound) {
+        // --- SỬA LOGIC GỌI ---
+        if (sound == Sound.TYPING) {
+            // Không làm gì ở đây, dùng hàm start/stop
+            return;
+        }
+        // --- KẾT THÚC SỬA ---
+
         Media media = sounds.get(sound);
         if (media == null) return;
         try {
             MediaPlayer sfxPlayer = new MediaPlayer(media);
-            sfxPlayer.setVolume(masterVolume); // <-- Áp dụng âm lượng
+            sfxPlayer.setVolume(masterVolume);
             sfxPlayer.play();
         } catch (Exception e) {
             System.err.println("Lỗi khi phát SFX: " + sound); e.printStackTrace();
         }
     }
 
+    // --- HÀM NÀY ĐÃ SỬA ---
     /**
-     * Cập nhật để áp dụng masterVolume
+     * Tải trước MediaPlayer và cài đặt lặp lại (Loop).
      */
+    private static void prepareTypingPlayer() {
+        Media media = sounds.get(Sound.TYPING);
+
+        if (media != null) {
+            try {
+                typingSoundPlayer = new MediaPlayer(media);
+                typingSoundPlayer.setVolume(masterVolume);
+                // --- THÊM DÒNG NÀY ĐỂ LẶP LẠI ---
+                typingSoundPlayer.setCycleCount(MediaPlayer.INDEFINITE);
+            } catch (Exception e) {
+                System.err.println("Lỗi khi chuẩn bị typingSoundPlayer");
+                typingSoundPlayer = null;
+            }
+        } else {
+            System.err.println("SoundManager: Không tìm thấy file 'typing_sound.mp3', tiếng gõ phím sẽ bị tắt.");
+            typingSoundPlayer = null;
+        }
+    }
+
+    // --- ĐỔI TÊN HÀM NÀY ---
+    /**
+     * Bắt đầu phát âm thanh gõ phím lặp lại.
+     */
+    public static void startTypingLoop() {
+        if (typingSoundPlayer != null) {
+            try {
+                typingSoundPlayer.play(); // Sẽ tự động lặp
+            } catch (Exception e) {
+                // (Bỏ qua lỗi nếu có)
+            }
+        }
+    }
+
+    // --- THÊM HÀM MỚI NÀY ---
+    /**
+     * Dừng âm thanh gõ phím lặp lại.
+     */
+    public static void stopTypingLoop() {
+        if (typingSoundPlayer != null) {
+            try {
+                typingSoundPlayer.stop(); // Dừng và tua về 0
+            } catch (Exception e) {
+                // (Bỏ qua lỗi nếu có)
+            }
+        }
+    }
+    // --- KẾT THÚC THÊM/SỬA ---
+
     public static void playMusic(Music music) {
         stopMusic();
         Media media = musicTracks.get(music);
         if (media == null) return;
         try {
             backgroundMusicPlayer = new MediaPlayer(media);
-            backgroundMusicPlayer.setVolume(masterVolume); // <-- Áp dụng âm lượng
+            backgroundMusicPlayer.setVolume(masterVolume);
             backgroundMusicPlayer.setOnEndOfMedia(() -> {
                 backgroundMusicPlayer.seek(Duration.ZERO);
                 backgroundMusicPlayer.play();
@@ -97,31 +156,23 @@ public class SoundManager {
         }
     }
 
-    // --- PHƯƠNG THỨC MỚI ĐỂ SET ÂM LƯỢNG ---
-    /**
-     * Đặt âm lượng chung cho cả SFX và Music.
-     * @param volume Giá trị từ 0.0 đến 1.0
-     */
     public static void setMasterVolume(double volume) {
-        // Giới hạn giá trị volume trong khoảng 0.0 - 1.0
         masterVolume = Math.max(0.0, Math.min(1.0, volume));
         System.out.println("SoundManager: Đặt âm lượng thành " + masterVolume);
 
-        // Cập nhật âm lượng cho nhạc nền đang phát (nếu có)
         if (backgroundMusicPlayer != null) {
             try {
                 backgroundMusicPlayer.setVolume(masterVolume);
-            } catch (Exception e) {
-                e.printStackTrace(); // Có thể xảy ra lỗi nếu player đang ở trạng thái không hợp lệ
-            }
+            } catch (Exception e) { e.printStackTrace(); }
+        }
+
+        if (typingSoundPlayer != null) {
+            try {
+                typingSoundPlayer.setVolume(masterVolume);
+            } catch (Exception e) { e.printStackTrace(); }
         }
     }
 
-    // --- PHƯƠNG THỨC MỚI ĐỂ LẤY ÂM LƯỢNG HIỆN TẠI ---
-    /**
-     * Lấy giá trị âm lượng chung hiện tại.
-     * @return Âm lượng (0.0 đến 1.0)
-     */
     public static double getMasterVolume() {
         return masterVolume;
     }
