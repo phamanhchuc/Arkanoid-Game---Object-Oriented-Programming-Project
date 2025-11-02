@@ -132,14 +132,14 @@ public class MenuController {
             }
 
             // --- SỬA LỖI TÊN FONT VÀ CÁCH TẢI ---
-            String fontPath = "/com/example/arkanoid/fonts/isabella.ttf"; // Sửa thành chữ thường
+            String fontPath = "/com/example/arkanoid/fonts/Isabella.ttf"; // Sửa thành chữ thường
 
             InputStream fontStreamTitle = getClass().getResourceAsStream(fontPath);
             InputStream fontStreamBody = getClass().getResourceAsStream(fontPath);
 
             if (fontStreamTitle != null && fontStreamBody != null) {
-                isabellaTitleFont = Font.loadFont(fontStreamTitle, 40.0);
-                isabellaBodyFont = Font.loadFont(fontStreamBody, 28.0);
+                isabellaTitleFont = Font.loadFont(fontStreamTitle, 80.0);
+                isabellaBodyFont = Font.loadFont(fontStreamBody, 40.0);
                 System.out.println("Đã tải font isabella thành công.");
             } else {
                 System.err.println("Lỗi: Không tìm thấy file font 'isabella.ttf' tại: " + fontPath);
@@ -170,9 +170,10 @@ public class MenuController {
         storyImageView.setVisible(true);
 
         // --- SỬA CÁCH CÀI ĐẶT FONT ---
-        storyText1.setLayoutX(50.0);
+        storyText1.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+        storyText1.setWrappingWidth(storyImageView.getFitWidth());
+        storyText1.setLayoutX(0);
         storyText1.setLayoutY(80.0);
-        storyText1.setWrappingWidth(1100.0);
         if (isabellaTitleFont != null) {
             storyText1.setFont(isabellaTitleFont); // Dùng font Isabella đã tải
         } else {
@@ -218,18 +219,18 @@ public class MenuController {
 
             SoundManager.stopTypingLoop();
 
-            storyText1.setText("Nhà nguyện các trắng");
-            storyText2.setText("Noi tiếng chuông yên nghỉ ngàn năm , ConMel gặp tu sĩ mấtức tin -LongDe\nNgai chỉ điểm cho ConMel về tung tích cháu gái AnhChuc...");
-            storyText3.setText("...Trong gạch đổ vỡ, ConMel theo lời LongDe tìm cách mở ra Trục Thăng Thiên");
+            storyText1.setText("NHÀ NGUYỆN CÁT TRẮNG");
+            storyText2.setText("Nơi tiếng chuông yên nghỉ ngàn năm, ConMel gặp tu sĩ mất đức tin - LongDe.\nNgài chỉ điểm cho ConMel về tung tích cháu gái AnhChuc...");
+            storyText3.setText("...Trong gạch đá đổ vỡ, ConMel theo lời LongDe tìm cách mở ra Trục Thăng Thiên");
 
             PauseTransition pause = new PauseTransition(Duration.millis(500));
             pause.setOnFinished(e -> fadeOutAndLoadGame());
             pause.play();
         });
 
-        String titleText = "Nhà nguyện các trắng";
-        String panel1Text = "Nơi tiếng chuông yên nghỉ ngàn năm , ConMel gặp tu sĩ mấtức tin -LongDe\nNgai chỉ điểm cho ConMel về tung tích cháu gái AnhChuc..."; // Dòng 1 (bên trái trên)
-        String panel2Text = "...Trong gạch đổ vỡ, ConMel theo lời LongDe tìm cách mở ra Trục Thăng Thiên"; // Dòng 2 (bên phải dưới)
+        String titleText = "NHÀ NGUYỆN CÁT TRẮNG";
+        String panel1Text = "Nơi tiếng chuông yên nghỉ ngàn năm, ConMel gặp tu sĩ mất đức tin - LongDe.\nNgài chỉ điểm cho ConMel về tung tích cháu gái AnhChuc..."; // Dòng 1 (bên trái trên)
+        String panel2Text = "...Trong gạch đá đổ vỡ, ConMel theo lời LongDe tìm cách mở ra Trục Thăng Thiên"; // Dòng 2 (bên phải dưới)
 
         Runnable onT2Finished = () -> {
             PauseTransition finalPause = new PauseTransition(Duration.millis(3000));
