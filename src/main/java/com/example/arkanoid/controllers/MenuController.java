@@ -7,7 +7,6 @@ import com.example.arkanoid.SoundManager;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-
 import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
 import javafx.animation.RotateTransition;
@@ -34,8 +33,11 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.io.InputStream; // <-- Đảm bảo đã import
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import javafx.scene.text.Font; // <-- Đảm bảo đã import
 
 public class MenuController {
 
@@ -71,6 +73,9 @@ public class MenuController {
 
     private Timeline currentTimeline;
     private boolean isSkipped = false;
+
+    private Font isabellaTitleFont;
+    private Font isabellaBodyFont;
 
     private HighScores highScores;
 
@@ -111,10 +116,10 @@ public class MenuController {
             }
         });
 
-        // Tải ảnh cốt truyện
+        // Tải ảnh cốt truyện VÀ FONT
         try {
-            // (Đã sửa từ lần trước)
-            storyImage1 = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/ảnh 1.png")); // Giả sử bạn đã đổi tên file
+            // (Giả sử tên file là "story_1.png" cho an toàn)
+            storyImage1 = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/ảnh 1.png"));
             storyImage2 = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/ảnh 2.png"));
 
             if (storyImage1 == null || storyImage1.isError()) {
@@ -126,8 +131,26 @@ public class MenuController {
                 storyImage2 = null;
             }
 
+            // --- SỬA LỖI TÊN FONT VÀ CÁCH TẢI ---
+            String fontPath = "/com/example/arkanoid/fonts/isabella.ttf"; // Sửa thành chữ thường
+
+            InputStream fontStreamTitle = getClass().getResourceAsStream(fontPath);
+            InputStream fontStreamBody = getClass().getResourceAsStream(fontPath);
+
+            if (fontStreamTitle != null && fontStreamBody != null) {
+                isabellaTitleFont = Font.loadFont(fontStreamTitle, 40.0);
+                isabellaBodyFont = Font.loadFont(fontStreamBody, 28.0);
+                System.out.println("Đã tải font isabella thành công.");
+            } else {
+                System.err.println("Lỗi: Không tìm thấy file font 'isabella.ttf' tại: " + fontPath);
+                // Đóng stream nếu một trong hai bị lỗi (mặc dù cả hai đều null)
+                if(fontStreamTitle != null) fontStreamTitle.close();
+                if(fontStreamBody != null) fontStreamBody.close();
+            }
+            // --- KẾT THÚC SỬA ---
+
         } catch (Exception e) {
-            System.err.println("Lỗi nghiêm trọng khi tải ảnh cốt truyện.");
+            System.err.println("Lỗi nghiêm trọng khi tải ảnh hoặc font.");
             e.printStackTrace();
         }
     }
@@ -146,29 +169,43 @@ public class MenuController {
         storyImageView.setOpacity(1.0);
         storyImageView.setVisible(true);
 
+        // --- SỬA CÁCH CÀI ĐẶT FONT ---
         storyText1.setLayoutX(50.0);
         storyText1.setLayoutY(80.0);
         storyText1.setWrappingWidth(1100.0);
-        storyText1.setFont(new javafx.scene.text.Font("Arial", 40.0));
-        storyText1.setStyle("-fx-font-family: 'Arial'; -fx-font-weight: bold; -fx-fill: white; -fx-stroke: #A14DA1; -fx-stroke-width: 1.5;");
+        if (isabellaTitleFont != null) {
+            storyText1.setFont(isabellaTitleFont); // Dùng font Isabella đã tải
+        } else {
+            storyText1.setFont(new javafx.scene.text.Font("Arial", 40.0)); // Font dự phòng
+        }
+        storyText1.setStyle("-fx-fill: white; -fx-stroke: #A14DA1; -fx-stroke-width: 1.5;");
         storyText1.setText("");
         storyText1.setVisible(true);
 
         storyText2.setLayoutX(50.0);
         storyText2.setLayoutY(140.0);
         storyText2.setWrappingWidth(550.0);
-        storyText2.setFont(new javafx.scene.text.Font("Arial", 28.0));
-        storyText2.setStyle("-fx-font-family: 'Arial'; -fx-font-weight: bold; -fx-fill: white; -fx-stroke: #A14DA1; -fx-stroke-width: 1.0;");
+        if (isabellaBodyFont != null) {
+            storyText2.setFont(isabellaBodyFont); // Dùng font Isabella đã tải
+        } else {
+            storyText2.setFont(new javafx.scene.text.Font("Arial", 28.0)); // Font dự phòng
+        }
+        storyText2.setStyle("-fx-fill: white; -fx-stroke: #A14DA1; -fx-stroke-width: 1.0;");
         storyText2.setText("");
         storyText2.setVisible(true);
 
         storyText3.setLayoutX(620.0);
         storyText3.setLayoutY(780.0);
         storyText3.setWrappingWidth(550.0);
-        storyText3.setFont(new javafx.scene.text.Font("Arial", 28.0));
-        storyText3.setStyle("-fx-font-family: 'Arial'; -fx-font-weight: bold; -fx-fill: white; -fx-stroke: #A14DA1; -fx-stroke-width: 1.0;");
+        if (isabellaBodyFont != null) {
+            storyText3.setFont(isabellaBodyFont); // Dùng font Isabella đã tải
+        } else {
+            storyText3.setFont(new javafx.scene.text.Font("Arial", 28.0)); // Font dự phòng
+        }
+        storyText3.setStyle("-fx-fill: white; -fx-stroke: #A14DA1; -fx-stroke-width: 1.0;");
         storyText3.setText("");
         storyText3.setVisible(true);
+        // --- KẾT THÚC SỬA FONT ---
 
         storyImageView.setOnMousePressed(event -> {
             if (isSkipped) return;
@@ -179,11 +216,10 @@ public class MenuController {
                 currentTimeline.stop();
             }
 
-            // --- THÊM DÒNG DỪNG ÂM THANH KHI SKIP ---
             SoundManager.stopTypingLoop();
 
             storyText1.setText("Nhà nguyện các trắng");
-            storyText2.setText("Nơi tiếng chuông yên nghỉ ngàn năm , ConMel gặp tu sĩ mấtức tin -LongDe\nNgai chỉ điểm cho ConMel về tung tích cháu gái AnhChuc...");
+            storyText2.setText("Noi tiếng chuông yên nghỉ ngàn năm , ConMel gặp tu sĩ mấtức tin -LongDe\nNgai chỉ điểm cho ConMel về tung tích cháu gái AnhChuc...");
             storyText3.setText("...Trong gạch đổ vỡ, ConMel theo lời LongDe tìm cách mở ra Trục Thăng Thiên");
 
             PauseTransition pause = new PauseTransition(Duration.millis(500));
@@ -213,9 +249,6 @@ public class MenuController {
         }, 80);
     }
 
-    /**
-     * HÀM NÀY ĐÃ SỬA LẠI LOGIC ÂM THANH
-     */
     private void startTypewriter(Text textNode, String fullText, Runnable onFinished, int delayMillis) {
         if (isSkipped) {
             textNode.setText(fullText);
@@ -235,11 +268,8 @@ public class MenuController {
             int index = charIndex.getAndIncrement();
             if (index < fullText.length()) {
                 textNode.setText(textNode.getText() + fullText.charAt(index));
-                // (KHÔNG CẦN PHÁT ÂM THANH Ở ĐÂY NỮA)
             } else {
                 currentTimeline.stop();
-
-                // --- DỪNG ÂM THANH KHI CHẠY XONG ---
                 SoundManager.stopTypingLoop();
 
                 if (onFinished != null) {
@@ -250,7 +280,6 @@ public class MenuController {
 
         currentTimeline.setCycleCount(fullText.length() + 1);
 
-        // --- BẮT ĐẦU ÂM THANH TRƯỚC KHI CHẠY ---
         SoundManager.startTypingLoop();
         currentTimeline.play();
     }
@@ -292,7 +321,9 @@ public class MenuController {
 
     private void loadGameScene() {
         try {
+            // (Đã sửa lỗi NullPointerException từ lần trước)
             Stage stage = (Stage) storyImageView.getScene().getWindow();
+
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/arkanoid/main-view.fxml"));
             Region gameRoot = loader.load();
             StackPane rootPane = new StackPane();
@@ -318,6 +349,8 @@ public class MenuController {
             ex.printStackTrace();
         }
     }
+
+    // (Các hàm còn lại: handleSettings, handleRanking, getRankText, handleGuide, v.v... không thay đổi)
 
     private void handleSettings() {
         System.out.println("Nút Settings đã được nhấn!");
