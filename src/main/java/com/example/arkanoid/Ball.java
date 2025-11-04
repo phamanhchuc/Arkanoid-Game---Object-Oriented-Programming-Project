@@ -11,14 +11,17 @@ public class Ball extends MovableObject {
     private double playAreaOffsetX;
     private double playAreaWidth;
 
-
     private static final int NUM_FRAMES = 5;
-    private static final double FRAME_DURATION_SECONDS = 0.03; // Tốc độ nhanh
+    private static final double FRAME_DURATION_SECONDS = 0.03;
     private int currentFrame = 0;
     private double animationTime = 0;
-
     private int frameWidth;
     private int frameHeight;
+
+    // --- THÊM THEO HƯỚNG DẪN ---
+    private CollisionStrategy collisionStrategy;
+    // --- KẾT THÚC THÊM ---
+
 
     public void setPlayArea(double offsetX, double width) {
         this.playAreaOffsetX = offsetX;
@@ -32,6 +35,9 @@ public class Ball extends MovableObject {
         dx = 0;
         dy = 0;
         this.radius = r;
+
+        // --- THÊM DÒNG NÀY ---
+        this.collisionStrategy = new NormalCollisionStrategy(); // Mặc định là chiến lược bình thường
 
         try {
             String imagePath = "/com/example/arkanoid/images/ball_spritesheet.png";
@@ -47,6 +53,32 @@ public class Ball extends MovableObject {
             e.printStackTrace();
         }
     }
+
+    // --- THÊM CÁC HÀM MỚI (THEO HƯỚNG DẪN) ---
+    /**
+     * Thay đổi chiến lược va chạm (ví dụ: khi nhặt Power-up)
+     *
+     */
+    public void setCollisionStrategy(CollisionStrategy strategy) {
+        this.collisionStrategy = strategy;
+    }
+
+    /**
+     * Lấy chiến lược hiện tại (để lưu lại khi power-up hết hạn)
+     *
+     */
+    public CollisionStrategy getCollisionStrategy() {
+        return this.collisionStrategy;
+    }
+
+    /**
+     * Ủy quyền xử lý va chạm cho chiến lược hiện tại
+     *
+     */
+    public void handleCollision(GameObject object, GameManager manager) {
+        collisionStrategy.handleCollision(this, object, manager);
+    }
+    // --- KẾT THÚC THÊM ---
 
     @Override
     public void render(GraphicsContext gc) {
@@ -68,28 +100,19 @@ public class Ball extends MovableObject {
 
     public void launch(){
         if (stuck){
-            // Phóng theo góc mặc định (60 độ)
             launchAtAngle(60);
         }
     }
 
-    /**
-     * Phóng bóng (hoặc thiết lập vận tốc) theo một góc cụ thể (tính bằng độ).
-     * 0 độ là sang phải, 90 độ là lên trên, 180 độ là sang trái.
-     * @param angleDegrees Góc phóng (tính bằng độ)
-     */
     public void launchAtAngle(double angleDegrees) {
-        stuck = false; // Đảm bảo bóng không còn dính
+        stuck = false;
         double angleRadians = Math.toRadians(angleDegrees);
-
-        // Lấy tốc độ hiện tại nếu có, nếu không thì dùng tốc độ mặc định
         double currentSpeed = Math.sqrt(dx*dx + dy*dy);
-        if (currentSpeed < 1) { // Nếu đang đứng yên
+        if (currentSpeed < 1) {
             currentSpeed = this.speed;
         }
-
         dx = currentSpeed * Math.cos(angleRadians);
-        dy = -currentSpeed * Math.sin(angleRadians); // - (âm) vì trục Y trong JavaFX đi xuống
+        dy = -currentSpeed * Math.sin(angleRadians);
     }
 
     public void stickTo(Paddle p){
@@ -116,23 +139,21 @@ public class Ball extends MovableObject {
             }
         }
 
-        // --- CẬP NHẬT ÂM THANH TƯỜNG ---
         if (x <= playAreaOffsetX) {
             x = playAreaOffsetX;
             dx = -dx;
-            SoundManager.playSound(SoundManager.Sound.HIT_WALL); // <-- ÂM THANH
+            SoundManager.playSound(SoundManager.Sound.HIT_WALL);
         }
         if (x + width >= playAreaOffsetX + playAreaWidth) {
             x = playAreaOffsetX + playAreaWidth - width;
             dx = -dx;
-            SoundManager.playSound(SoundManager.Sound.HIT_WALL); // <-- ÂM THANH
+            SoundManager.playSound(SoundManager.Sound.HIT_WALL);
         }
         if (y <= 0) {
             y = 0;
             dy = -dy;
-            SoundManager.playSound(SoundManager.Sound.HIT_WALL); // <-- ÂM THANH
+            SoundManager.playSound(SoundManager.Sound.HIT_WALL);
         }
-        // --- KẾT THÚC CẬP NHẬT ---
     }
 
     public boolean isOutOfBounds(){ return y > sceneH; }

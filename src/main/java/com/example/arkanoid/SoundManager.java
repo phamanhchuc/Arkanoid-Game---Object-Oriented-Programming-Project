@@ -6,12 +6,16 @@ import javafx.util.Duration;
 
 import java.util.HashMap;
 import java.util.Map;
+// --- THÊM CÁC IMPORT NÀY ---
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+// --- KẾT THÚC THÊM ---
 
 public class SoundManager {
     public enum Sound {
         HIT_BRICK, HIT_PADDLE, HIT_WALL, COLLECT_POWERUP,
         LEVEL_COMPLETED, MISSED_BALL, GAME_OVER,
-        TYPING
+        TYPING // (Giữ lại từ lần sửa trước)
     }
     public enum Music { BACKGROUND_GAME }
 
@@ -20,8 +24,11 @@ public class SoundManager {
     private static MediaPlayer backgroundMusicPlayer;
 
     private static double masterVolume = 1.0;
-
     private static MediaPlayer typingSoundPlayer;
+
+    // --- THÊM EXECUTORSERVICE (THREAD POOL) ---
+    //
+    private static final ExecutorService audioPool = Executors.newFixedThreadPool(5); // Tối đa 5 âm thanh cùng lúc
 
     static {
         try {
@@ -32,9 +39,7 @@ public class SoundManager {
             sounds.put(Sound.LEVEL_COMPLETED, loadMedia("level-completed.mp3"));
             sounds.put(Sound.MISSED_BALL, loadMedia("missed_ball.mp3"));
             sounds.put(Sound.GAME_OVER, loadMedia("game_over.mp3"));
-
-            sounds.put(Sound.TYPING, loadMedia("typing_sound.mp3")); // Tên file của bạn
-
+            sounds.put(Sound.TYPING, loadMedia("typing_sound.mp3"));
             musicTracks.put(Music.BACKGROUND_GAME, loadMedia("man1.mp3"));
 
             prepareTypingPlayer();
@@ -57,37 +62,42 @@ public class SoundManager {
         }
     }
 
+    // --- HÀM NÀY ĐÃ ĐƯỢC SỬA ĐỂ DÙNG THREAD POOL ---
     public static void playSound(Sound sound) {
-        // --- SỬA LOGIC GỌI ---
         if (sound == Sound.TYPING) {
-            // Không làm gì ở đây, dùng hàm start/stop
+            // (Logic cho typing giữ nguyên)
+            startTypingLoop(); // Hoặc playTypingSound() tùy logic bạn muốn
             return;
         }
-        // --- KẾT THÚC SỬA ---
 
         Media media = sounds.get(sound);
         if (media == null) return;
-        try {
-            MediaPlayer sfxPlayer = new MediaPlayer(media);
-            sfxPlayer.setVolume(masterVolume);
-            sfxPlayer.play();
-        } catch (Exception e) {
-            System.err.println("Lỗi khi phát SFX: " + sound); e.printStackTrace();
-        }
+
+        // Gửi tác vụ phát âm thanh cho Thread Pool
+        //
+        audioPool.submit(() -> {
+            try {
+                MediaPlayer sfxPlayer = new MediaPlayer(media);
+                sfxPlayer.setVolume(masterVolume);
+
+                // Quan trọng: Tự động giải phóng tài nguyên khi chơi xong
+                sfxPlayer.setOnEndOfMedia(() -> sfxPlayer.dispose());
+
+                sfxPlayer.play();
+            } catch (Exception e) {
+                System.err.println("Lỗi khi phát SFX trong Thread Pool: " + sound);
+                e.printStackTrace();
+            }
+        });
     }
 
-    // --- HÀM NÀY ĐÃ SỬA ---
-    /**
-     * Tải trước MediaPlayer và cài đặt lặp lại (Loop).
-     */
+    // (Hàm prepareTypingPlayer và các hàm typing/music khác giữ nguyên)
     private static void prepareTypingPlayer() {
         Media media = sounds.get(Sound.TYPING);
-
         if (media != null) {
             try {
                 typingSoundPlayer = new MediaPlayer(media);
                 typingSoundPlayer.setVolume(masterVolume);
-                // --- THÊM DÒNG NÀY ĐỂ LẶP LẠI ---
                 typingSoundPlayer.setCycleCount(MediaPlayer.INDEFINITE);
             } catch (Exception e) {
                 System.err.println("Lỗi khi chuẩn bị typingSoundPlayer");
@@ -98,36 +108,20 @@ public class SoundManager {
             typingSoundPlayer = null;
         }
     }
-
-    // --- ĐỔI TÊN HÀM NÀY ---
-    /**
-     * Bắt đầu phát âm thanh gõ phím lặp lại.
-     */
     public static void startTypingLoop() {
         if (typingSoundPlayer != null) {
             try {
-                typingSoundPlayer.play(); // Sẽ tự động lặp
-            } catch (Exception e) {
-                // (Bỏ qua lỗi nếu có)
-            }
+                typingSoundPlayer.play();
+            } catch (Exception e) { /* Bỏ qua */ }
         }
     }
-
-    // --- THÊM HÀM MỚI NÀY ---
-    /**
-     * Dừng âm thanh gõ phím lặp lại.
-     */
     public static void stopTypingLoop() {
         if (typingSoundPlayer != null) {
             try {
-                typingSoundPlayer.stop(); // Dừng và tua về 0
-            } catch (Exception e) {
-                // (Bỏ qua lỗi nếu có)
-            }
+                typingSoundPlayer.stop();
+            } catch (Exception e) { /* Bỏ qua */ }
         }
     }
-    // --- KẾT THÚC THÊM/SỬA ---
-
     public static void playMusic(Music music) {
         stopMusic();
         Media media = musicTracks.get(music);
@@ -146,7 +140,6 @@ public class SoundManager {
             backgroundMusicPlayer = null;
         }
     }
-
     public static void stopMusic() {
         if (backgroundMusicPlayer != null) {
             try {
@@ -155,7 +148,6 @@ public class SoundManager {
             } catch (Exception e) { e.printStackTrace(); }
         }
     }
-
     public static void setMasterVolume(double volume) {
         masterVolume = Math.max(0.0, Math.min(1.0, volume));
         System.out.println("SoundManager: Đặt âm lượng thành " + masterVolume);
@@ -165,15 +157,22 @@ public class SoundManager {
                 backgroundMusicPlayer.setVolume(masterVolume);
             } catch (Exception e) { e.printStackTrace(); }
         }
-
         if (typingSoundPlayer != null) {
             try {
                 typingSoundPlayer.setVolume(masterVolume);
             } catch (Exception e) { e.printStackTrace(); }
         }
     }
-
     public static double getMasterVolume() {
         return masterVolume;
+    }
+
+    // --- THÊM HÀM SHUTDOWN ---
+    //
+    public static void shutdown() {
+        System.out.println("Đang tắt Audio Thread Pool...");
+        stopMusic();
+        stopTypingLoop();
+        audioPool.shutdown();
     }
 }
