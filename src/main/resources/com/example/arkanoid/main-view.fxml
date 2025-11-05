@@ -6,6 +6,7 @@
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
 
 <AnchorPane prefHeight="955.5" prefWidth="1200" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.arkanoid.controllers.MainController">
 
@@ -13,6 +14,8 @@
         <Canvas fx:id="gameCanvas" height="955.5" width="1200" />
 
         <ImageView fx:id="winImageView" fitHeight="955.5" fitWidth="1200" pickOnBounds="true" preserveRatio="false" visible="false" />
+
+        <Text fx:id="winText" fill="WHITE" layoutX="50.0" layoutY="100.0" stroke="#a14da1" strokeWidth="1.5" style="-fx-font-family: 'Arial'; -fx-font-weight: bold;" visible="false" wrappingWidth="1100.0" />
         <ImageView fx:id="pauseBackground" fitHeight="1000.0" fitWidth="1000.0" layoutX="90.0" layoutY="150.0" pickOnBounds="true" preserveRatio="true" visible="false">
             <image>
                 <Image url="@images/menu_Pause.png" />
@@ -22,30 +25,24 @@
 
         <VBox fx:id="pausePane" alignment="CENTER" layoutX="450.0" layoutY="300.0" spacing="20.0" visible="false">
             <children>
-                <Button fx:id="resumeButton" mnemonicParsing="false" style="-fx-background-color: transparent;
--fx-padding: 0;">
+                <Button fx:id="resumeButton" mnemonicParsing="false" style="-fx-background-color: transparent; -fx-padding: 0;">
                     <graphic>
                         <ImageView fitHeight="80.0" preserveRatio="true">
                             <image><Image url="@images/resume_Pause.png" /></image>
-
                         </ImageView>
                     </graphic>
                 </Button>
-                <Button fx:id="restartButton" mnemonicParsing="false" style="-fx-background-color: transparent;
--fx-padding: 0;">
+                <Button fx:id="restartButton" mnemonicParsing="false" style="-fx-background-color: transparent; -fx-padding: 0;">
                     <graphic>
                         <ImageView fitHeight="80.0" preserveRatio="true">
                             <image><Image url="@images/restartGame_Pause.png" /></image>
-
                         </ImageView>
                     </graphic>
                 </Button>
-                <Button fx:id="quitButton" mnemonicParsing="false" style="-fx-background-color: transparent;
--fx-padding: 0;">
+                <Button fx:id="quitButton" mnemonicParsing="false" style="-fx-background-color: transparent; -fx-padding: 0;">
                     <graphic>
                         <ImageView fitHeight="80.0" preserveRatio="true">
                             <image><Image url="@images/quitGame_Pause.png" /></image>
-
                         </ImageView>
                     </graphic>
                 </Button>

@@ -4,7 +4,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
-// Bỏ import ImagePattern vì không dùng
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 
@@ -12,19 +11,17 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-// (Import cho Factory - đã thêm từ lần trước)
 import java.util.Map;
 import java.util.HashMap;
 
 public class GameManager {
 
-    // (Các biến thành viên không đổi)
+    // (Các biến paddle, balls, bricks... không đổi)
     private final int playAreaWidth = 800;
     private double playAreaOffsetX;
     private int screenWidth, screenHeight;
@@ -41,9 +38,16 @@ public class GameManager {
     private int lives = 3;
     private boolean running = false;
     private String playerName;
-    private Image backgroundImage;
+
+    // --- SỬA ẢNH NỀN ---
+    private List<Image> backgroundImages = new ArrayList<>();
+    private Image currentBackgroundImage;
+
     private boolean gameOver = false;
     private boolean levelWon = false;
+    // --- THÊM CỜ GAME THẮNG ---
+    private boolean gameWon = false; // Thắng toàn bộ game
+
     private HighScores highScores;
     private boolean mouseControlled = false;
     private boolean crossBowActive = false;
@@ -53,27 +57,37 @@ public class GameManager {
     private final double ARROW_SPAWN_INTERVAL = 0.7;
     private final double ARROW_WIDTH = 10;
     private final double ARROW_HEIGHT = 90;
-    private String currentLevel = "level1.txt";
+
+    // --- THÊM QUẢN LÝ LEVEL ---
+    private int currentLevelIndex = 0;
+    // (Thêm level3.txt)
+    private List<String> levelFiles = List.of("level1.txt", "level2.txt", "level3.txt");
+
     private Map<Integer, BrickFactory> brickFactories;
 
-    // --- Constructor ---
+    // --- Constructor (Đã sửa) ---
     public GameManager(int screenWidth, int screenHeight, String playerName) {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
         this.playerName = playerName != null ? playerName : "Player 1";
         this.playAreaOffsetX = (screenWidth - playAreaWidth) / 2.0;
+
+        // --- TẢI TẤT CẢ ẢNH NỀN ---
         try {
-            backgroundImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_1.png"));
+            backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_1.png")));
+            backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BG2.png"))); // Màn 2
+            backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/bg3.png"))); // Màn 3
         } catch (Exception e) {
             System.err.println("Lỗi: Không thể tải ảnh nền.");
             e.printStackTrace();
         }
+
         highScores = new HighScores();
         initializeFactories();
+
         initGame();
     }
 
-    // (Hàm initializeFactories không đổi)
     private void initializeFactories() {
         brickFactories = new HashMap<>();
         brickFactories.put(1, new NormalBrickFactory(1));
@@ -82,13 +96,62 @@ public class GameManager {
         brickFactories.put(4, new IndestructibleBrickFactory());
     }
 
-    // (Hàm initGame không đổi)
     public void initGame() {
+        score = 0;
+        lives = 3;
+        currentLevelIndex = 0;
+        gameWon = false; // Reset cờ thắng game
+        loadLevelData();
+    }
+
+    private void loadLevelData() {
+        // (Kiểm tra nếu lỡ hết ảnh nền thì dùng lại ảnh cuối)
+        int bgIndex = Math.min(currentLevelIndex, backgroundImages.size() - 1);
+        currentBackgroundImage = backgroundImages.get(bgIndex);
+
+        String levelFile = levelFiles.get(currentLevelIndex);
+
         paddle = new Paddle(
                 playAreaOffsetX + playAreaWidth / 2.0 - 60,
                 screenHeight - 40, 120, 20, screenWidth
         );
         paddle.setPlayArea(playAreaOffsetX, playAreaWidth);
+
+        balls.clear();
+        powerUps.clear();
+        particles.clear();
+        projectiles.clear();
+
+        int ballRadius = 6;
+        Ball newBall = new Ball(
+                paddle.getX() + paddle.getWidth() / 2 - ballRadius,
+                paddle.getY() - (ballRadius * 2),
+                ballRadius, screenWidth, screenHeight
+        );
+        newBall.setPlayArea(playAreaOffsetX, playAreaWidth);
+        newBall.stickTo(paddle);
+        balls.add(newBall);
+
+        createBricks(levelFile);
+
+        crossBowActive = false;
+        crossBowTimer = 0.0;
+        arrowSpawnTimer = 0.0;
+        paddle.setCrossBowActive(false);
+        trailSpawnTimer = 0;
+        running = false;
+        gameOver = false;
+        levelWon = false; // Quan trọng: Reset cờ thắng màn
+        mouseControlled = false;
+    }
+
+    private void resetCurrentLevel() {
+        running = false;
+        powerUps.clear();
+        projectiles.clear();
+        crossBowActive = false;
+        paddle.setCrossBowActive(false);
+
         balls.clear();
         int ballRadius = 6;
         Ball newBall = new Ball(
@@ -99,22 +162,20 @@ public class GameManager {
         newBall.setPlayArea(playAreaOffsetX, playAreaWidth);
         newBall.stickTo(paddle);
         balls.add(newBall);
-        createBricks(currentLevel);
-        powerUps.clear();
-        particles.clear();
-        projectiles.clear();
-        crossBowActive = false;
-        crossBowTimer = 0.0;
-        arrowSpawnTimer = 0.0;
-        paddle.setCrossBowActive(false);
-        trailSpawnTimer = 0;
-        score = 0;
-        lives = 3;
-        running = false;
-        gameOver = false;
-        levelWon = false;
-        mouseControlled = false;
     }
+
+    // --- HÀM NÀY ĐÃ SỬA ---
+    public void nextLevel() {
+        currentLevelIndex++; // Tăng chỉ số màn chơi
+
+        if (currentLevelIndex >= levelFiles.size()) {
+            System.out.println("Đã thắng TOÀN BỘ game!");
+            gameWon = true; // Báo hiệu đã thắng toàn bộ game
+        } else {
+            loadLevelData(); // Tải màn chơi mới
+        }
+    }
+
 
     // (Hàm createBricks không đổi)
     private void createBricks(String levelFileName) {
@@ -166,8 +227,12 @@ public class GameManager {
         System.out.println("Đã tải thành công map: " + levelFileName + " (" + rows + "x" + cols + ")");
     }
 
-    // (Các hàm getters, input... không đổi)
+    // --- THÊM CÁC HÀM GETTER MỚI ---
     public boolean hasWonLevel() { return levelWon; }
+    public boolean hasWonGame() { return gameWon; }
+    public int getCurrentLevelIndex() { return currentLevelIndex; }
+    // --- KẾT THÚC THÊM ---
+
     public void startGame() { if (!running && !gameOver) { running = true; for (Ball b : balls) { b.launch(); } } }
     public boolean isRunning() { return running; }
     public boolean isGameOver() { return gameOver; }
@@ -176,7 +241,7 @@ public class GameManager {
     public void processMouseMovement(double mouseX) { if (paddle != null) { paddle.moveTo(mouseX); } }
     public void processInput(Set<KeyCode> keys) { if (gameOver) { if (keys.contains(KeyCode.SPACE) || keys.contains(KeyCode.R)) { initGame(); } return; } if (keys.contains(KeyCode.SPACE)) { startGame(); } if (mouseControlled) { paddle.stop(); return; } if (keys.contains(KeyCode.LEFT)) { paddle.moveLeft(); } else if (keys.contains(KeyCode.RIGHT)) { paddle.moveRight(); } else { paddle.stop(); } }
 
-    // --- HÀM UPDATE (ĐÃ SỬA LOGIC WIN) ---
+    // --- HÀM UPDATE (ĐÃ SỬA) ---
     public void update(double dt) {
         if (gameOver || !running) {
             paddle.update(dt);
@@ -191,36 +256,48 @@ public class GameManager {
             b.update(dt);
         }
 
-        // (Code crossbow, trail, ball-out-of-bounds không đổi)
+        // (Code crossbow, trail không đổi)
         if (crossBowActive) { crossBowTimer -= dt; arrowSpawnTimer += dt; if (arrowSpawnTimer >= ARROW_SPAWN_INTERVAL) { spawnArrow(); arrowSpawnTimer -= ARROW_SPAWN_INTERVAL; } if (crossBowTimer <= 0) { crossBowActive = false; paddle.setCrossBowActive(false); System.out.println("Nỏ hết hạn");} }
         trailSpawnTimer += dt; if (trailSpawnTimer >= TRAIL_SPAWN_INTERVAL) { for (Ball b : balls) { spawnBallTrailParticle(b); } trailSpawnTimer -= TRAIL_SPAWN_INTERVAL; }
-        Iterator<Ball> ballIterator = balls.iterator(); while (ballIterator.hasNext()) { Ball b = ballIterator.next(); if (b.isOutOfBounds()) { ballIterator.remove(); if (balls.isEmpty()) { SoundManager.playSound(SoundManager.Sound.MISSED_BALL); } } }
-        if (balls.isEmpty()) { lives--; running = false; powerUps.clear(); if (crossBowActive) { crossBowActive = false; paddle.setCrossBowActive(false); } if (lives <= 0) { gameOver = true; saveCurrentScore(); SoundManager.playSound(SoundManager.Sound.GAME_OVER); } else { int ballRadius = 6; Ball newBall = new Ball( paddle.getX() + paddle.getWidth() / 2 - ballRadius, paddle.getY() - (ballRadius * 2), ballRadius, screenWidth, screenHeight ); newBall.setPlayArea(playAreaOffsetX, playAreaWidth); newBall.stickTo(paddle); balls.add(newBall); } }
 
-        // 1. Va chạm Bóng - Paddle (Đã sửa dùng Strategy)
+        // (Logic bóng rơi)
+        Iterator<Ball> ballIterator = balls.iterator();
+        while (ballIterator.hasNext()) {
+            Ball b = ballIterator.next();
+            if (b.isOutOfBounds()) {
+                ballIterator.remove();
+                if (balls.isEmpty()) {
+                    SoundManager.playSound(SoundManager.Sound.MISSED_BALL);
+                }
+            }
+        }
+
+        // (Sửa logic mất mạng)
+        if (balls.isEmpty()) {
+            lives--;
+            if (lives <= 0) {
+                gameOver = true;
+                saveCurrentScore();
+                SoundManager.playSound(SoundManager.Sound.GAME_OVER);
+            } else {
+                resetCurrentLevel();
+            }
+        }
+
+        // (Logic va chạm không đổi)
         for (Ball b : balls) {
             if (checkCollisionCircleRect(b, paddle) && b.getY() + b.getHeight() <= paddle.getY() + b.getDy()*dt + 5) {
                 b.handleCollision(paddle, this);
             }
         }
-
-        // 2. Va chạm Bóng - Gạch
-        boolean allBricksDestroyed = true; // Bắt đầu bằng cách giả định đã thắng
+        boolean allBricksDestroyed = true;
         Iterator<Brick> brickIterator = bricks.iterator();
         while(brickIterator.hasNext()) {
             Brick b = brickIterator.next();
-
-            // --- SỬA LOGIC WIN Ở ĐÂY ---
-            if (b.isDestroyed()) continue; // Gạch đã vỡ -> bỏ qua
-
-            // Nếu gạch KHÔNG vỡ VÀ nó KHÔNG PHẢI là gạch bất tử
+            if (b.isDestroyed()) continue;
             if (!b.isIndestructible()) {
-                allBricksDestroyed = false; // -> thì game chưa thắng
+                allBricksDestroyed = false;
             }
-            // (Nếu gạch là gạch bất tử, nó sẽ bị bỏ qua và allBricksDestroyed vẫn là true)
-            // --- KẾT THÚC SỬA ---
-
-            // (Logic va chạm dùng Strategy)
             for (Ball ball : balls) {
                 if (checkCollisionCircleRect(ball, b)) {
                     ball.handleCollision(b, this);
@@ -229,11 +306,11 @@ public class GameManager {
             }
         }
 
-        // Check Win
-        if (allBricksDestroyed) { // (Giờ logic này đã đúng)
+        // --- SỬA LOGIC WIN (Chỉ kích hoạt 1 lần) ---
+        if (allBricksDestroyed && !levelWon) { // Thêm !levelWon
             System.out.println("YOU WIN!");
             running = false;
-            levelWon = true;
+            levelWon = true; // Báo hiệu cho MainController
             saveCurrentScore();
             SoundManager.playSound(SoundManager.Sound.LEVEL_COMPLETED);
             if (crossBowActive) {
@@ -241,6 +318,7 @@ public class GameManager {
                 paddle.setCrossBowActive(false);
             }
         }
+        // --- KẾT THÚC SỬA ---
 
         // (Code Powerup, Projectile không đổi)
         Iterator<PowerUp> powerUpIterator = powerUps.iterator(); while (powerUpIterator.hasNext()) { PowerUp pu = powerUpIterator.next(); if (pu.isCollected()) { powerUpIterator.remove(); continue; } pu.update(dt); if (checkCollisionRectRect(pu, paddle)) { applyPowerUpEffect(pu); pu.setCollected(true); powerUpIterator.remove(); } else if (pu.getY() > screenHeight) { pu.setCollected(true); powerUpIterator.remove(); } }
@@ -258,7 +336,40 @@ public class GameManager {
     private boolean checkCollisionRectRect(GameObject r1, GameObject r2) { return r1.getX() < r2.getX() + r2.getWidth() && r1.getX() + r1.getWidth() > r2.getX() && r1.getY() < r2.getY() + r2.getHeight() && r1.getY() + r1.getHeight() > r2.getY(); }
     private void applyPowerUpEffect(PowerUp pu) { if (pu.getType() == PowerUp.PowerUpType.LIFE) { lives++; System.out.println("Bạn nhận được thêm 1 mạng! Tổng mạng: " + lives); SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP); } else if (pu.getType() == PowerUp.PowerUpType.LOSE_LIFE) { lives--; System.out.println("Bạn bị mất 1 mạng! Tổng mạng: " + lives); SoundManager.playSound(SoundManager.Sound.MISSED_BALL); if (lives <= 0) { gameOver = true; running = false; saveCurrentScore(); SoundManager.playSound(SoundManager.Sound.GAME_OVER); if (crossBowActive) { crossBowActive = false; paddle.setCrossBowActive(false); } } } else if (pu.getType() == PowerUp.PowerUpType.CROSS_BOW) { if (!crossBowActive) SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP); crossBowActive = true; crossBowTimer = CROSS_BOW_DURATION; paddle.setCrossBowActive(true); System.out.println("Nỏ đã được kích hoạt! " + CROSS_BOW_DURATION + " giây."); arrowSpawnTimer = 0.0; } else if (pu.getType() == PowerUp.PowerUpType.MULTI_BALL) { if (!balls.isEmpty()) { SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP); System.out.println("Multi-Ball kích hoạt!"); Ball sourceBall = balls.get(0); double radius = sourceBall.getWidth() / 2.0; double sourceCenterX = sourceBall.getX() + radius; double sourceCenterY = sourceBall.getY() + radius; List<Ball> newBallsList = new ArrayList<>(); for (int i = 0; i < 3; i++) { Ball newBall = new Ball(sourceCenterX, sourceCenterY, radius, screenWidth, screenHeight); newBall.setPlayArea(playAreaOffsetX, playAreaWidth); double angleDegrees = 60.0 + (random.nextDouble() * 60.0); newBall.launchAtAngle(angleDegrees); newBallsList.add(newBall); } balls.addAll(newBallsList); } } else if (pu.getType() == PowerUp.PowerUpType.PIERCING_SHOT) { System.out.println("Kích hoạt Meomeo Bullet!"); SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP); double bulletX = paddle.getX() + paddle.getWidth() / 2; double bulletY = paddle.getY(); double placeholderWidth = 10; double placeholderHeight = 50; projectiles.add(new Projectile(bulletX, bulletY, placeholderWidth, placeholderHeight, true)); } }
     private boolean checkCollisionCircleRect(Ball ball, GameObject rect) { double cx = ball.getX() + ball.getWidth() / 2; double cy = ball.getY() + ball.getHeight() / 2; double radius = ball.getWidth() / 2; double closestX = Math.max(rect.getX(), Math.min(cx, rect.getX() + rect.getWidth())); double closestY = Math.max(rect.getY(), Math.min(cy, rect.getY() + rect.getHeight())); double dx = cx - closestX; double dy = cy - closestY; return (dx * dx + dy * dy) <= (radius * radius); }
-    public void render(GraphicsContext gc) { if (backgroundImage != null) { gc.drawImage(backgroundImage, 0, 0, screenWidth, screenHeight); } else { gc.setFill(Color.BLACK); gc.fillRect(0, 0, screenWidth, screenHeight); } gc.setFill(Color.rgb(0, 0, 0, 0.6)); gc.fillRect(playAreaOffsetX, 0, playAreaWidth, screenHeight); gc.setFill(Color.WHITE); gc.setFont(new Font("Arial", 16)); gc.setTextAlign(TextAlignment.CENTER); gc.fillText("Player: " + playerName, screenWidth - 100, 25); gc.fillText("Score: " + score, screenWidth - 100, 50); gc.fillText("Lives: " + lives, screenWidth - 100, 75); if (crossBowActive) { gc.setFill(Color.YELLOW); gc.fillText(String.format("Nỏ: %.1f s", crossBowTimer), screenWidth - 100, 100); } gc.setTextAlign(TextAlignment.LEFT); for (Brick b : bricks) { if (!b.isDestroyed()) { b.render(gc); } } for (PowerUp pu : powerUps) { pu.render(gc); } for (Projectile p : projectiles) { p.render(gc); } paddle.render(gc); for (Particle p : particles) { p.render(gc); } for (Ball b : balls) { b.render(gc); } if (gameOver) { gc.setFill(Color.rgb(0, 0, 0, 0.7)); gc.fillRect(0, 0, screenWidth, screenHeight); gc.setFill(Color.RED); gc.setFont(new Font("Arial", 80)); gc.setTextAlign(TextAlignment.CENTER); gc.fillText("GAME OVER", screenWidth / 2.0, screenHeight / 2.0); gc.setFill(Color.WHITE); gc.setFont(new Font("Arial", 24)); gc.fillText("Press R or SPACE to Restart", screenWidth / 2.0, screenHeight / 2.0 + 50); gc.setTextAlign(TextAlignment.LEFT); } }
+
+    // (Hàm render không đổi)
+    public void render(GraphicsContext gc) {
+        if (currentBackgroundImage != null) {
+            gc.drawImage(currentBackgroundImage, 0, 0, screenWidth, screenHeight);
+        } else {
+            gc.setFill(Color.BLACK); gc.fillRect(0, 0, screenWidth, screenHeight);
+        }
+        gc.setFill(Color.rgb(0, 0, 0, 0.6));
+        gc.fillRect(playAreaOffsetX, 0, playAreaWidth, screenHeight);
+        gc.setFill(Color.WHITE); gc.setFont(new Font("Arial", 16)); gc.setTextAlign(TextAlignment.CENTER);
+        gc.fillText("Player: " + playerName, screenWidth - 100, 25);
+        gc.fillText("Score: " + score, screenWidth - 100, 50);
+        gc.fillText("Lives: " + lives, screenWidth - 100, 75);
+        if (crossBowActive) { gc.setFill(Color.YELLOW); gc.fillText(String.format("Nỏ: %.1f s", crossBowTimer), screenWidth - 100, 100); }
+        gc.setTextAlign(TextAlignment.LEFT);
+        for (Brick b : bricks) { if (!b.isDestroyed()) { b.render(gc); } }
+        for (PowerUp pu : powerUps) { pu.render(gc); }
+        for (Projectile p : projectiles) { p.render(gc); }
+        paddle.render(gc);
+        for (Particle p : particles) { p.render(gc); }
+        for (Ball b : balls) {
+            b.render(gc);
+        }
+        if (gameOver) {
+            gc.setFill(Color.rgb(0, 0, 0, 0.7)); gc.fillRect(0, 0, screenWidth, screenHeight);
+            gc.setFill(Color.RED); gc.setFont(new Font("Arial", 80)); gc.setTextAlign(TextAlignment.CENTER);
+            gc.fillText("GAME OVER", screenWidth / 2.0, screenHeight / 2.0);
+            gc.setFill(Color.WHITE); gc.setFont(new Font("Arial", 24));
+            gc.fillText("Press R or SPACE to Restart", screenWidth / 2.0, screenHeight / 2.0 + 50);
+            gc.setTextAlign(TextAlignment.LEFT);
+        }
+    }
+
     public void pauseGame() { if (!gameOver) { } }
     public void resumeGame() { if (!gameOver) { System.out.println("Game Resumed (logic internal)."); } }
 }

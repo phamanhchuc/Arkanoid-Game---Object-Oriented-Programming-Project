@@ -33,11 +33,11 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.io.InputStream; // <-- Đảm bảo đã import
+import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javafx.scene.text.Font; // <-- Đảm bảo đã import
+import javafx.scene.text.Font;
 
 public class MenuController {
 
@@ -118,21 +118,21 @@ public class MenuController {
 
         // Tải ảnh cốt truyện VÀ FONT
         try {
-            // (Giả sử tên file là "story_1.png" cho an toàn)
-            storyImage1 = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/ảnh 1.png"));
-            storyImage2 = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/ảnh 2.png"));
+            // --- SỬA TÊN FILE ẢNH (ĐUÔI .png) ---
+            storyImage1 = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/story_1.png"));
+            storyImage2 = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/story_2.png"));
 
             if (storyImage1 == null || storyImage1.isError()) {
                 System.err.println("Lỗi: Không tìm thấy 'story_1.png'");
                 storyImage1 = null;
             }
             if (storyImage2 == null || storyImage2.isError()) {
-                System.err.println("Lỗi: Không tìm thấy 'ảnh 2.png'");
+                System.err.println("Lỗi: Không tìm thấy 'story_2.png'");
                 storyImage2 = null;
             }
 
-            // --- SỬA LỖI TÊN FONT VÀ CÁCH TẢI ---
-            String fontPath = "/com/example/arkanoid/fonts/Isabella.ttf"; // Sửa thành chữ thường
+            // --- TÊN FONT (isabella.ttf) ---
+            String fontPath = "/com/example/arkanoid/fonts/isabella.ttf";
 
             InputStream fontStreamTitle = getClass().getResourceAsStream(fontPath);
             InputStream fontStreamBody = getClass().getResourceAsStream(fontPath);
@@ -143,7 +143,6 @@ public class MenuController {
                 System.out.println("Đã tải font isabella thành công.");
             } else {
                 System.err.println("Lỗi: Không tìm thấy file font 'isabella.ttf' tại: " + fontPath);
-                // Đóng stream nếu một trong hai bị lỗi (mặc dù cả hai đều null)
                 if(fontStreamTitle != null) fontStreamTitle.close();
                 if(fontStreamBody != null) fontStreamBody.close();
             }
@@ -155,29 +154,38 @@ public class MenuController {
         }
     }
 
+    // --- (Hàm handleStartGame đã sửa lỗi NullPointerException từ lần trước) ---
     private void handleStartGame() {
+        final Scene currentScene = mainPane.getScene();
+        final Stage currentStage = (Stage) currentScene.getWindow();
+        if (currentScene == null || currentStage == null) {
+            System.err.println("Lỗi nghiêm trọng: Không thể lấy Scene/Stage từ mainPane.");
+            return;
+        }
+
+        // --- SỬA LOGIC: DÙNG ẢNH 1 (story_1) ---
         if (storyImageView == null || storyImage1 == null) {
             System.err.println("Không thể bắt đầu cốt truyện (ảnh 1 lỗi), tải game luôn.");
-            loadGameSceneAndMusic();
+            loadGameSceneAndMusic(currentStage, currentScene);
             return;
         }
 
         setMainMenuVisible(false);
         isSkipped = false;
 
-        storyImageView.setImage(storyImage1);
+        storyImageView.setImage(storyImage1); // Dùng ảnh 1
         storyImageView.setOpacity(1.0);
         storyImageView.setVisible(true);
 
-        // --- SỬA CÁCH CÀI ĐẶT FONT ---
+        // (Cài đặt Text Font)
         storyText1.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
         storyText1.setWrappingWidth(storyImageView.getFitWidth());
         storyText1.setLayoutX(0);
         storyText1.setLayoutY(80.0);
         if (isabellaTitleFont != null) {
-            storyText1.setFont(isabellaTitleFont); // Dùng font Isabella đã tải
+            storyText1.setFont(isabellaTitleFont);
         } else {
-            storyText1.setFont(new javafx.scene.text.Font("Arial", 40.0)); // Font dự phòng
+            storyText1.setFont(new javafx.scene.text.Font("Arial", 40.0));
         }
         storyText1.setStyle("-fx-fill: white; -fx-stroke: #A14DA1; -fx-stroke-width: 1.5;");
         storyText1.setText("");
@@ -187,9 +195,9 @@ public class MenuController {
         storyText2.setLayoutY(140.0);
         storyText2.setWrappingWidth(550.0);
         if (isabellaBodyFont != null) {
-            storyText2.setFont(isabellaBodyFont); // Dùng font Isabella đã tải
+            storyText2.setFont(isabellaBodyFont);
         } else {
-            storyText2.setFont(new javafx.scene.text.Font("Arial", 28.0)); // Font dự phòng
+            storyText2.setFont(new javafx.scene.text.Font("Arial", 28.0));
         }
         storyText2.setStyle("-fx-fill: white; -fx-stroke: #A14DA1; -fx-stroke-width: 1.0;");
         storyText2.setText("");
@@ -199,15 +207,15 @@ public class MenuController {
         storyText3.setLayoutY(780.0);
         storyText3.setWrappingWidth(550.0);
         if (isabellaBodyFont != null) {
-            storyText3.setFont(isabellaBodyFont); // Dùng font Isabella đã tải
+            storyText3.setFont(isabellaBodyFont);
         } else {
-            storyText3.setFont(new javafx.scene.text.Font("Arial", 28.0)); // Font dự phòng
+            storyText3.setFont(new javafx.scene.text.Font("Arial", 28.0));
         }
         storyText3.setStyle("-fx-fill: white; -fx-stroke: #A14DA1; -fx-stroke-width: 1.0;");
         storyText3.setText("");
         storyText3.setVisible(true);
-        // --- KẾT THÚC SỬA FONT ---
 
+        // (Cài đặt Skip)
         storyImageView.setOnMousePressed(event -> {
             if (isSkipped) return;
             isSkipped = true;
@@ -216,7 +224,6 @@ public class MenuController {
             if (currentTimeline != null) {
                 currentTimeline.stop();
             }
-
             SoundManager.stopTypingLoop();
 
             storyText1.setText("NHÀ NGUYỆN CÁT TRẮNG");
@@ -224,25 +231,23 @@ public class MenuController {
             storyText3.setText("...Trong gạch đá đổ vỡ, ConMel theo lời LongDe tìm cách mở ra Trục Thăng Thiên");
 
             PauseTransition pause = new PauseTransition(Duration.millis(500));
-            pause.setOnFinished(e -> fadeOutAndLoadGame());
+            pause.setOnFinished(e -> fadeOutAndLoadGame(currentStage, currentScene));
             pause.play();
         });
 
+        // (Timeline Text - Nội dung này đúng cho Màn 1)
         String titleText = "NHÀ NGUYỆN CÁT TRẮNG";
-        String panel1Text = "Nơi tiếng chuông yên nghỉ ngàn năm, ConMel gặp tu sĩ mất đức tin - LongDe.\nNgài chỉ điểm cho ConMel về tung tích cháu gái AnhChuc..."; // Dòng 1 (bên trái trên)
-        String panel2Text = "...Trong gạch đá đổ vỡ, ConMel theo lời LongDe tìm cách mở ra Trục Thăng Thiên"; // Dòng 2 (bên phải dưới)
+        String panel1Text = "Nơi tiếng chuông yên nghỉ ngàn năm, ConMel gặp tu sĩ mất đức tin - LongDe.\nNgài chỉ điểm cho ConMel về tung tích cháu gái AnhChuc...";
+        String panel2Text = "...Trong gạch đá đổ vỡ, ConMel theo lời LongDe tìm cách mở ra Trục Thăng Thiên";
 
         Runnable onT2Finished = () -> {
             PauseTransition finalPause = new PauseTransition(Duration.millis(3000));
-            finalPause.setOnFinished(e -> fadeOutAndLoadGame());
+            finalPause.setOnFinished(e -> fadeOutAndLoadGame(currentStage, currentScene));
             finalPause.play();
         };
-
         Runnable onT1Finished = () -> {
             startTypewriter(storyText3, panel2Text, onT2Finished, 50);
         };
-
-        // Bắt đầu chạy tiêu đề trước
         startTypewriter(storyText1, titleText, () -> {
             PauseTransition pauseAfterTitle = new PauseTransition(Duration.millis(1500));
             pauseAfterTitle.setOnFinished(e -> startTypewriter(storyText2, panel1Text, onT1Finished, 60));
@@ -250,81 +255,58 @@ public class MenuController {
         }, 80);
     }
 
+    // (Hàm startTypewriter không đổi)
     private void startTypewriter(Text textNode, String fullText, Runnable onFinished, int delayMillis) {
         if (isSkipped) {
             textNode.setText(fullText);
             if (onFinished != null) onFinished.run();
             return;
         }
-
         final AtomicInteger charIndex = new AtomicInteger(0);
         textNode.setText("");
-
         currentTimeline = new Timeline(new KeyFrame(Duration.millis(delayMillis), e -> {
-            if (isSkipped) {
-                currentTimeline.stop();
-                return;
-            }
-
+            if (isSkipped) { currentTimeline.stop(); return; }
             int index = charIndex.getAndIncrement();
             if (index < fullText.length()) {
                 textNode.setText(textNode.getText() + fullText.charAt(index));
             } else {
                 currentTimeline.stop();
                 SoundManager.stopTypingLoop();
-
-                if (onFinished != null) {
-                    onFinished.run();
-                }
+                if (onFinished != null) { onFinished.run(); }
             }
         }));
-
         currentTimeline.setCycleCount(fullText.length() + 1);
-
         SoundManager.startTypingLoop();
         currentTimeline.play();
     }
 
-    private void fadeOutAndLoadGame() {
-        if (isSkipped) {
-            loadGameSceneAndMusic();
-            return;
-        }
-
-        FadeTransition fadeImg = new FadeTransition(Duration.millis(1000), storyImageView);
-        fadeImg.setToValue(0);
-
-        FadeTransition fadeT1 = new FadeTransition(Duration.millis(1000), storyText1);
-        fadeT1.setToValue(0);
-
-        FadeTransition fadeT2 = new FadeTransition(Duration.millis(1000), storyText2);
-        fadeT2.setToValue(0);
-
-        FadeTransition fadeT3 = new FadeTransition(Duration.millis(1000), storyText3);
-        fadeT3.setToValue(0);
-
+    // (Hàm fadeOutAndLoadGame không đổi)
+    private void fadeOutAndLoadGame(Stage stage, Scene scene) {
+        if (isSkipped) { loadGameSceneAndMusic(stage, scene); return; }
+        FadeTransition fadeImg = new FadeTransition(Duration.millis(1000), storyImageView); fadeImg.setToValue(0);
+        FadeTransition fadeT1 = new FadeTransition(Duration.millis(1000), storyText1); fadeT1.setToValue(0);
+        FadeTransition fadeT2 = new FadeTransition(Duration.millis(1000), storyText2); fadeT2.setToValue(0);
+        FadeTransition fadeT3 = new FadeTransition(Duration.millis(1000), storyText3); fadeT3.setToValue(0);
         ParallelTransition fadeOut = new ParallelTransition(fadeImg, fadeT1, fadeT2, fadeT3);
         fadeOut.setOnFinished(e -> {
             storyImageView.setVisible(false);
             storyText1.setVisible(false);
             storyText2.setVisible(false);
             storyText3.setVisible(false);
-            loadGameSceneAndMusic();
+            loadGameSceneAndMusic(stage, scene);
         });
         fadeOut.play();
     }
 
-    private void loadGameSceneAndMusic() {
+    // (Hàm loadGameSceneAndMusic không đổi)
+    private void loadGameSceneAndMusic(Stage stage, Scene scene) {
         SoundManager.playMusic(SoundManager.Music.BACKGROUND_GAME);
-        loadGameScene();
+        loadGameScene(stage, scene);
     }
 
-
-    private void loadGameScene() {
+    // (Hàm loadGameScene không đổi)
+    private void loadGameScene(Stage stage, Scene gameScene) {
         try {
-            // (Đã sửa lỗi NullPointerException từ lần trước)
-            Stage stage = (Stage) storyImageView.getScene().getWindow();
-
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/arkanoid/main-view.fxml"));
             Region gameRoot = loader.load();
             StackPane rootPane = new StackPane();
@@ -332,7 +314,6 @@ public class MenuController {
             rootPane.setStyle("-fx-background-color: black;");
             rootPane.setAlignment(Pos.CENTER);
             gameRoot.setMaxSize(MainApp.DESIGN_WIDTH, MainApp.DESIGN_HEIGHT);
-            Scene gameScene = stage.getScene();
             gameScene.setRoot(rootPane);
             MainApp.scaleToFit(gameRoot, gameScene);
             stage.setTitle("Arkanoid Game");
@@ -351,158 +332,17 @@ public class MenuController {
         }
     }
 
-    // (Các hàm còn lại: handleSettings, handleRanking, getRankText, handleGuide, v.v... không thay đổi)
-
-    private void handleSettings() {
-        System.out.println("Nút Settings đã được nhấn!");
-        showPanel(settingsPane);
-    }
-
-    private void handleRanking() {
-        System.out.println("Nút Ranking đã được nhấn!");
-        try {
-            showPanel(rankingImageView);
-            Image rankingBg = rankingImageView.getImage();
-            if (rankingBg == null) {
-                rankingBg = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/ranking.jpg"));
-                if (rankingBg != null) rankingImageView.setImage(rankingBg);
-                else {
-                    System.err.println("Lỗi: Không tìm thấy ảnh nền ranking.jpg");
-                    showPanel(null);
-                    return;
-                }
-            }
-            List<ScoreEntry> topScores = highScores.getScores();
-            rank1Text.setText(getRankText(topScores, 0));
-            rank2Text.setText(getRankText(topScores, 1));
-            rank3Text.setText(getRankText(topScores, 2));
-
-        } catch (Exception e) {
-            System.err.println("Lỗi khi tải ảnh hoặc hiển thị BXH:");
-            e.printStackTrace();
-            showPanel(null);
-        }
-    }
-
-    private String getRankText(List<ScoreEntry> scores, int index) {
-        if (scores != null && index >= 0 && index < scores.size()) {
-            ScoreEntry entry = scores.get(index);
-            if (entry != null) {
-                return (index + 1) + ". " + entry.getPlayerName() + ": " + entry.getScore();
-            } else {
-                return (index + 1) + ". Error";
-            }
-        } else {
-            return (index + 1) + ". N/A";
-        }
-    }
-
-    private void handleGuide() {
-        System.out.println("Nút Guide đã được nhấn!");
-        try {
-            Image guideImg = guideImageView.getImage();
-            if(guideImg == null){
-                guideImg = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/guideMenu.png"));
-                if(guideImg != null) guideImageView.setImage(guideImg);
-                else {
-                    System.err.println("Lỗi: Không tìm thấy ảnh guideMenu.png");
-                    showPanel(null);
-                    return;
-                }
-            }
-            showPanel(guideImageView);
-
-        } catch (Exception e) {
-            System.err.println("Lỗi khi tải ảnh hướng dẫn:");
-            e.printStackTrace();
-            showPanel(null);
-        }
-    }
-
-    private void handleBackFromGuide() {
-        showPanel(null);
-    }
-
-    private void handleBackFromRanking() {
-        showPanel(null);
-    }
-
-    private void handleBackFromSettings() {
-        showPanel(null);
-    }
-
-    private void showPanel(Node panelToShow) {
-        boolean showGuide = (panelToShow == guideImageView);
-        boolean showRanking = (panelToShow == rankingImageView);
-        boolean showSettings = (panelToShow == settingsPane);
-        boolean showMainMenu = (panelToShow == null);
-
-        if (guideImageView != null) guideImageView.setVisible(showGuide);
-        if (backButtonGuide != null) backButtonGuide.setVisible(showGuide);
-
-        if (rankingImageView != null) rankingImageView.setVisible(showRanking);
-        if (rank1Text != null) rank1Text.setVisible(showRanking);
-        if (rank2Text != null) rank2Text.setVisible(showRanking);
-        if (rank3Text != null) rank3Text.setVisible(showRanking);
-        if (backButtonRanking != null) backButtonRanking.setVisible(showRanking);
-
-        if (settingsPane != null) settingsPane.setVisible(showSettings);
-        if (settingsBackground != null) settingsBackground.setVisible(showSettings);
-
-        setMainMenuVisible(showMainMenu);
-    }
-
-    private void setMainMenuVisible(boolean isVisible) {
-        if (buttonStart != null) buttonStart.setVisible(isVisible);
-        if (buttonSetting != null) buttonSetting.setVisible(isVisible);
-        if (buttonRanking != null) buttonRanking.setVisible(isVisible);
-        if (buttonGuide != null) buttonGuide.setVisible(isVisible);
-        if (startImage != null) startImage.setVisible(isVisible);
-        if (settingImage != null) settingImage.setVisible(isVisible);
-        if (rankingImage != null) rankingImage.setVisible(isVisible);
-        if (guideImageBtn != null) guideImageBtn.setVisible(isVisible);
-    }
-
-
-    private void addScaleAnimation(Button button, ImageView image) {
-        if (button == null || image == null) return;
-        ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), image);
-        pressTransition.setToX(0.9);
-        pressTransition.setToY(0.9);
-        ScaleTransition releaseTransition = new ScaleTransition(Duration.millis(100), image);
-        releaseTransition.setToX(1.0);
-        releaseTransition.setToY(1.0);
-        button.setOnMousePressed(event -> pressTransition.playFromStart());
-        button.setOnMouseReleased(event -> releaseTransition.playFromStart());
-    }
-
-    private void addJiggleAnimation(Button button, ImageView image) {
-        if (button == null || image == null) return;
-        ScaleTransition pressScale = new ScaleTransition(Duration.millis(100), image);
-        pressScale.setToX(0.9);
-        pressScale.setToY(0.9);
-        RotateTransition pressRotate = new RotateTransition(Duration.millis(100), image);
-        pressRotate.setToAngle(-5);
-        ParallelTransition pressTransition = new ParallelTransition(pressScale, pressRotate);
-        ScaleTransition releaseScale = new ScaleTransition(Duration.millis(100), image);
-        releaseScale.setToX(1.0);
-        releaseScale.setToY(1.0);
-        RotateTransition releaseRotate = new RotateTransition(Duration.millis(100), image);
-        releaseRotate.setToAngle(0);
-        ParallelTransition releaseTransition = new ParallelTransition(releaseScale, releaseRotate);
-        button.setOnMousePressed(event -> pressTransition.playFromStart());
-        button.setOnMouseReleased(event -> releaseTransition.playFromStart());
-    }
-
-    private void addClickAnimation(Button button) {
-        if (button == null) return;
-        ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), button);
-        pressTransition.setToX(0.9);
-        pressTransition.setToY(0.9);
-        ScaleTransition releaseTransition = new ScaleTransition(Duration.millis(100), button);
-        releaseTransition.setToX(1.0);
-        releaseTransition.setToY(1.0);
-        button.setOnMousePressed(event -> pressTransition.playFromStart());
-        button.setOnMouseReleased(event -> releaseTransition.playFromStart());
-    }
+    // (Các hàm còn lại không đổi)
+    private void handleSettings() { System.out.println("Nút Settings đã được nhấn!"); showPanel(settingsPane); }
+    private void handleRanking() { System.out.println("Nút Ranking đã được nhấn!"); try { showPanel(rankingImageView); Image rankingBg = rankingImageView.getImage(); if (rankingBg == null) { rankingBg = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/ranking.jpg")); if (rankingBg != null) rankingImageView.setImage(rankingBg); else { System.err.println("Lỗi: Không tìm thấy ảnh nền ranking.jpg"); showPanel(null); return; } } List<ScoreEntry> topScores = highScores.getScores(); rank1Text.setText(getRankText(topScores, 0)); rank2Text.setText(getRankText(topScores, 1)); rank3Text.setText(getRankText(topScores, 2)); } catch (Exception e) { System.err.println("Lỗi khi tải ảnh hoặc hiển thị BXH:"); e.printStackTrace(); showPanel(null); } }
+    private String getRankText(List<ScoreEntry> scores, int index) { if (scores != null && index >= 0 && index < scores.size()) { ScoreEntry entry = scores.get(index); if (entry != null) { return (index + 1) + ". " + entry.getPlayerName() + ": " + entry.getScore(); } else { return (index + 1) + ". Error"; } } else { return (index + 1) + ". N/A"; } }
+    private void handleGuide() { System.out.println("Nút Guide đã được nhấn!"); try { Image guideImg = guideImageView.getImage(); if(guideImg == null){ guideImg = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/guideMenu.png")); if(guideImg != null) guideImageView.setImage(guideImg); else { System.err.println("Lỗi: Không tìm thấy ảnh guideMenu.png"); showPanel(null); return; } } showPanel(guideImageView); } catch (Exception e) { System.err.println("Lỗi khi tải ảnh hướng dẫn:"); e.printStackTrace(); showPanel(null); } }
+    private void handleBackFromGuide() { showPanel(null); }
+    private void handleBackFromRanking() { showPanel(null); }
+    private void handleBackFromSettings() { showPanel(null); }
+    private void showPanel(Node panelToShow) { boolean showGuide = (panelToShow == guideImageView); boolean showRanking = (panelToShow == rankingImageView); boolean showSettings = (panelToShow == settingsPane); boolean showMainMenu = (panelToShow == null); if (guideImageView != null) guideImageView.setVisible(showGuide); if (backButtonGuide != null) backButtonGuide.setVisible(showGuide); if (rankingImageView != null) rankingImageView.setVisible(showRanking); if (rank1Text != null) rank1Text.setVisible(showRanking); if (rank2Text != null) rank2Text.setVisible(showRanking); if (rank3Text != null) rank3Text.setVisible(showRanking); if (backButtonRanking != null) backButtonRanking.setVisible(showRanking); if (settingsPane != null) settingsPane.setVisible(showSettings); if (settingsBackground != null) settingsBackground.setVisible(showSettings); setMainMenuVisible(showMainMenu); }
+    private void setMainMenuVisible(boolean isVisible) { if (buttonStart != null) buttonStart.setVisible(isVisible); if (buttonSetting != null) buttonSetting.setVisible(isVisible); if (buttonRanking != null) buttonRanking.setVisible(isVisible); if (buttonGuide != null) buttonGuide.setVisible(isVisible); if (startImage != null) startImage.setVisible(isVisible); if (settingImage != null) settingImage.setVisible(isVisible); if (rankingImage != null) rankingImage.setVisible(isVisible); if (guideImageBtn != null) guideImageBtn.setVisible(isVisible); }
+    private void addScaleAnimation(Button button, ImageView image) { if (button == null || image == null) return; ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), image); pressTransition.setToX(0.9); pressTransition.setToY(0.9); ScaleTransition releaseTransition = new ScaleTransition(Duration.millis(100), image); releaseTransition.setToX(1.0); releaseTransition.setToY(1.0); button.setOnMousePressed(event -> pressTransition.playFromStart()); button.setOnMouseReleased(event -> releaseTransition.playFromStart()); }
+    private void addJiggleAnimation(Button button, ImageView image) { if (button == null || image == null) return; ScaleTransition pressScale = new ScaleTransition(Duration.millis(100), image); pressScale.setToX(0.9); pressScale.setToY(0.9); RotateTransition pressRotate = new RotateTransition(Duration.millis(100), image); pressRotate.setToAngle(-5); ParallelTransition pressTransition = new ParallelTransition(pressScale, pressRotate); ScaleTransition releaseScale = new ScaleTransition(Duration.millis(100), image); releaseScale.setToX(1.0); releaseScale.setToY(1.0); RotateTransition releaseRotate = new RotateTransition(Duration.millis(100), image); releaseRotate.setToAngle(0); ParallelTransition releaseTransition = new ParallelTransition(releaseScale, releaseRotate); button.setOnMousePressed(event -> pressTransition.playFromStart()); button.setOnMouseReleased(event -> releaseTransition.playFromStart()); }
+    private void addClickAnimation(Button button) { if (button == null) return; ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), button); pressTransition.setToX(0.9); pressTransition.setToY(0.9); ScaleTransition releaseTransition = new ScaleTransition(Duration.millis(100), button); releaseTransition.setToX(1.0); releaseTransition.setToY(1.0); button.setOnMousePressed(event -> pressTransition.playFromStart()); button.setOnMouseReleased(event -> releaseTransition.playFromStart()); }
 }
