@@ -75,8 +75,8 @@ public class GameManager {
         // --- TẢI TẤT CẢ ẢNH NỀN ---
         try {
             backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_1.png")));
-            backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BG2.png"))); // Màn 2
-            backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/bg3.png"))); // Màn 3
+            backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_2.png"))); // Màn 2
+            backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_3.png"))); // Màn 3
         } catch (Exception e) {
             System.err.println("Lỗi: Không thể tải ảnh nền.");
             e.printStackTrace();
