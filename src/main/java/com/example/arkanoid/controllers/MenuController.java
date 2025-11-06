@@ -228,7 +228,7 @@ public class MenuController {
 
             storyText1.setText("NHÀ NGUYỆN CÁT TRẮNG");
             storyText2.setText("Nơi tiếng chuông yên nghỉ ngàn năm, ConMel gặp tu sĩ mất đức tin - LongDe.\nNgài chỉ điểm cho ConMel về tung tích cháu gái AnhChuc...");
-            storyText3.setText("...Trong gạch đá đổ vỡ, ConMel theo lời LongDe tìm cách mở ra Trục Thăng Thiên");
+            storyText3.setText("...Trong gạch đá đổ vỡ, ConMel theo lời LongDe tìm cách mở ra Trục Thăng Thiên.");
 
             PauseTransition pause = new PauseTransition(Duration.millis(500));
             pause.setOnFinished(e -> fadeOutAndLoadGame(currentStage, currentScene));
