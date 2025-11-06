@@ -4,7 +4,6 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
-// Bỏ import ImagePattern vì không dùng
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 
@@ -12,19 +11,17 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-// (Import cho Factory - đã thêm từ lần trước)
 import java.util.Map;
 import java.util.HashMap;
 
 public class GameManager {
 
-    // (Các biến thành viên không đổi)
+    // (Các biến paddle, balls, bricks... không đổi)
     private final int playAreaWidth = 800;
     private double playAreaOffsetX;
     private int screenWidth, screenHeight;
@@ -34,6 +31,10 @@ public class GameManager {
     private List<PowerUp> powerUps = new ArrayList<>();
     private List<Particle> particles = new ArrayList<>();
     private List<Projectile> projectiles = new ArrayList<>();
+
+    // --- THÊM BIẾN BOSS ---
+    private Boss boss; // Thêm 1 con boss
+
     private Random random = new Random();
     private double trailSpawnTimer = 0;
     private static final double TRAIL_SPAWN_INTERVAL = 0.03;
@@ -47,7 +48,7 @@ public class GameManager {
 
     private boolean gameOver = false;
     private boolean levelWon = false;
-    private boolean gameWon = false; // Thắng toàn bộ game
+    private boolean gameWon = false;
 
     private HighScores highScores;
     private boolean mouseControlled = false;
@@ -64,7 +65,7 @@ public class GameManager {
 
     private Map<Integer, BrickFactory> brickFactories;
 
-    // --- Constructor (Đã sửa) ---
+    // --- Constructor (Không đổi) ---
     public GameManager(int screenWidth, int screenHeight, String playerName) {
         this.screenWidth = screenWidth;
         this.screenHeight = screenHeight;
@@ -73,27 +74,30 @@ public class GameManager {
 
         try {
             backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_1.png")));
-            backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_2.png")));
-            backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_3.png")));
+            backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_1.png")));
+            backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_1.png")));
+            // (Thêm ảnh viền từ lần trước)
+            // borderImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_area_border.png"));
         } catch (Exception e) {
-            System.err.println("Lỗi: Không thể tải ảnh nền.");
+            System.err.println("Lỗi: Không thể tải ảnh nền hoặc viền.");
             e.printStackTrace();
         }
 
         highScores = new HighScores();
         initializeFactories();
-
         initGame();
     }
 
-    // (Các hàm initializeFactories, initGame, loadLevelData, resetCurrentLevel, nextLevel, createBricks không đổi)
+    // (Hàm initializeFactories không đổi)
     private void initializeFactories() {
         brickFactories = new HashMap<>();
         brickFactories.put(1, new NormalBrickFactory(1));
         brickFactories.put(2, new NormalBrickFactory(2));
         brickFactories.put(3, new NormalBrickFactory(3));
         brickFactories.put(4, new IndestructibleBrickFactory());
+        brickFactories.put(5, new NormalBrickFactory(5));
     }
+
     public void initGame() {
         score = 0;
         lives = 3;
@@ -101,19 +105,25 @@ public class GameManager {
         gameWon = false;
         loadLevelData();
     }
+
+    // --- HÀM NÀY ĐÃ SỬA ---
     private void loadLevelData() {
         int bgIndex = Math.min(currentLevelIndex, backgroundImages.size() - 1);
         currentBackgroundImage = backgroundImages.get(bgIndex);
         String levelFile = levelFiles.get(currentLevelIndex);
+
         paddle = new Paddle(
                 playAreaOffsetX + playAreaWidth / 2.0 - 60,
                 screenHeight - 40, 120, 20, screenWidth
         );
         paddle.setPlayArea(playAreaOffsetX, playAreaWidth);
+
         balls.clear();
         powerUps.clear();
         particles.clear();
         projectiles.clear();
+        boss = null; // Xóa boss cũ (nếu có)
+
         int ballRadius = 6;
         Ball newBall = new Ball(
                 paddle.getX() + paddle.getWidth() / 2 - ballRadius,
@@ -123,7 +133,18 @@ public class GameManager {
         newBall.setPlayArea(playAreaOffsetX, playAreaWidth);
         newBall.stickTo(paddle);
         balls.add(newBall);
+
         createBricks(levelFile);
+
+        // --- THÊM KHỞI TẠO BOSS ---
+        // Chỉ tạo boss nếu là Màn 1 (index = 0)
+        if (currentLevelIndex == 0) {
+            // Tạo boss ở tọa độ Y=20 (trên cùng), kích thước 80x60 (bạn có thể đổi)
+            boss = new Boss(playAreaOffsetX, 20, 80, 60);
+            boss.setPlayArea(playAreaOffsetX, playAreaWidth);
+        }
+        // --- KẾT THÚC THÊM ---
+
         crossBowActive = false;
         crossBowTimer = 0.0;
         arrowSpawnTimer = 0.0;
@@ -134,6 +155,8 @@ public class GameManager {
         levelWon = false;
         mouseControlled = false;
     }
+
+    // (Các hàm resetCurrentLevel, nextLevel, createBricks... không đổi)
     private void resetCurrentLevel() {
         running = false;
         powerUps.clear();
@@ -208,8 +231,6 @@ public class GameManager {
         }
         System.out.println("Đã tải thành công map: " + levelFileName + " (" + rows + "x" + cols + ")");
     }
-
-    // (Các hàm getters, input, update... không đổi)
     public boolean hasWonLevel() { return levelWon; }
     public boolean hasWonGame() { return gameWon; }
     public int getCurrentLevelIndex() { return currentLevelIndex; }
@@ -220,7 +241,43 @@ public class GameManager {
     public void setMouseControl(boolean controlled) { this.mouseControlled = controlled; }
     public void processMouseMovement(double mouseX) { if (paddle != null) { paddle.moveTo(mouseX); } }
     public void processInput(Set<KeyCode> keys) { if (gameOver) { if (keys.contains(KeyCode.SPACE) || keys.contains(KeyCode.R)) { initGame(); } return; } if (keys.contains(KeyCode.SPACE)) { startGame(); } if (mouseControlled) { paddle.stop(); return; } if (keys.contains(KeyCode.LEFT)) { paddle.moveLeft(); } else if (keys.contains(KeyCode.RIGHT)) { paddle.moveRight(); } else { paddle.stop(); } }
-    public void update(double dt) { if (gameOver || !running) { paddle.update(dt); for (Ball b : balls) { b.stickTo(paddle); } return; } paddle.update(dt); for (Ball b : balls) { b.update(dt); } if (crossBowActive) { crossBowTimer -= dt; arrowSpawnTimer += dt; if (arrowSpawnTimer >= ARROW_SPAWN_INTERVAL) { spawnArrow(); arrowSpawnTimer -= ARROW_SPAWN_INTERVAL; } if (crossBowTimer <= 0) { crossBowActive = false; paddle.setCrossBowActive(false); System.out.println("Nỏ hết hạn");} } trailSpawnTimer += dt; if (trailSpawnTimer >= TRAIL_SPAWN_INTERVAL) { for (Ball b : balls) { spawnBallTrailParticle(b); } trailSpawnTimer -= TRAIL_SPAWN_INTERVAL; } Iterator<Ball> ballIterator = balls.iterator(); while (ballIterator.hasNext()) { Ball b = ballIterator.next(); if (b.isOutOfBounds()) { ballIterator.remove(); if (balls.isEmpty()) { SoundManager.playSound(SoundManager.Sound.MISSED_BALL); } } } if (balls.isEmpty()) { lives--; if (lives <= 0) { gameOver = true; saveCurrentScore(); SoundManager.playSound(SoundManager.Sound.GAME_OVER); } else { resetCurrentLevel(); } } for (Ball b : balls) { if (checkCollisionCircleRect(b, paddle) && b.getY() + b.getHeight() <= paddle.getY() + b.getDy()*dt + 5) { b.handleCollision(paddle, this); } } boolean allBricksDestroyed = true; Iterator<Brick> brickIterator = bricks.iterator(); while(brickIterator.hasNext()) { Brick b = brickIterator.next(); if (b.isDestroyed()) continue; if (!b.isIndestructible()) { allBricksDestroyed = false; } for (Ball ball : balls) { if (checkCollisionCircleRect(ball, b)) { ball.handleCollision(b, this); break; } } } if (allBricksDestroyed && !levelWon) { System.out.println("YOU WIN!"); running = false; levelWon = true; saveCurrentScore(); SoundManager.playSound(SoundManager.Sound.LEVEL_COMPLETED); if (crossBowActive) { crossBowActive = false; paddle.setCrossBowActive(false); } } Iterator<PowerUp> powerUpIterator = powerUps.iterator(); while (powerUpIterator.hasNext()) { PowerUp pu = powerUpIterator.next(); if (pu.isCollected()) { powerUpIterator.remove(); continue; } pu.update(dt); if (checkCollisionRectRect(pu, paddle)) { applyPowerUpEffect(pu); pu.setCollected(true); powerUpIterator.remove(); } else if (pu.getY() > screenHeight) { pu.setCollected(true); powerUpIterator.remove(); } } Iterator<Projectile> projectileIterator = projectiles.iterator(); while (projectileIterator.hasNext()) { Projectile p = projectileIterator.next(); p.update(dt); if (p.getY() + p.getHeight() < 0) { p.setDestroyed(true); } if (!p.isDestroyed()) { for (Brick b : bricks) { if (b.isDestroyed() || b.isIndestructible()) continue; if (p.isPiercing() && p.hasHitBrick(b)) { continue; } if (checkCollisionRectRect(p, b)) { if (p.isPiercing()) { boolean destroyed = b.takeHit(); if (destroyed) { score += 100; trySpawnPowerUp(b); } else { score += 25; } SoundManager.playSound(SoundManager.Sound.HIT_BRICK); p.addHitBrick(b); continue; } else { if (b.takeHit()) { score += 100; trySpawnPowerUp(b); } else { score += 25; } p.setDestroyed(true); SoundManager.playSound(SoundManager.Sound.HIT_BRICK); break; } } } } if (p.isDestroyed()) { projectileIterator.remove(); } } Iterator<Particle> particleIterator = particles.iterator(); while (particleIterator.hasNext()) { Particle p = particleIterator.next(); p.update(dt); if (p.isExpired()) particleIterator.remove(); } }
+
+    // --- HÀM UPDATE (ĐÃ SỬA) ---
+    public void update(double dt) {
+        // --- THÊM UPDATE BOSS ---
+        // (Boss di chuyển ngay cả khi game chưa bắt đầu)
+        if (boss != null) {
+            boss.update(dt);
+        }
+        // --- KẾT THÚC THÊM ---
+
+        if (gameOver || !running) {
+            paddle.update(dt);
+            for (Ball b : balls) {
+                b.stickTo(paddle);
+            }
+            return;
+        }
+
+        paddle.update(dt);
+        for (Ball b : balls) {
+            b.update(dt);
+        }
+
+        // (Code crossbow, trail, ball-out-of-bounds... không đổi)
+        if (crossBowActive) { crossBowTimer -= dt; arrowSpawnTimer += dt; if (arrowSpawnTimer >= ARROW_SPAWN_INTERVAL) { spawnArrow(); arrowSpawnTimer -= ARROW_SPAWN_INTERVAL; } if (crossBowTimer <= 0) { crossBowActive = false; paddle.setCrossBowActive(false); System.out.println("Nỏ hết hạn");} }
+        trailSpawnTimer += dt; if (trailSpawnTimer >= TRAIL_SPAWN_INTERVAL) { for (Ball b : balls) { spawnBallTrailParticle(b); } trailSpawnTimer -= TRAIL_SPAWN_INTERVAL; }
+        Iterator<Ball> ballIterator = balls.iterator(); while (ballIterator.hasNext()) { Ball b = ballIterator.next(); if (b.isOutOfBounds()) { ballIterator.remove(); if (balls.isEmpty()) { SoundManager.playSound(SoundManager.Sound.MISSED_BALL); } } }
+        if (balls.isEmpty()) { lives--; if (lives <= 0) { gameOver = true; saveCurrentScore(); SoundManager.playSound(SoundManager.Sound.GAME_OVER); } else { resetCurrentLevel(); } }
+        for (Ball b : balls) { if (checkCollisionCircleRect(b, paddle) && b.getY() + b.getHeight() <= paddle.getY() + b.getDy()*dt + 5) { b.handleCollision(paddle, this); } }
+        boolean allBricksDestroyed = true; Iterator<Brick> brickIterator = bricks.iterator(); while(brickIterator.hasNext()) { Brick b = brickIterator.next(); if (b.isDestroyed()) continue; if (!b.isIndestructible()) { allBricksDestroyed = false; } for (Ball ball : balls) { if (checkCollisionCircleRect(ball, b)) { ball.handleCollision(b, this); break; } } }
+        if (allBricksDestroyed && !levelWon) { System.out.println("YOU WIN!"); running = false; levelWon = true; saveCurrentScore(); SoundManager.playSound(SoundManager.Sound.LEVEL_COMPLETED); if (crossBowActive) { crossBowActive = false; paddle.setCrossBowActive(false); } }
+        Iterator<PowerUp> powerUpIterator = powerUps.iterator(); while (powerUpIterator.hasNext()) { PowerUp pu = powerUpIterator.next(); if (pu.isCollected()) { powerUpIterator.remove(); continue; } pu.update(dt); if (checkCollisionRectRect(pu, paddle)) { applyPowerUpEffect(pu); pu.setCollected(true); powerUpIterator.remove(); } else if (pu.getY() > screenHeight) { pu.setCollected(true); powerUpIterator.remove(); } }
+        Iterator<Projectile> projectileIterator = projectiles.iterator(); while (projectileIterator.hasNext()) { Projectile p = projectileIterator.next(); p.update(dt); if (p.getY() + p.getHeight() < 0) { p.setDestroyed(true); } if (!p.isDestroyed()) { for (Brick b : bricks) { if (b.isDestroyed() || b.isIndestructible()) continue; if (p.isPiercing() && p.hasHitBrick(b)) { continue; } if (checkCollisionRectRect(p, b)) { if (p.isPiercing()) { boolean destroyed = b.takeHit(); if (destroyed) { score += 100; trySpawnPowerUp(b); } else { score += 25; } SoundManager.playSound(SoundManager.Sound.HIT_BRICK); p.addHitBrick(b); continue; } else { if (b.takeHit()) { score += 100; trySpawnPowerUp(b); } else { score += 25; } p.setDestroyed(true); SoundManager.playSound(SoundManager.Sound.HIT_BRICK); break; } } } } if (p.isDestroyed()) { projectileIterator.remove(); } }
+        Iterator<Particle> particleIterator = particles.iterator(); while (particleIterator.hasNext()) { Particle p = particleIterator.next(); p.update(dt); if (p.isExpired()) particleIterator.remove(); }
+    }
+
+    // (Các hàm tiện ích không đổi)
     public void addScore(int points) { this.score += points; }
     public void spawnPowerUpFromBrick(Brick b) { double powerUpWidth = 50; double powerUpHeight = 70; double x = b.getX() + (b.getWidth() - powerUpWidth) / 2; double y = b.getY() + (b.getHeight() - powerUpHeight) / 2; PowerUp powerUp = PowerUpFactory.createRandomPowerUp(x, y, powerUpWidth, powerUpHeight); if (powerUp != null) { powerUps.add(powerUp); } }
     private void trySpawnPowerUp(Brick b) { spawnPowerUpFromBrick(b); }
@@ -239,15 +296,20 @@ public class GameManager {
             gc.setFill(Color.BLACK); gc.fillRect(0, 0, screenWidth, screenHeight);
         }
 
-        // Vẽ nền đen cho khu vực chơi
         gc.setFill(Color.rgb(0, 0, 0, 0.6));
         gc.fillRect(playAreaOffsetX, 0, playAreaWidth, screenHeight);
 
-        // --- THÊM VIỀN CHO KHU VỰC CHƠI ---
-        gc.setStroke(Color.rgb(150, 100, 200, 0.8)); // Màu tím nhạt (bạn có thể đổi)
-        gc.setLineWidth(4); // Độ dày viền
-        gc.strokeRect(playAreaOffsetX, 0, playAreaWidth, screenHeight);
-        // --- KẾT THÚC THÊM VIỀN ---
+        // (Xóa viền vẽ chay, thay bằng ảnh viền nếu có)
+        // if (borderImage != null && !borderImage.isError()) {
+        //    gc.drawImage(borderImage, 0, 0, screenWidth, screenHeight);
+        // }
+
+        // --- THÊM RENDER BOSS ---
+        // (Vẽ boss *sau* nền đen, nhưng *trước* gạch)
+        if (boss != null) {
+            boss.render(gc);
+        }
+        // --- KẾT THÚC THÊM ---
 
         // (Code vẽ UI, gạch, bóng... không đổi)
         gc.setFill(Color.WHITE); gc.setFont(new Font("Arial", 16)); gc.setTextAlign(TextAlignment.CENTER);
