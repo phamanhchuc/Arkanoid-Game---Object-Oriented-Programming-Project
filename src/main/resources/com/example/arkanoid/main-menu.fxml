@@ -27,6 +27,11 @@
                     <image> <Image url="@images/backgroundStart.png" /> </image>
                 </ImageView>
 
+                <ImageView fx:id="startImage" fitHeight="150.0" fitWidth="499.0" layoutX="379.0" layoutY="665.0" pickOnBounds="true" preserveRatio="true">
+                    <image> <Image url="@images/startButton.png" /> </image>
+
+                </ImageView>
+
                 <ImageView fx:id="storyImageView" fitHeight="955.5" fitWidth="1200.0" pickOnBounds="true" preserveRatio="false" visible="false" />
 
                 <Text fx:id="storyText1" fill="WHITE" layoutX="50.0" layoutY="80.0" stroke="#a14da1" strokeWidth="1.5" style="-fx-font-family: 'Arial'; -fx-font-weight: bold;" visible="false" wrappingWidth="550.0">
@@ -47,10 +52,7 @@
                     </font>
                 </Text>
 
-                <ImageView fx:id="startImage" fitHeight="150.0" fitWidth="499.0" layoutX="379.0" layoutY="665.0" pickOnBounds="true" preserveRatio="true">
-                    <image> <Image url="@images/startButton.png" /> </image>
 
-                </ImageView>
 
                 <Button fx:id="buttonStart" blendMode="MULTIPLY" layoutX="420.0" layoutY="679.0" mnemonicParsing="false" prefHeight="105.0" prefWidth="359.0" style="-fx-background-color: transparent;"
                 />

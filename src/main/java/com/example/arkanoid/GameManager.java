@@ -45,6 +45,13 @@ public class GameManager {
 
     private List<Image> backgroundImages = new ArrayList<>();
     private Image currentBackgroundImage;
+    private Image borderImage;
+    private Image leftSideImage;
+    private Image rightSideImage;
+    private Image scoreBoard;
+    private Image angle1;
+    private Image angle2;
+
 
     private boolean gameOver = false;
     private boolean levelWon = false;
@@ -77,7 +84,13 @@ public class GameManager {
             backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_1.png")));
             backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_1.png")));
             // (Thêm ảnh viền từ lần trước)
-            // borderImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_area_border.png"));
+             borderImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border1.png"));
+            leftSideImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide.jpg"));
+            rightSideImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide.jpg"));
+            scoreBoard = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board.png"));
+            angle1 =  new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1.png"));
+            angle2 = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle2.png"));
+
         } catch (Exception e) {
             System.err.println("Lỗi: Không thể tải ảnh nền hoặc viền.");
             e.printStackTrace();
@@ -299,11 +312,6 @@ public class GameManager {
         gc.setFill(Color.rgb(0, 0, 0, 0.6));
         gc.fillRect(playAreaOffsetX, 0, playAreaWidth, screenHeight);
 
-        // (Xóa viền vẽ chay, thay bằng ảnh viền nếu có)
-        // if (borderImage != null && !borderImage.isError()) {
-        //    gc.drawImage(borderImage, 0, 0, screenWidth, screenHeight);
-        // }
-
         // --- THÊM RENDER BOSS ---
         // (Vẽ boss *sau* nền đen, nhưng *trước* gạch)
         if (boss != null) {
@@ -313,9 +321,6 @@ public class GameManager {
 
         // (Code vẽ UI, gạch, bóng... không đổi)
         gc.setFill(Color.WHITE); gc.setFont(new Font("Arial", 16)); gc.setTextAlign(TextAlignment.CENTER);
-        gc.fillText("Player: " + playerName, screenWidth - 100, 25);
-        gc.fillText("Score: " + score, screenWidth - 100, 50);
-        gc.fillText("Lives: " + lives, screenWidth - 100, 75);
         if (crossBowActive) { gc.setFill(Color.YELLOW); gc.fillText(String.format("Nỏ: %.1f s", crossBowTimer), screenWidth - 100, 100); }
         gc.setTextAlign(TextAlignment.LEFT);
         for (Brick b : bricks) { if (!b.isDestroyed()) { b.render(gc); } }
@@ -326,6 +331,7 @@ public class GameManager {
         for (Ball b : balls) {
             b.render(gc);
         }
+
         if (gameOver) {
             gc.setFill(Color.rgb(0, 0, 0, 0.7)); gc.fillRect(0, 0, screenWidth, screenHeight);
             gc.setFill(Color.RED); gc.setFont(new Font("Arial", 80)); gc.setTextAlign(TextAlignment.CENTER);
@@ -334,6 +340,76 @@ public class GameManager {
             gc.fillText("Press R or SPACE to Restart", screenWidth / 2.0, screenHeight / 2.0 + 50);
             gc.setTextAlign(TextAlignment.LEFT);
         }
+
+
+        if (leftSideImage != null && !leftSideImage.isError()) {
+            // Vẽ bên trái border
+            gc.drawImage(
+                    leftSideImage,
+                    playAreaOffsetX - leftSideImage.getWidth()-10, // canh sát mép trái play area
+                    0,
+                    leftSideImage.getWidth(),
+                    screenHeight
+            );
+        }
+
+
+        if (rightSideImage != null && !rightSideImage.isError()) {
+            // Vẽ bên phải border
+            gc.drawImage(
+                    rightSideImage,
+                    playAreaOffsetX + playAreaWidth+10, // ngay bên phải vùng chơi
+                    0,
+                    rightSideImage.getWidth(),
+                    screenHeight
+            );
+        }
+
+        // (Xóa viền vẽ chay, thay bằng ảnh viền nếu có)
+        if (borderImage != null && !borderImage.isError()) {
+            gc.drawImage(borderImage, 0, 0, screenWidth, screenHeight);
+        }
+
+        if (scoreBoard != null && !scoreBoard.isError()) {
+            double x = 870;      // tọa độ X
+            double y = 60;      // tọa độ Y
+            double w = 500;      // chiều rộng
+            double h = 840;       // chiều cao
+            gc.drawImage(scoreBoard, x, y, w, h);
+        }
+        if (angle1 != null && !angle1.isError()) {
+            double x = -50;      // tọa độ X
+            double y = 400;      // tọa độ Y
+            double w = 460;      // chiều rộng
+            double h = 840;       // chiều cao
+            gc.drawImage(angle1, x, y, w, h);
+        }
+        if (angle2 != null && !angle2.isError()) {
+            double x = 0;      // tọa độ X
+            double y = 0;      // tọa độ Y
+            double w = 250;      // chiều rộng
+            double h = 240;       // chiều cao
+            gc.drawImage(angle2, x, y, w, h);
+        }
+
+
+//  Reset lại màu chữ và font sau khi vẽ particle
+
+        gc.setFill(Color.WHITE);              // ✅ Đặt lại màu trắng hoặc màu bạn muốn
+        gc.setFont(new Font("Arial Bold", 16));
+        gc.setStroke(Color.BLACK);
+        gc.setLineWidth(2);
+
+// Vẽ text len bang diem nhe hehehehehehe
+        gc.strokeText("Player: " + playerName, screenWidth - 185, 190);
+        gc.fillText("Player: " + playerName, screenWidth - 185, 190);
+
+        gc.strokeText("Score: " + score, screenWidth - 185, 230);
+        gc.fillText("Score: " + score, screenWidth - 185, 230);
+
+        gc.strokeText("Lives: " + lives, screenWidth - 185, 270);
+        gc.fillText("Lives: " + lives, screenWidth - 185, 270);
+
     }
 
     public void pauseGame() { if (!gameOver) { } }
