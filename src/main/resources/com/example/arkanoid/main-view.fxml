@@ -16,11 +16,21 @@
         <ImageView fx:id="winImageView" fitHeight="955.5" fitWidth="1200" pickOnBounds="true" preserveRatio="false" visible="false" />
 
         <Text fx:id="winText" fill="WHITE" layoutX="50.0" layoutY="100.0" stroke="#a14da1" strokeWidth="1.5" style="-fx-font-family: 'Arial'; -fx-font-weight: bold;" visible="false" wrappingWidth="1100.0" />
+
+        <Text fx:id="winTitleText" fill="WHITE" layoutX="0.0" layoutY="90.0" style="-fx-fill: white; -fx-stroke: #bd7244; -fx-stroke-width: 2;" visible="false" wrappingWidth="1200.0" />
+
+        <Text fx:id="winText1" fill="WHITE" layoutX="50.0" layoutY="200.0" style="-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;" visible="false" wrappingWidth="800.0" />
+
+        <Text fx:id="winText2" fill="WHITE" layoutX="300.0" layoutY="650.0" style="-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;" visible="false" wrappingWidth="900.0" />
+
+        <Text fx:id="winText3" fill="WHITE" layoutX="40.0" layoutY="100.0" style="-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;" visible="false" wrappingWidth="750.0" />
+
+        <Text fx:id="winText4" fill="WHITE" layoutX="770.0" layoutY="550.0" style="-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;" visible="false" wrappingWidth="400.0" />
+
         <ImageView fx:id="pauseBackground" fitHeight="1000.0" fitWidth="1000.0" layoutX="90.0" layoutY="150.0" pickOnBounds="true" preserveRatio="true" visible="false">
             <image>
                 <Image url="@images/menu_Pause.png" />
             </image>
-
         </ImageView>
 
         <VBox fx:id="pausePane" alignment="CENTER" layoutX="450.0" layoutY="300.0" spacing="20.0" visible="false">
