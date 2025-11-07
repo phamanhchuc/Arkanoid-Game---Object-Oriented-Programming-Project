@@ -4,6 +4,15 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 
 public class Ball extends MovableObject {
+
+    // --- THÊM ENUM MỚI NÀY VÀO TRONG CÙNG CỦA CLASS ---
+    public enum BallState {
+        NORMAL,
+        FIRE,
+        ICE
+    }
+    // --- KẾT THÚC THÊM ---
+
     private double speed = 350;
     private double radius;
     private int sceneW, sceneH;
@@ -18,8 +27,11 @@ public class Ball extends MovableObject {
     private int frameWidth;
     private int frameHeight;
 
-    // --- THÊM THEO HƯỚNG DẪN ---
     private CollisionStrategy collisionStrategy;
+
+    // --- THÊM BIẾN TRẠNG THÁI ---
+    private BallState currentState = BallState.NORMAL;
+    private double stateTimer = 0.0; // Đếm ngược thời gian hiệu lực
     // --- KẾT THÚC THÊM ---
 
 
@@ -36,7 +48,6 @@ public class Ball extends MovableObject {
         dy = 0;
         this.radius = r;
 
-        // --- THÊM DÒNG NÀY ---
         this.collisionStrategy = new NormalCollisionStrategy(); // Mặc định là chiến lược bình thường
 
         try {
@@ -54,7 +65,13 @@ public class Ball extends MovableObject {
         }
     }
 
-    // --- THÊM CÁC HÀM MỚI (THEO HƯỚNG DẪN) ---
+    /**
+     * Lấy trạng thái bóng (dùng cho debug hoặc các logic khác)
+     */
+    public boolean isStuck() {
+        return stuck;
+    }
+
     /**
      * Thay đổi chiến lược va chạm (ví dụ: khi nhặt Power-up)
      *
@@ -77,6 +94,23 @@ public class Ball extends MovableObject {
      */
     public void handleCollision(GameObject object, GameManager manager) {
         collisionStrategy.handleCollision(this, object, manager);
+    }
+    // --- KẾT THÚC THÊM ---
+
+    // --- THÊM 2 HÀM MỚI NÀY ---
+    /**
+     * Gán trạng thái (Lửa/Băng) và thời gian hiệu lực cho bóng.
+     */
+    public void setBallState(BallState state, double duration) {
+        this.currentState = state;
+        this.stateTimer = duration;
+    }
+
+    /**
+     * Lấy trạng thái hiện tại của bóng (để Strategy kiểm tra).
+     */
+    public BallState getState() {
+        return this.currentState;
     }
     // --- KẾT THÚC THÊM ---
 
@@ -127,6 +161,16 @@ public class Ball extends MovableObject {
     @Override
     public void update(double dt) {
         if (stuck) return;
+
+        // --- THÊM LOGIC ĐẾM NGƯỢC ---
+        if (stateTimer > 0) {
+            stateTimer -= dt;
+            if (stateTimer <= 0) {
+                currentState = BallState.NORMAL;
+                System.out.println("Ball state returned to NORMAL");
+            }
+        }
+        // --- KẾT THÚC THÊM ---
 
         move(dt);
 
