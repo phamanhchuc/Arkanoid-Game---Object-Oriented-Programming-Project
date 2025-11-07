@@ -50,14 +50,20 @@ public class MainController {
     @FXML private Button quitButton;
     @FXML private ImageView pauseBackground;
     @FXML private ImageView winImageView;
+
     @FXML private Text winText;
+    @FXML private Text winTitleText;
+    @FXML private Text winText1;
+    @FXML private Text winText2;
+    @FXML private Text winText3;
+    @FXML private Text winText4;
+    private Text[] allWinTexts;
 
     private GameManager gameManager;
     private AnimationTimer gameLoop;
     private Set<KeyCode> activeKeys = new HashSet<>();
     private boolean isPaused = false;
 
-    // --- CÁC BIẾN THÊM ---
     private Image storyImage2;
     private Image storyImage3;
     private Image storyImage4;
@@ -65,7 +71,13 @@ public class MainController {
     private Image storyImage6;
     private Font isabellaBodyFont;
     private Timeline currentWinTimeline;
-    private boolean isWinSkipped = false;
+    private boolean isWinSkipped = false; // (Vẫn dùng cờ này)
+
+    // --- BIẾN MỚI ĐỂ SKIP THÔNG MINH ---
+    private Text currentTypingTarget;
+    private String currentTypingContent;
+    private Runnable currentTypingCallback;
+    // --- KẾT THÚC BIẾN MỚI ---
 
     @FXML
     private void initialize() {
@@ -74,9 +86,10 @@ public class MainController {
         gameCanvas.setHeight(955.5);
         gameManager = new GameManager(1200, 956, GameData.playerName);
 
+        allWinTexts = new Text[]{winText, winTitleText, winText1, winText2, winText3, winText4};
+
         gameLoop = new AnimationTimer() {
             private long lastTime = 0;
-
             @Override
             public void handle(long now) {
                 if (lastTime == 0) { lastTime = now; return; }
@@ -108,6 +121,7 @@ public class MainController {
         addClickAnimation(restartButton);
         addClickAnimation(quitButton);
 
+        // (Đảm bảo tên file là .png như bạn nói)
         try {
             storyImage2 = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/story_2.png"));
             storyImage3 = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/story_3.png"));
@@ -168,10 +182,65 @@ public class MainController {
         }
     }
 
+    private void clearAllCutsceneTexts() {
+        if (allWinTexts != null) {
+            for (Text t : allWinTexts) {
+                if (t != null) {
+                    t.setText("");
+                    t.setVisible(false);
+                }
+            }
+        }
+    }
+
+    // --- SỬA LOGIC SKIP TOÀN BỘ ---
+    private void skipEntireCutscene() {
+        if (isWinSkipped) return;
+        isWinSkipped = true;
+
+        System.out.println("Đã bỏ qua (skip) toàn bộ cutscene!");
+        if (currentWinTimeline != null) {
+            currentWinTimeline.stop();
+        }
+        SoundManager.stopTypingLoop();
+
+        // Dọn dẹp các biến skip
+        currentTypingTarget = null;
+        currentTypingContent = null;
+        currentTypingCallback = null;
+
+        loadNextLevelAndRestart();
+    }
+
     private void handleLevelWin() {
         int levelWonIndex = gameManager.getCurrentLevelIndex();
         gameManager.nextLevel();
 
+        // Cài đặt sự kiện skip chung
+        winImageView.setOnMousePressed(event -> {
+            // Nếu đang có text chạy -> skip text đó
+            if (currentWinTimeline != null && currentWinTimeline.getStatus() == Timeline.Status.RUNNING) {
+                System.out.println("Skipping text...");
+                currentWinTimeline.stop(); // Dừng timer
+                SoundManager.stopTypingLoop(); // Dừng âm thanh
+
+                // Hoàn thành text ngay lập tức
+                if (currentTypingTarget != null && currentTypingContent != null) {
+                    currentTypingTarget.setText(currentTypingContent);
+                }
+
+                // Chạy hàm callback (nếu có) để chuyển cảnh
+                if (currentTypingCallback != null) {
+                    Runnable callback = currentTypingCallback;
+                    currentTypingCallback = null; // Xóa để tránh gọi lại
+                    callback.run();
+                }
+            }
+            // (Nếu không có text nào đang chạy, click chuột không làm gì cả)
+        });
+        winImageView.requestFocus();
+
+        // Phân loại cutscene
         if (gameManager.hasWonGame()) runCutscene_WinLevel3();
         else if (levelWonIndex == 0) runCutscene_WinLevel1();
         else if (levelWonIndex == 1) runCutscene_WinLevel2();
@@ -187,17 +256,21 @@ public class MainController {
 
         if (gameCanvas != null) gameCanvas.setVisible(false);
         isWinSkipped = false;
-        if (isabellaBodyFont != null) winText.setFont(isabellaBodyFont);
-        else winText.setFont(new Font("Arial", 40));
 
-        winImageView.setOnMousePressed(event -> {
-            if (isWinSkipped) return;
-            isWinSkipped = true;
-            if (currentWinTimeline != null) currentWinTimeline.stop();
-            SoundManager.stopTypingLoop();
-            loadNextLevelAndRestart();
-        });
+        // (Cài đặt font)
+        if (isabellaBodyFont != null) {
+            winText.setFont(Font.font(isabellaBodyFont.getFamily(), 60));
+            winTitleText.setFont(Font.font(isabellaBodyFont.getFamily(), 70));
+            winText1.setFont(Font.font(isabellaBodyFont.getFamily(), 50));
+            winText2.setFont(Font.font(isabellaBodyFont.getFamily(), 50));
+        } else {
+            winText.setFont(new Font("Arial", 55));
+            winTitleText.setFont(new Font("Arial", 70));
+            winText1.setFont(new Font("Arial", 42));
+            winText2.setFont(new Font("Arial", 38));
+        }
 
+        // (Nội dung text)
         String scene1_Text = "Linh thạch sáng chói. Bầu trời tỉnh dậy, mở mắt,... ";
         String scene2_Text1 = "THÀNH PHỐ NỔI AETHERION";
         String scene2_Text2 = "Cổng Trời mở ra, \nkhông phải nơi Thượng Đế \nngự trị, mà là công trình của \nnhững kẻ muốn thay thế Ngài.";
@@ -207,17 +280,6 @@ public class MainController {
             PauseTransition pause = new PauseTransition(Duration.millis(3000));
             pause.setOnFinished(e -> {
                 if (isWinSkipped) return;
-
-                // 🧹 DỌN DẸP CÁC TEXT SAU CUTSCENE
-                Platform.runLater(() -> {
-                    if (winText != null && winText.getParent() instanceof Pane parent) {
-                        parent.getChildren().removeIf(node ->
-                                node instanceof Text &&
-                                        node != winText // không xóa text gốc nếu bạn cần dùng lại
-                        );
-                    }
-                });
-
                 loadNextLevelAndRestart();
             });
             pause.play();
@@ -230,50 +292,23 @@ public class MainController {
                 if (isWinSkipped) return;
 
                 winImageView.setImage(storyImage3);
-                winText.setVisible(true);
-                winText.setText("");
+                winText.setVisible(false);
 
-                Pane parent = (Pane) winText.getParent();
-
-                Text winTitleText = new Text();
                 winTitleText.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
-                winTitleText.setLayoutX(0);
-                winTitleText.setLayoutY(90);
-                winTitleText.setWrappingWidth(1200);
-                winTitleText.setStyle("-fx-fill: white; -fx-stroke: #bd7244; -fx-stroke-width: 2;");
-                winTitleText.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 70) : new Font("Arial", 70));
-                parent.getChildren().add(winTitleText);
+                winTitleText.setVisible(true);
 
                 startWinTypewriter(winTitleText, scene2_Text1, () -> {
                     PauseTransition pause2 = new PauseTransition(Duration.millis(1000));
                     pause2.setOnFinished(e2 -> {
                         if (isWinSkipped) return;
-
-                        Text winText1 = new Text();
-                        winText1.setVisible(true);
                         winText1.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
-                        winText1.setLayoutX(50);
-                        winText1.setLayoutY(200);
-                        winText1.setWrappingWidth(800);
-                        winText1.setStyle("-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;");
-                        winText1.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 50) : new Font("Arial", 42));
-                        parent.getChildren().add(winText1);
-
+                        winText1.setVisible(true);
                         startWinTypewriter(winText1, scene2_Text2, () -> {
                             PauseTransition pause3 = new PauseTransition(Duration.millis(800));
                             pause3.setOnFinished(e3 -> {
                                 if (isWinSkipped) return;
-
-                                Text winText2 = new Text();
-                                winText2.setVisible(true);
                                 winText2.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
-                                winText2.setLayoutX(300);
-                                winText2.setLayoutY(650);
-                                winText2.setWrappingWidth(900);
-                                winText2.setStyle("-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;");
-                                winText2.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 50) : new Font("Arial", 38));
-                                parent.getChildren().add(winText2);
-
+                                winText2.setVisible(true);
                                 startWinTypewriter(winText2, scene2_Text3, onScene2Finished);
                             });
                             pause3.play();
@@ -288,14 +323,14 @@ public class MainController {
         System.out.println("Bắt đầu Cảnh 1 (Thắng màn 1)...");
         winImageView.setImage(storyImage2);
         winImageView.setVisible(true);
+
         winText.setText("");
         winText.setVisible(true);
         winText.setStyle("-fx-fill: white; -fx-stroke: #723f3f; -fx-stroke-width: 1.5;");
         winText.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
         winText.setLayoutX(50);
         winText.setLayoutY(100);
-        winText.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 60) : new Font("Arial", 55));
-        startWinTypewriter(scene1_Text, onScene1Finished);
+        startWinTypewriter(winText, scene1_Text, onScene1Finished);
     }
 
     private void runCutscene_WinLevel2() {
@@ -309,81 +344,42 @@ public class MainController {
         isWinSkipped = false;
         winText.setVisible(false);
 
-        winImageView.setOnMousePressed(event -> {
-            if (isWinSkipped) return;
-            isWinSkipped = true;
-
-            // Dọn dẹp text khi skip
-            Platform.runLater(() -> {
-                if (winText != null && winText.getParent() instanceof Pane parent) {
-                    parent.getChildren().removeIf(node ->
-                            node instanceof Text && node != winText
-                    );
-                }
-            });
-
-            if (currentWinTimeline != null) currentWinTimeline.stop();
-            SoundManager.stopTypingLoop();
-            loadNextLevelAndRestart();
-        });
-
-        // ---------- NỘI DUNG TEXT ----------
-        // ending scene (storyImage4)
+        // (Nội dung text Màn 2)
         String scene2_Text3 = "Ánh sáng vỡ tung, Cổng Trời sụp đổ trong \ntiếng cầu nguyện bị xé vụn.";
         String scene2_Text4 = "ConMel với tay về phía AnhChuc, \nnhưng chỉ còn khoảng không nuốt lấy anh.";
         String scene2_Text5 = "Trong tro sáng còn lại, \nQuanBew mỉm cười lặng lẽ. \nThiên Đàng cuối cùng đã mở ra.";
-
-        // opening scene (storyImage5)
         String scene3_Text1 = "Cổng Trời không khép lại - nó nở rộ như \nmột vết thương. " +
                 "Từ trái tim bị hiến tế \ncủa AnhChuc, bầu trời rách toạc, \nvà máu hóa thành lửa.";
         String scene3_Text2 = "QuanBew quan sát đống đổ nát, thì thầm lời cuối cùng của nghi lễ rồi mỉm cười trước vị thần mà hắn vừa sinh ra.\n" +
                 "Từ đó, Địa Ngục bắt đầu treo giữa trời.";
 
-        // 🧹 Dọn text helper
-        Runnable clearTexts = () -> Platform.runLater(() -> {
-            if (winText != null && winText.getParent() instanceof Pane p) {
-                p.getChildren().removeIf(node -> node instanceof Text && node != winText);
-            }
-        });
-
-        // ---------- Khi kết thúc toàn bộ cutscene ----------
         Runnable onAllFinished = () -> {
             if (isWinSkipped) return;
-            clearTexts.run();
             loadNextLevelAndRestart();
         };
 
-        // ---------- Cảnh mở đầu (storyImage5) ----------
+        // (Cảnh 2: Mở đầu Màn 3)
         Runnable playScene3 = () -> {
             if (isWinSkipped) return;
-
-            // Dọn text cũ trước khi vào cảnh mới
-            clearTexts.run();
-
             winImageView.setImage(storyImage5);
-            Pane parent = (Pane) winImageView.getParent();
-
-            // Thêm delay ngắn để đảm bảo ảnh đã render xong
             PauseTransition waitForImage = new PauseTransition(Duration.millis(200));
             waitForImage.setOnFinished(e0 -> {
                 if (isWinSkipped) return;
 
-                // scene3_Text1
-                Text t1 = createCutsceneText(60, 120, 700, 48,
-                        "-fx-fill: white; -fx-stroke: #bd7244; -fx-stroke-width: 1.5;");
-                parent.getChildren().add(t1);
+                winText1.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 48) : new Font("Arial", 45));
+                winText1.setStyle("-fx-fill: white; -fx-stroke: #bd7244; -fx-stroke-width: 1.5;");
+                winText1.setVisible(true);
 
-                startWinTypewriter(t1, scene3_Text1, () -> {
+                startWinTypewriter(winText1, scene3_Text1, () -> {
                     PauseTransition p2 = new PauseTransition(Duration.millis(1000));
                     p2.setOnFinished(e -> {
                         if (isWinSkipped) return;
 
-                        // scene3_Text2
-                        Text t2 = createCutsceneText(580, 650, 570, 46,
-                                "-fx-fill: white; -fx-stroke: #864c39; -fx-stroke-width: 1.5;");
-                        parent.getChildren().add(t2);
+                        winText2.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 46) : new Font("Arial", 43));
+                        winText2.setStyle("-fx-fill: white; -fx-stroke: #864c39; -fx-stroke-width: 1.5;");
+                        winText2.setVisible(true);
 
-                        startWinTypewriter(t2, scene3_Text2, () -> {
+                        startWinTypewriter(winText2, scene3_Text2, () -> {
                             PauseTransition done = new PauseTransition(Duration.seconds(3));
                             done.setOnFinished(e2 -> onAllFinished.run());
                             done.play();
@@ -395,31 +391,34 @@ public class MainController {
             waitForImage.play();
         };
 
-        // ---------- Cảnh kết (storyImage4) ----------
+        // (Cảnh 1: Kết thúc Màn 2)
         Runnable playScene2 = () -> {
             if (isWinSkipped) return;
             winImageView.setImage(storyImage4);
-            Pane parent = (Pane) winImageView.getParent();
 
-            Text t3 = createCutsceneText(60, 120, 700, 48, "-fx-fill: white; -fx-stroke: #bd7244; -fx-stroke-width: 1.5;");
-            parent.getChildren().add(t3);
-            startWinTypewriter(t3, scene2_Text3, () -> {
+            winText1.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 48) : new Font("Arial", 45));
+            winText1.setStyle("-fx-fill: white; -fx-stroke: #bd7244; -fx-stroke-width: 1.5;");
+            winText1.setVisible(true);
+
+            startWinTypewriter(winText1, scene2_Text3, () -> {
                 PauseTransition p1 = new PauseTransition(Duration.millis(1000));
                 p1.setOnFinished(e -> {
                     if (isWinSkipped) return;
 
-                    Text t4 = createCutsceneText(60, 650, 700, 46, "-fx-fill: white; -fx-stroke: #821010; -fx-stroke-width: 1.5;");
-                    parent.getChildren().add(t4);
-                    startWinTypewriter(t4, scene2_Text4, () -> {
+                    winText2.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 46) : new Font("Arial", 43));
+                    winText2.setStyle("-fx-fill: white; -fx-stroke: #821010; -fx-stroke-width: 1.5;");
+                    winText2.setVisible(true);
+
+                    startWinTypewriter(winText2, scene2_Text4, () -> {
                         PauseTransition p2 = new PauseTransition(Duration.millis(800));
                         p2.setOnFinished(e2 -> {
                             if (isWinSkipped) return;
 
-                            Text t5 = createCutsceneText(750, 750, 450, 44, "-fx-fill: white; -fx-stroke: #864c39; -fx-stroke-width: 1.5;");
-                            t5.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
-                            parent.getChildren().add(t5);
-                            startWinTypewriter(t5, scene2_Text5, () -> {
-                                // Sau khi xong ending → sang opening
+                            winText3.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 44) : new Font("Arial", 41));
+                            winText3.setStyle("-fx-fill: white; -fx-stroke: #864c39; -fx-stroke-width: 1.5;");
+                            winText3.setVisible(true);
+
+                            startWinTypewriter(winText3, scene2_Text5, () -> {
                                 PauseTransition nextScene = new PauseTransition(Duration.seconds(2));
                                 nextScene.setOnFinished(e3 -> playScene3.run());
                                 nextScene.play();
@@ -432,26 +431,13 @@ public class MainController {
             });
         };
 
-        // ---------- Bắt đầu toàn bộ ----------
+        // Bắt đầu toàn bộ
         System.out.println("Bắt đầu Cutscene (Win Level 2)...");
         winImageView.setImage(storyImage4);
         winImageView.setVisible(true);
-
         PauseTransition startDelay = new PauseTransition(Duration.millis(2000));
         startDelay.setOnFinished(e -> playScene2.run());
         startDelay.play();
-    }
-
-    // Hàm helper tạo text với style chung
-    private Text createCutsceneText(double x, double y, double wrap, double fontSize, String style) {
-        Text text = new Text();
-        text.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
-        text.setLayoutX(x);
-        text.setLayoutY(y);
-        text.setWrappingWidth(wrap);
-        text.setStyle(style);
-        text.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), fontSize) : new Font("Arial", fontSize - 3));
-        return text;
     }
 
     private void runCutscene_WinLevel3() {
@@ -465,74 +451,36 @@ public class MainController {
         isWinSkipped = false;
         winText.setVisible(false);
 
-        winImageView.setOnMousePressed(e -> {
-            if (isWinSkipped) return;
-            isWinSkipped = true;
-            handleQuit();
-        });
-
-        // --- Nội dung kết ---
         String scene3_Text3 = "Ánh sáng cuối cùng bùng nổ, xé tan cả Thiên Đàng lẫn Địa Ngục. " +
-                "Bạo Chúa Nem Chua gào thét, và bầu trời sụp đổ cùng nhịp tim nhân loại. " +
+                "Bạo Chúa Nem Chua gào thét, và bầu trời sụp đổ cùng nhịp tim nhân loại. \n" +
                 "ConMel tan vào luồng sáng của lời hứa cuối cùng.";
         String scene3_Text4 = "Trên mặt đất nứt vỡ, một bàn tay gãy nát nằm lại giữa đống " +
                 "tro tàn - như dấu chấm hết cho giấc mơ của nhân loại.";
 
         System.out.println("Bắt đầu Cảnh (Thắng màn 3 - cuối)...");
-
-        // --- Đặt ảnh ---
         winImageView.setImage(storyImage6);
         winImageView.setVisible(true);
 
-        // --- Lấy parent thật của ảnh ---
-        Node parentNode = winImageView.getParent();
-        if (!(parentNode instanceof Pane parent)) {
-            System.err.println("Không tìm thấy Pane cha của winImageView!");
-            handleQuit();
-            return;
-        }
-
-        // 🧹 Dọn text cũ
-        Platform.runLater(() -> parent.getChildren().removeIf(n -> n instanceof Text));
-
-        // --- Đợi 0.3s để chắc chắn ảnh hiển thị ---
         PauseTransition waitImage = new PauseTransition(Duration.millis(300));
         waitImage.setOnFinished(ev -> {
             if (isWinSkipped) return;
 
             // --- Text 1 ---
-            Text text1 = new Text();
-            text1.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
-            text1.setLayoutX(40);
-            text1.setLayoutY(100);
-            text1.setWrappingWidth(750);
-            text1.setStyle("-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;");
-            text1.setFont(isabellaBodyFont != null
-                    ? Font.font(isabellaBodyFont.getFamily(), 50)
-                    : new Font("Arial", 45));
-            parent.getChildren().add(text1);
+            winText3.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 50) : new Font("Arial", 45));
+            winText3.setStyle("-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;");
+            winText3.setVisible(true);
 
-            // 🔹 Đảm bảo text nằm trên ảnh
-            text1.toFront();
-
-            startWinTypewriter(text1, scene3_Text3, () -> {
+            startWinTypewriter(winText3, scene3_Text3, () -> {
                 PauseTransition after1 = new PauseTransition(Duration.millis(1000));
                 after1.setOnFinished(e -> {
                     if (isWinSkipped) return;
 
-                    Text text2 = new Text();
-                    text2.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
-                    text2.setLayoutX(770);
-                    text2.setLayoutY(550);
-                    text2.setWrappingWidth(400);
-                    text2.setStyle("-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;");
-                    text2.setFont(isabellaBodyFont != null
-                            ? Font.font(isabellaBodyFont.getFamily(), 50)
-                            : new Font("Arial", 42));
-                    parent.getChildren().add(text2);
-                    text2.toFront();
+                    // --- Text 2 ---
+                    winText4.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 50) : new Font("Arial", 42));
+                    winText4.setStyle("-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;");
+                    winText4.setVisible(true);
 
-                    startWinTypewriter(text2, scene3_Text4, () -> {
+                    startWinTypewriter(winText4, scene3_Text4, () -> {
                         PauseTransition done = new PauseTransition(Duration.seconds(4));
                         done.setOnFinished(e2 -> {
                             if (isWinSkipped) return;
@@ -548,7 +496,7 @@ public class MainController {
     }
 
 
-    // --- TYPEWRITER: bản mới ---
+    // --- SỬA HÀM NÀY: Dùng Text cụ thể, và lưu trạng thái ---
     private void startWinTypewriter(Text target, String content, Runnable onFinished) {
         if (target == null || content == null) {
             if (onFinished != null) onFinished.run();
@@ -558,17 +506,20 @@ public class MainController {
         target.setText("");
         final int[] index = {0};
 
-        // stop timeline trước đó nếu có
         if (currentWinTimeline != null) {
             currentWinTimeline.stop();
         }
 
-        // khai báo timeline trước, sau đó tạo KeyFrame tham chiếu tới timeline
+        // --- LƯU TRẠNG THÁI ĐỂ SKIP ---
+        currentTypingTarget = target;
+        currentTypingContent = content;
+        currentTypingCallback = onFinished;
+        // --- KẾT THÚC LƯU ---
+
         Timeline timeline = new Timeline();
 
         KeyFrame kf = new KeyFrame(Duration.millis(60), evt -> {
-            if (isWinSkipped) {
-                // dừng chính timeline này
+            if (isWinSkipped) { // (Kiểm tra cờ skip toàn bộ)
                 timeline.stop();
                 return;
             }
@@ -577,27 +528,35 @@ public class MainController {
             } else {
                 timeline.stop();
                 SoundManager.stopTypingLoop();
+
+                // --- XÓA TRẠNG THÁI KHI XONG ---
+                currentTypingTarget = null;
+                currentTypingContent = null;
+                currentTypingCallback = null;
+                // --- KẾT THÚC XÓA ---
+
                 if (onFinished != null) onFinished.run();
             }
         });
 
         timeline.getKeyFrames().add(kf);
         timeline.setCycleCount(content.length() + 1);
-
-        // lưu tham chiếu để có thể dừng từ nơi khác (ví dụ khi skip)
         currentWinTimeline = timeline;
-
         SoundManager.startTypingLoop();
         timeline.play();
     }
 
 
-    // --- TYPEWRITER: bản cũ giữ nguyên API ---
-    private void startWinTypewriter(String fullText, Runnable onFinished) {
-        startWinTypewriter(winText, fullText, onFinished);
-    }
-
     private void loadNextLevelAndRestart() {
+        // --- THÊM DỌN DẸP ---
+        isWinSkipped = true; // Đảm bảo không chạy thêm gì nữa
+        if (currentWinTimeline != null) currentWinTimeline.stop();
+        currentTypingTarget = null;
+        currentTypingContent = null;
+        currentTypingCallback = null;
+        // --- KẾT THÚC ---
+
+        gameManager.nextLevel();
         restartGameAfterWin();
     }
 
@@ -606,7 +565,8 @@ public class MainController {
             winImageView.setVisible(false);
             winImageView.setOnMousePressed(null);
         }
-        if (winText != null) winText.setVisible(false);
+        // --- DỌN DẸP TẤT CẢ TEXT ---
+        clearAllCutsceneTexts();
 
         if (gameCanvas != null) {
             gameCanvas.setVisible(true);
@@ -621,7 +581,13 @@ public class MainController {
             currentWinTimeline.stop();
             SoundManager.stopTypingLoop();
         }
-        if (winText != null) winText.setVisible(false);
+        // --- DỌN DẸP TRẠNG THÁI VÀ TEXT ---
+        isWinSkipped = true;
+        currentTypingTarget = null;
+        currentTypingContent = null;
+        currentTypingCallback = null;
+        clearAllCutsceneTexts();
+
         gameManager.initGame();
         restartGameAfterWin();
     }
@@ -630,6 +596,13 @@ public class MainController {
         stopGameLoop();
         if (currentWinTimeline != null) currentWinTimeline.stop();
         SoundManager.shutdown();
+
+        // --- DỌN DẸP TRẠNG THÁI VÀ TEXT ---
+        isWinSkipped = true;
+        currentTypingTarget = null;
+        currentTypingContent = null;
+        currentTypingCallback = null;
+        clearAllCutsceneTexts();
 
         try {
             Stage stage = (Stage) quitButton.getScene().getWindow();
@@ -664,4 +637,3 @@ public class MainController {
         if (gameLoop != null) gameLoop.stop();
     }
 }
-
