@@ -81,8 +81,8 @@ public class GameManager {
 
         try {
             backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_1.png")));
-            backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_1.png")));
-            backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_1.png")));
+            backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_2.png")));
+            backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_3.png")));
             // (Thêm ảnh viền từ lần trước)
              borderImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border1.png"));
             leftSideImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide.jpg"));
