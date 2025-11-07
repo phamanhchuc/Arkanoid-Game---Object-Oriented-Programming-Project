@@ -6,10 +6,9 @@ import javafx.util.Duration;
 
 import java.util.HashMap;
 import java.util.Map;
-// --- THÊM CÁC IMPORT NÀY ---
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-// --- KẾT THÚC THÊM ---
+// --- XÓA IMPORT THREAD POOL ---
+// (Không cần ExecutorService nữa)
+// --- KẾT THÚC XÓA ---
 
 public class SoundManager {
     public enum Sound {
@@ -26,9 +25,9 @@ public class SoundManager {
     private static double masterVolume = 1.0;
     private static MediaPlayer typingSoundPlayer;
 
-    // --- THÊM EXECUTORSERVICE (THREAD POOL) ---
-    //
-    private static final ExecutorService audioPool = Executors.newFixedThreadPool(5); // Tối đa 5 âm thanh cùng lúc
+    // --- XÓA EXECUTORSERVICE (THREAD POOL) ---
+    // (Không cần nữa)
+    // --- KẾT THÚC XÓA ---
 
     static {
         try {
@@ -62,33 +61,32 @@ public class SoundManager {
         }
     }
 
-    // --- HÀM NÀY ĐÃ ĐƯỢC SỬA ĐỂ DÙNG THREAD POOL ---
+    // --- HÀM NÀY ĐÃ ĐƯỢC SỬA ĐỂ BỎ THREAD POOL ---
     public static void playSound(Sound sound) {
         if (sound == Sound.TYPING) {
             // (Logic cho typing giữ nguyên)
-            startTypingLoop(); // Hoặc playTypingSound() tùy logic bạn muốn
+            startTypingLoop();
             return;
         }
 
         Media media = sounds.get(sound);
         if (media == null) return;
 
-        // Gửi tác vụ phát âm thanh cho Thread Pool
-        //
-        audioPool.submit(() -> {
-            try {
-                MediaPlayer sfxPlayer = new MediaPlayer(media);
-                sfxPlayer.setVolume(masterVolume);
+        // --- SỬA LỖI: CHẠY TRỰC TIẾP ---
+        // Vì hàm này được gọi từ AnimationTimer (luồng JFX) nên nó an toàn
+        try {
+            MediaPlayer sfxPlayer = new MediaPlayer(media);
+            sfxPlayer.setVolume(masterVolume);
 
-                // Quan trọng: Tự động giải phóng tài nguyên khi chơi xong
-                sfxPlayer.setOnEndOfMedia(() -> sfxPlayer.dispose());
+            // Quan trọng: Tự động giải phóng tài nguyên khi chơi xong
+            sfxPlayer.setOnEndOfMedia(() -> sfxPlayer.dispose());
 
-                sfxPlayer.play();
-            } catch (Exception e) {
-                System.err.println("Lỗi khi phát SFX trong Thread Pool: " + sound);
-                e.printStackTrace();
-            }
-        });
+            sfxPlayer.play();
+        } catch (Exception e) {
+            System.err.println("Lỗi khi phát SFX: " + sound);
+            e.printStackTrace();
+        }
+        // --- KẾT THÚC SỬA ---
     }
 
     // (Hàm prepareTypingPlayer và các hàm typing/music khác giữ nguyên)
@@ -167,12 +165,11 @@ public class SoundManager {
         return masterVolume;
     }
 
-    // --- THÊM HÀM SHUTDOWN ---
-    //
+    // --- XÓA HÀM SHUTDOWN (VÌ KHÔNG CÒN THREAD POOL) ---
     public static void shutdown() {
-        System.out.println("Đang tắt Audio Thread Pool...");
+        System.out.println("Đang tắt Âm thanh...");
         stopMusic();
         stopTypingLoop();
-        audioPool.shutdown();
+        // (Không cần audioPool.shutdown() nữa)
     }
 }
