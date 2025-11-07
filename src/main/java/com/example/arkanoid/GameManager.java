@@ -98,26 +98,26 @@ public class GameManager {
 
             // --- Viền trái ---
             leftSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
-            leftSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
-            leftSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
+            leftSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide2.jpg")));
+            leftSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide3.jpg")));
 
             // --- Viền phải ---
             rightSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
-            rightSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
-            rightSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
+            rightSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide2.jpg")));
+            rightSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide3.jpg")));
 
             // --- Bảng điểm ---
             scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board1.png")));
             scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board2.png")));
-            scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board1.png")));
+            scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board3.png")));
             //--- Phu kien game map ---
             angle1.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1_1.png")));
             angle1.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1_2.png")));
-            angle1.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1_1.png")));
+            angle1.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1_3.png")));
 
             angle2.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle2_1.png")));
             angle2.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle2_2.png")));
-            angle2.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle2_1.png")));
+            angle2.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle2_3.png")));
 
 
         } catch (Exception e) {
