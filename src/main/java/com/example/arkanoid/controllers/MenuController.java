@@ -187,7 +187,7 @@ public class MenuController {
         } else {
             storyText1.setFont(new javafx.scene.text.Font("Arial", 40.0));
         }
-        storyText1.setStyle("-fx-fill: white; -fx-stroke: #A14DA1; -fx-stroke-width: 1.5;");
+        storyText1.setStyle("-fx-fill: white; -fx-stroke: #723f3f; -fx-stroke-width: 1.5;");
         storyText1.setText("");
         storyText1.setVisible(true);
 
@@ -199,7 +199,7 @@ public class MenuController {
         } else {
             storyText2.setFont(new javafx.scene.text.Font("Arial", 28.0));
         }
-        storyText2.setStyle("-fx-fill: white; -fx-stroke: #A14DA1; -fx-stroke-width: 1.0;");
+        storyText2.setStyle("-fx-fill: white; -fx-stroke: #864c39; -fx-stroke-width: 1.0;");
         storyText2.setText("");
         storyText2.setVisible(true);
 
@@ -211,7 +211,7 @@ public class MenuController {
         } else {
             storyText3.setFont(new javafx.scene.text.Font("Arial", 28.0));
         }
-        storyText3.setStyle("-fx-fill: white; -fx-stroke: #A14DA1; -fx-stroke-width: 1.0;");
+        storyText3.setStyle("-fx-fill: white; -fx-stroke: #864c39; -fx-stroke-width: 1.0;");
         storyText3.setText("");
         storyText3.setVisible(true);
 
