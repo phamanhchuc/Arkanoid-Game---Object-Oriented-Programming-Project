@@ -44,13 +44,20 @@ public class GameManager {
     private String playerName;
 
     private List<Image> backgroundImages = new ArrayList<>();
+    private List<Image> borderImage = new ArrayList<>();
+    private List<Image> leftSideImage = new ArrayList<>();
+    private List<Image> rightSideImage = new ArrayList<>();
+    private List<Image> scoreBoard = new ArrayList<>();
+    private List<Image> angle1 = new  ArrayList<>();
+    private List<Image> angle2 = new  ArrayList<>();
+
     private Image currentBackgroundImage;
-    private Image borderImage;
-    private Image leftSideImage;
-    private Image rightSideImage;
-    private Image scoreBoard;
-    private Image angle1;
-    private Image angle2;
+    private Image currentBorderImage;
+    private Image currentLeftSideImage;
+    private Image currentRightSideImage;
+    private Image currentScoreBoardImage;
+    private Image currentAngle1Image;
+    private Image currentAngle2Image;
 
 
     private boolean gameOver = false;
@@ -83,13 +90,35 @@ public class GameManager {
             backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_1.png")));
             backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_2.png")));
             backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_3.png")));
-            // (Thêm ảnh viền từ lần trước)
-             borderImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border1.png"));
-            leftSideImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide.jpg"));
-            rightSideImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide.jpg"));
-            scoreBoard = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board.png"));
-            angle1 =  new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1.png"));
-            angle2 = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle2.png"));
+
+            // --- Viền ngoài ---
+            borderImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border1.png")));
+            borderImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border2.png")));
+            borderImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border3.png")));
+
+            // --- Viền trái ---
+            leftSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
+            leftSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
+            leftSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
+
+            // --- Viền phải ---
+            rightSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
+            rightSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
+            rightSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
+
+            // --- Bảng điểm ---
+            scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board1.png")));
+            scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board2.png")));
+            scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board1.png")));
+            //--- Phu kien game map ---
+            angle1.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1_1.png")));
+            angle1.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1_2.png")));
+            angle1.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1_1.png")));
+
+            angle2.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle2_1.png")));
+            angle2.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle2_2.png")));
+            angle2.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle2_1.png")));
+
 
         } catch (Exception e) {
             System.err.println("Lỗi: Không thể tải ảnh nền hoặc viền.");
@@ -123,6 +152,25 @@ public class GameManager {
     private void loadLevelData() {
         int bgIndex = Math.min(currentLevelIndex, backgroundImages.size() - 1);
         currentBackgroundImage = backgroundImages.get(bgIndex);
+
+        int borderIndex = Math.min(currentLevelIndex, borderImage.size() - 1);
+        currentBorderImage = borderImage.get(borderIndex);
+
+        int leftIndex = Math.min(currentLevelIndex, leftSideImage.size() - 1);
+        currentLeftSideImage = leftSideImage.get(leftIndex);
+
+        int rightIndex = Math.min(currentLevelIndex, rightSideImage.size() - 1);
+        currentRightSideImage = rightSideImage.get(rightIndex);
+
+        int scoreIndex = Math.min(currentLevelIndex, scoreBoard.size() - 1);
+        currentScoreBoardImage = scoreBoard.get(scoreIndex);
+
+        int angle1Index = Math.min(currentLevelIndex, angle1.size() - 1);
+        currentAngle1Image = angle1.get(angle1Index);
+
+        int angle2Index = Math.min(currentLevelIndex, angle2.size() - 1);
+        currentAngle2Image = angle2.get(angle2Index);
+
         String levelFile = levelFiles.get(currentLevelIndex);
 
         paddle = new Paddle(
@@ -340,57 +388,28 @@ public class GameManager {
             gc.fillText("Press R or SPACE to Restart", screenWidth / 2.0, screenHeight / 2.0 + 50);
             gc.setTextAlign(TextAlignment.LEFT);
         }
-
-
-        if (leftSideImage != null && !leftSideImage.isError()) {
-            // Vẽ bên trái border
-            gc.drawImage(
-                    leftSideImage,
-                    playAreaOffsetX - leftSideImage.getWidth()-10, // canh sát mép trái play area
-                    0,
-                    leftSideImage.getWidth(),
-                    screenHeight
-            );
+        if (currentLeftSideImage != null && !currentLeftSideImage.isError()) {
+            gc.drawImage(currentLeftSideImage, playAreaOffsetX - currentLeftSideImage.getWidth() - 10, 0, currentLeftSideImage.getWidth(), screenHeight);
         }
 
-
-        if (rightSideImage != null && !rightSideImage.isError()) {
-            // Vẽ bên phải border
-            gc.drawImage(
-                    rightSideImage,
-                    playAreaOffsetX + playAreaWidth+10, // ngay bên phải vùng chơi
-                    0,
-                    rightSideImage.getWidth(),
-                    screenHeight
-            );
+        if (currentRightSideImage != null && !currentRightSideImage.isError()) {
+            gc.drawImage(currentRightSideImage, playAreaOffsetX + playAreaWidth + 10, 0, currentRightSideImage.getWidth(), screenHeight);
         }
 
-        // (Xóa viền vẽ chay, thay bằng ảnh viền nếu có)
-        if (borderImage != null && !borderImage.isError()) {
-            gc.drawImage(borderImage, 0, 0, screenWidth, screenHeight);
+        if (currentBorderImage != null && !currentBorderImage.isError()) {
+            gc.drawImage(currentBorderImage, 0, 0, screenWidth, screenHeight);
         }
 
-        if (scoreBoard != null && !scoreBoard.isError()) {
-            double x = 870;      // tọa độ X
-            double y = 60;      // tọa độ Y
-            double w = 500;      // chiều rộng
-            double h = 840;       // chiều cao
-            gc.drawImage(scoreBoard, x, y, w, h);
+        if (currentScoreBoardImage != null && !currentScoreBoardImage.isError()) {
+            gc.drawImage(currentScoreBoardImage, 870, 60, 500, 840);
         }
-        if (angle1 != null && !angle1.isError()) {
-            double x = -50;      // tọa độ X
-            double y = 400;      // tọa độ Y
-            double w = 460;      // chiều rộng
-            double h = 840;       // chiều cao
-            gc.drawImage(angle1, x, y, w, h);
+        if (currentAngle1Image != null) {
+            gc.drawImage(currentAngle1Image, -50, 400, 460, 840);
         }
-        if (angle2 != null && !angle2.isError()) {
-            double x = 0;      // tọa độ X
-            double y = 0;      // tọa độ Y
-            double w = 250;      // chiều rộng
-            double h = 240;       // chiều cao
-            gc.drawImage(angle2, x, y, w, h);
+        if (currentAngle2Image != null) {
+            gc.drawImage(currentAngle2Image, 0, 0, 250, 240);
         }
+
 
 
 //  Reset lại màu chữ và font sau khi vẽ particle
