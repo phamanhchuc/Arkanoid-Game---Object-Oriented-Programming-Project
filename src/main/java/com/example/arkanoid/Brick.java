@@ -14,6 +14,7 @@ public class Brick extends GameObject {
     }
 
     private int hits;
+    private int maxHits; // <-- THÊM BIẾN NÀY
     private boolean destroyed = false;
     private BrickType type;
 
@@ -73,27 +74,33 @@ public class Brick extends GameObject {
     public Brick(double x, double y, double w, double h, int typeCode) {
         super(x, y, w, h);
 
+        // Gán hits VÀ maxHits
         switch (typeCode) {
             case 5: // <-- THÊM CASE 5
                 this.type = BrickType.SPECIAL_STONE;
                 this.hits = 5;
+                this.maxHits = 5; // <-- THÊM
                 break;
             case 4:
                 this.type = BrickType.INDESTRUCTIBLE;
                 this.hits = 1;
+                this.maxHits = 1; // <-- THÊM
                 break;
             case 3:
                 this.type = BrickType.STONE;
                 this.hits = 3;
+                this.maxHits = 3; // <-- THÊM
                 break;
             case 2:
                 this.type = BrickType.CLOUD;
                 this.hits = 2;
+                this.maxHits = 2; // <-- THÊM
                 break;
             default:
                 // (Gạch loại 1 mặc định là gạch đá 1 hit)
                 this.type = BrickType.STONE;
                 this.hits = 1;
+                this.maxHits = 1; // <-- THÊM
                 if (stoneImages[0] == null) { // Đảm bảo ảnh tồn tại
                     stoneImages[0] = new Image(Brick.class.getResourceAsStream("/com/example/arkanoid/images/brick_state_3.2.png"));
                 }
@@ -125,6 +132,25 @@ public class Brick extends GameObject {
         }
         return destroyed;
     }
+
+    // --- THÊM HÀM MỚI ---
+    /**
+     * Hồi 1 HP cho gạch nếu nó chưa đầy máu.
+     * @return true nếu hồi máu thành công, false nếu đã đầy máu.
+     */
+    public boolean healHit() {
+        if (this.type == BrickType.INDESTRUCTIBLE) {
+            return false; // Không thể hồi máu gạch bất tử
+        }
+
+        if (hits < maxHits) {
+            hits++;
+            return true; // Hồi máu thành công
+        }
+
+        return false; // Gạch đã đầy máu
+    }
+    // --- KẾT THÚC THÊM ---
 
     @Override
     public void update(double dt) { /* Gạch tĩnh không cần update */ }

@@ -361,6 +361,9 @@ public class MainController {
         // (Cảnh 2: Mở đầu Màn 3)
         Runnable playScene3 = () -> {
             if (isWinSkipped) return;
+            winText1.setVisible(false);
+            winText2.setVisible(false);
+            winText3.setVisible(false);
             winImageView.setImage(storyImage5);
             PauseTransition waitForImage = new PauseTransition(Duration.millis(200));
             waitForImage.setOnFinished(e0 -> {
@@ -556,7 +559,7 @@ public class MainController {
         currentTypingCallback = null;
         // --- KẾT THÚC ---
 
-        gameManager.nextLevel();
+       // gameManager.nextLevel();
         restartGameAfterWin();
     }
 

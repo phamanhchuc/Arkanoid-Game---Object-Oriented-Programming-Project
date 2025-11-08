@@ -35,6 +35,12 @@ public class GameManager {
     // --- THÊM BIẾN BOSS ---
     private Boss boss; // Thêm 1 con boss
 
+    private double medicineSpawnTimer = 0.0;
+    private double medicineSpawnInterval = 1.0; // Thả lần đầu sau 15s
+    private final double MEDICINE_WIDTH = 30.0;  // Chỉnh kích thước viên thuốc
+    private final double MEDICINE_HEIGHT = 20.0; // Chỉnh kích thước viên thuốc
+    private final double BALL_STATE_DURATION = 10.0; // Hiệu ứng kéo dài 10 giây
+
     private Random random = new Random();
     private double trailSpawnTimer = 0;
     private static final double TRAIL_SPAWN_INTERVAL = 0.03;
@@ -44,13 +50,20 @@ public class GameManager {
     private String playerName;
 
     private List<Image> backgroundImages = new ArrayList<>();
+    private List<Image> borderImage = new ArrayList<>();
+    private List<Image> leftSideImage = new ArrayList<>();
+    private List<Image> rightSideImage = new ArrayList<>();
+    private List<Image> scoreBoard = new ArrayList<>();
+    private List<Image> angle1 = new  ArrayList<>();
+    private List<Image> angle2 = new  ArrayList<>();
+
     private Image currentBackgroundImage;
-    private Image borderImage;
-    private Image leftSideImage;
-    private Image rightSideImage;
-    private Image scoreBoard;
-    private Image angle1;
-    private Image angle2;
+    private Image currentBorderImage;
+    private Image currentLeftSideImage;
+    private Image currentRightSideImage;
+    private Image currentScoreBoardImage;
+    private Image currentAngle1Image;
+    private Image currentAngle2Image;
 
 
     private boolean gameOver = false;
@@ -83,13 +96,35 @@ public class GameManager {
             backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_1.png")));
             backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_2.png")));
             backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_3.png")));
-            // (Thêm ảnh viền từ lần trước)
-             borderImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border1.png"));
-            leftSideImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide.jpg"));
-            rightSideImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide.jpg"));
-            scoreBoard = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board.png"));
-            angle1 =  new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1.png"));
-            angle2 = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle2.png"));
+
+            // --- Viền ngoài ---
+            borderImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border1.png")));
+            borderImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border2.png")));
+            borderImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border3.png")));
+
+            // --- Viền trái ---
+            leftSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
+            leftSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide2.jpg")));
+            leftSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide3.jpg")));
+
+            // --- Viền phải ---
+            rightSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
+            rightSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide2.jpg")));
+            rightSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide3.jpg")));
+
+            // --- Bảng điểm ---
+            scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board1.png")));
+            scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board2.png")));
+            scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board3.png")));
+            //--- Phu kien game map ---
+            angle1.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1_1.png")));
+            angle1.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1_2.png")));
+            angle1.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1_3.png")));
+
+            angle2.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle2_1.png")));
+            angle2.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle2_2.png")));
+            angle2.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle2_3.png")));
+
 
         } catch (Exception e) {
             System.err.println("Lỗi: Không thể tải ảnh nền hoặc viền.");
@@ -123,6 +158,25 @@ public class GameManager {
     private void loadLevelData() {
         int bgIndex = Math.min(currentLevelIndex, backgroundImages.size() - 1);
         currentBackgroundImage = backgroundImages.get(bgIndex);
+
+        int borderIndex = Math.min(currentLevelIndex, borderImage.size() - 1);
+        currentBorderImage = borderImage.get(borderIndex);
+
+        int leftIndex = Math.min(currentLevelIndex, leftSideImage.size() - 1);
+        currentLeftSideImage = leftSideImage.get(leftIndex);
+
+        int rightIndex = Math.min(currentLevelIndex, rightSideImage.size() - 1);
+        currentRightSideImage = rightSideImage.get(rightIndex);
+
+        int scoreIndex = Math.min(currentLevelIndex, scoreBoard.size() - 1);
+        currentScoreBoardImage = scoreBoard.get(scoreIndex);
+
+        int angle1Index = Math.min(currentLevelIndex, angle1.size() - 1);
+        currentAngle1Image = angle1.get(angle1Index);
+
+        int angle2Index = Math.min(currentLevelIndex, angle2.size() - 1);
+        currentAngle2Image = angle2.get(angle2Index);
+
         String levelFile = levelFiles.get(currentLevelIndex);
 
         paddle = new Paddle(
@@ -136,7 +190,7 @@ public class GameManager {
         particles.clear();
         projectiles.clear();
         boss = null; // Xóa boss cũ (nếu có)
-
+        medicineSpawnTimer = 0.0;
         int ballRadius = 6;
         Ball newBall = new Ball(
                 paddle.getX() + paddle.getWidth() / 2 - ballRadius,
@@ -186,6 +240,7 @@ public class GameManager {
         newBall.setPlayArea(playAreaOffsetX, playAreaWidth);
         newBall.stickTo(paddle);
         balls.add(newBall);
+        applyBallState(Ball.BallState.NORMAL);
     }
     public void nextLevel() {
         currentLevelIndex++;
@@ -262,6 +317,18 @@ public class GameManager {
         if (boss != null) {
             boss.update(dt);
         }
+        if (boss != null && running) {
+            medicineSpawnTimer += dt;
+            if (medicineSpawnTimer >= medicineSpawnInterval) {
+                // Thả thuốc ở giữa, bên dưới boss
+                spawnMedicine(boss.getX() + boss.getWidth() / 2 - (MEDICINE_WIDTH / 2),
+                        boss.getY() + boss.getHeight());
+
+                medicineSpawnTimer = 0.0; // Reset timer
+                // Lần thả tiếp theo ngẫu nhiên từ 15-20s
+                medicineSpawnInterval = 15.0 + random.nextDouble() * 5.0;
+            }
+        }
         // --- KẾT THÚC THÊM ---
 
         if (gameOver || !running) {
@@ -295,10 +362,94 @@ public class GameManager {
     public void spawnPowerUpFromBrick(Brick b) { double powerUpWidth = 50; double powerUpHeight = 70; double x = b.getX() + (b.getWidth() - powerUpWidth) / 2; double y = b.getY() + (b.getHeight() - powerUpHeight) / 2; PowerUp powerUp = PowerUpFactory.createRandomPowerUp(x, y, powerUpWidth, powerUpHeight); if (powerUp != null) { powerUps.add(powerUp); } }
     private void trySpawnPowerUp(Brick b) { spawnPowerUpFromBrick(b); }
     private void spawnArrow() { double arrowX = paddle.getX() + paddle.getWidth() / 2; double arrowY = paddle.getY(); projectiles.add(new Projectile(arrowX, arrowY, ARROW_WIDTH, ARROW_HEIGHT, false)); }
-    private void spawnBallTrailParticle(Ball b) { double particleX = b.getX() + b.getWidth() / 2; double particleY = b.getY() + b.getHeight() / 2; double particleSize = b.getWidth() * 1.0; Color trailColor = Color.rgb(255, 0, 255, 0.8); double lifespan = 0.6; particles.add(new Particle(particleX, particleY, particleSize, particleSize, trailColor, lifespan)); }
+    private void spawnBallTrailParticle(Ball b) {
+        double particleX = b.getX() + b.getWidth() / 2;
+        double particleY = b.getY() + b.getHeight() / 2;
+        double particleSize = b.getWidth() * 1.0;
+        Color trailColor;
+        switch (b.getState()) {
+            case ICE:
+                trailColor = Color.rgb(0, 255, 255, 0.8); // Màu Xanh Băng
+                break;
+            case FIRE:
+                trailColor = Color.rgb(255, 100, 0, 0.8); // Màu Lửa
+                break;
+            default:
+            case NORMAL:
+                trailColor = Color.rgb(255, 0, 255, 0.8); // Màu gốc
+                break;
+        }
+        double lifespan = 0.6; particles.add(new Particle(particleX, particleY, particleSize, particleSize, trailColor, lifespan)); }
     private void saveCurrentScore() { if (playerName != null && score > 0) { boolean isNewHighScore = highScores.addScore(playerName, score); if (isNewHighScore) { System.out.println("Điểm mới đã được lưu vào top 3!"); } } }
     private boolean checkCollisionRectRect(GameObject r1, GameObject r2) { return r1.getX() < r2.getX() + r2.getWidth() && r1.getX() + r1.getWidth() > r2.getX() && r1.getY() < r2.getY() + r2.getHeight() && r1.getY() + r1.getHeight() > r2.getY(); }
-    private void applyPowerUpEffect(PowerUp pu) { if (pu.getType() == PowerUp.PowerUpType.LIFE) { lives++; System.out.println("Bạn nhận được thêm 1 mạng! Tổng mạng: " + lives); SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP); } else if (pu.getType() == PowerUp.PowerUpType.LOSE_LIFE) { lives--; System.out.println("Bạn bị mất 1 mạng! Tổng mạng: " + lives); SoundManager.playSound(SoundManager.Sound.MISSED_BALL); if (lives <= 0) { gameOver = true; running = false; saveCurrentScore(); SoundManager.playSound(SoundManager.Sound.GAME_OVER); if (crossBowActive) { crossBowActive = false; paddle.setCrossBowActive(false); } } } else if (pu.getType() == PowerUp.PowerUpType.CROSS_BOW) { if (!crossBowActive) SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP); crossBowActive = true; crossBowTimer = CROSS_BOW_DURATION; paddle.setCrossBowActive(true); System.out.println("Nỏ đã được kích hoạt! " + CROSS_BOW_DURATION + " giây."); arrowSpawnTimer = 0.0; } else if (pu.getType() == PowerUp.PowerUpType.MULTI_BALL) { if (!balls.isEmpty()) { SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP); System.out.println("Multi-Ball kích hoạt!"); Ball sourceBall = balls.get(0); double radius = sourceBall.getWidth() / 2.0; double sourceCenterX = sourceBall.getX() + radius; double sourceCenterY = sourceBall.getY() + radius; List<Ball> newBallsList = new ArrayList<>(); for (int i = 0; i < 3; i++) { Ball newBall = new Ball(sourceCenterX, sourceCenterY, radius, screenWidth, screenHeight); newBall.setPlayArea(playAreaOffsetX, playAreaWidth); double angleDegrees = 60.0 + (random.nextDouble() * 60.0); newBall.launchAtAngle(angleDegrees); newBallsList.add(newBall); } balls.addAll(newBallsList); } } else if (pu.getType() == PowerUp.PowerUpType.PIERCING_SHOT) { System.out.println("Kích hoạt Meomeo Bullet!"); SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP); double bulletX = paddle.getX() + paddle.getWidth() / 2; double bulletY = paddle.getY(); double placeholderWidth = 10; double placeholderHeight = 50; projectiles.add(new Projectile(bulletX, bulletY, placeholderWidth, placeholderHeight, true)); } }
+    private void applyPowerUpEffect(PowerUp pu) {
+        if (pu.getType() == PowerUp.PowerUpType.LIFE) {
+            lives++; System.out.println("Bạn nhận được thêm 1 mạng! Tổng mạng: " + lives);
+            SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
+        } else if (pu.getType() == PowerUp.PowerUpType.LOSE_LIFE) {
+            lives--;
+            System.out.println("Bạn bị mất 1 mạng! Tổng mạng: " + lives);
+            SoundManager.playSound(SoundManager.Sound.MISSED_BALL);
+            if (lives <= 0) {
+                gameOver = true; running = false; saveCurrentScore();
+                SoundManager.playSound(SoundManager.Sound.GAME_OVER);
+                if (crossBowActive) {
+                    crossBowActive = false; paddle.setCrossBowActive(false);
+                }
+            }
+        } else if (pu.getType() == PowerUp.PowerUpType.CROSS_BOW) {
+            if (!crossBowActive) SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
+            crossBowActive = true; crossBowTimer = CROSS_BOW_DURATION; paddle.setCrossBowActive(true);
+            System.out.println("Nỏ đã được kích hoạt! " + CROSS_BOW_DURATION + " giây.");
+            arrowSpawnTimer = 0.0;
+        } else if (pu.getType() == PowerUp.PowerUpType.MULTI_BALL) {
+            if (!balls.isEmpty()) { SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
+                System.out.println("Multi-Ball kích hoạt!");
+                Ball sourceBall = balls.get(0);
+                double radius = sourceBall.getWidth() / 2.0;
+                double sourceCenterX = sourceBall.getX() + radius;
+                double sourceCenterY = sourceBall.getY() + radius; List<Ball> newBallsList = new ArrayList<>();
+                for (int i = 0; i < 3; i++) {
+                    Ball newBall = new Ball(sourceCenterX, sourceCenterY, radius, screenWidth, screenHeight);
+                    newBall.setPlayArea(playAreaOffsetX, playAreaWidth);
+                    double angleDegrees = 60.0 + (random.nextDouble() * 60.0); newBall.launchAtAngle(angleDegrees);
+                    newBallsList.add(newBall); } balls.addAll(newBallsList);
+            }
+        } else if (pu.getType() == PowerUp.PowerUpType.PIERCING_SHOT) {
+            System.out.println("Kích hoạt Meomeo Bullet!");
+            SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
+            double bulletX = paddle.getX() + paddle.getWidth() / 2;
+            double bulletY = paddle.getY(); double placeholderWidth = 10;
+            double placeholderHeight = 50;
+            projectiles.add(new Projectile(bulletX, bulletY, placeholderWidth, placeholderHeight, true));
+        } else if (pu.getType() == PowerUp.PowerUpType.MEDICINE) {
+            SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
+
+            if (random.nextDouble() < 0.5) {
+                // Trường hợp 1: BĂNG
+                System.out.println("Kích hoạt trạng thái BĂNG!");
+                applyBallState(Ball.BallState.ICE);
+            } else {
+                // Trường hợp 2: LỬA
+                System.out.println("Kích hoạt trạng thái LỬA!");
+                applyBallState(Ball.BallState.FIRE);
+            }
+        }
+    }
+    private void applyBallState(Ball.BallState state) {
+        for (Ball b : balls) {
+            b.setBallState(state, BALL_STATE_DURATION);
+        }
+    }
+
+    // --- THÊM HÀM MỚI 2 ---
+    /**
+     * Tạo ra PowerUp "Thuốc" tại một vị trí.
+     */
+    public void spawnMedicine(double x, double y) {
+        PowerUp powerUp = new PowerUp(x, y, MEDICINE_WIDTH, MEDICINE_HEIGHT, PowerUp.PowerUpType.MEDICINE);
+        powerUps.add(powerUp);
+    }
     private boolean checkCollisionCircleRect(Ball ball, GameObject rect) { double cx = ball.getX() + ball.getWidth() / 2; double cy = ball.getY() + ball.getHeight() / 2; double radius = ball.getWidth() / 2; double closestX = Math.max(rect.getX(), Math.min(cx, rect.getX() + rect.getWidth())); double closestY = Math.max(rect.getY(), Math.min(cy, rect.getY() + rect.getHeight())); double dx = cx - closestX; double dy = cy - closestY; return (dx * dx + dy * dy) <= (radius * radius); }
 
     // --- HÀM RENDER (ĐÃ SỬA) ---
@@ -340,57 +491,28 @@ public class GameManager {
             gc.fillText("Press R or SPACE to Restart", screenWidth / 2.0, screenHeight / 2.0 + 50);
             gc.setTextAlign(TextAlignment.LEFT);
         }
-
-
-        if (leftSideImage != null && !leftSideImage.isError()) {
-            // Vẽ bên trái border
-            gc.drawImage(
-                    leftSideImage,
-                    playAreaOffsetX - leftSideImage.getWidth()-10, // canh sát mép trái play area
-                    0,
-                    leftSideImage.getWidth(),
-                    screenHeight
-            );
+        if (currentLeftSideImage != null && !currentLeftSideImage.isError()) {
+            gc.drawImage(currentLeftSideImage, playAreaOffsetX - currentLeftSideImage.getWidth() - 10, 0, currentLeftSideImage.getWidth(), screenHeight);
         }
 
-
-        if (rightSideImage != null && !rightSideImage.isError()) {
-            // Vẽ bên phải border
-            gc.drawImage(
-                    rightSideImage,
-                    playAreaOffsetX + playAreaWidth+10, // ngay bên phải vùng chơi
-                    0,
-                    rightSideImage.getWidth(),
-                    screenHeight
-            );
+        if (currentRightSideImage != null && !currentRightSideImage.isError()) {
+            gc.drawImage(currentRightSideImage, playAreaOffsetX + playAreaWidth + 10, 0, currentRightSideImage.getWidth(), screenHeight);
         }
 
-        // (Xóa viền vẽ chay, thay bằng ảnh viền nếu có)
-        if (borderImage != null && !borderImage.isError()) {
-            gc.drawImage(borderImage, 0, 0, screenWidth, screenHeight);
+        if (currentBorderImage != null && !currentBorderImage.isError()) {
+            gc.drawImage(currentBorderImage, 0, 0, screenWidth, screenHeight);
         }
 
-        if (scoreBoard != null && !scoreBoard.isError()) {
-            double x = 870;      // tọa độ X
-            double y = 60;      // tọa độ Y
-            double w = 500;      // chiều rộng
-            double h = 840;       // chiều cao
-            gc.drawImage(scoreBoard, x, y, w, h);
+        if (currentScoreBoardImage != null && !currentScoreBoardImage.isError()) {
+            gc.drawImage(currentScoreBoardImage, 870, 60, 500, 840);
         }
-        if (angle1 != null && !angle1.isError()) {
-            double x = -50;      // tọa độ X
-            double y = 400;      // tọa độ Y
-            double w = 460;      // chiều rộng
-            double h = 840;       // chiều cao
-            gc.drawImage(angle1, x, y, w, h);
+        if (currentAngle1Image != null) {
+            gc.drawImage(currentAngle1Image, -50, 400, 460, 840);
         }
-        if (angle2 != null && !angle2.isError()) {
-            double x = 0;      // tọa độ X
-            double y = 0;      // tọa độ Y
-            double w = 250;      // chiều rộng
-            double h = 240;       // chiều cao
-            gc.drawImage(angle2, x, y, w, h);
+        if (currentAngle2Image != null) {
+            gc.drawImage(currentAngle2Image, 0, 0, 250, 240);
         }
+
 
 
 //  Reset lại màu chữ và font sau khi vẽ particle

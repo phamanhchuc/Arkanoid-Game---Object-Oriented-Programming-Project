@@ -11,6 +11,7 @@ public class NormalCollisionStrategy implements CollisionStrategy {
 
         if (object instanceof Brick) {
             Brick brick = (Brick) object;
+            Ball.BallState ballState = ball.getState(); // <-- Lấy trạng thái của bóng
 
             // --- BƯỚC 1: XỬ LÝ VẬT LÝ ---
             // Đây là code từ hàm resolveBallBrickCollisionImproved cũ của bạn
@@ -54,14 +55,55 @@ public class NormalCollisionStrategy implements CollisionStrategy {
                     ball.setDy(-ball.getDy());
                 }
 
-                // --- BƯỚC 2: XỬ LÝ LOGIC GAME ---
-                // (Logic này được chuyển từ GameManager.update() vào đây)
-                SoundManager.playSound(SoundManager.Sound.HIT_BRICK);
-                if (!brick.isIndestructible() && brick.takeHit()) {
-                    manager.addScore(100);
-                    manager.spawnPowerUpFromBrick(brick); // Gọi hàm mới trong GameManager
-                } else if (!brick.isIndestructible()) {
-                    manager.addScore(25);
+                // --- BƯỚC 2: XỬ LÝ LOGIC GAME (ĐÃ SỬA) ---
+
+                // Gạch bất tử luôn nảy bóng (không phân biệt trạng thái)
+                if (brick.isIndestructible()) {
+                    SoundManager.playSound(SoundManager.Sound.HIT_WALL); // Tạm dùng âm thanh nảy tường
+                    return; // Không làm gì thêm
+                }
+
+                // Xử lý logic dựa trên trạng thái của bóng
+                switch (ballState) {
+                    case ICE:
+                        // Trạng thái BĂNG: Hồi máu cho gạch
+                        if (brick.healHit()) {
+                            // Hồi máu thành công (gạch chưa đầy máu)
+                            manager.addScore(10); // Thưởng 10 điểm
+                        }
+                        // Tạm dùng âm thanh này cho "hồi máu"
+                        SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
+                        break;
+
+                    case FIRE:
+                        // Trạng thái LỬA: Gây 2 sát thương
+                        SoundManager.playSound(SoundManager.Sound.HIT_BRICK);
+                        boolean destroyed = brick.takeHit(); // Hit 1
+
+                        if (!destroyed) {
+                            // Nếu chưa bị phá hủy, gây thêm Hit 2
+                            destroyed = brick.takeHit();
+                        }
+
+                        if (destroyed) {
+                            manager.addScore(100); // Ghi điểm phá hủy
+                            manager.spawnPowerUpFromBrick(brick);
+                        } else {
+                            manager.addScore(50); // Ghi điểm 2 hit (25 + 25)
+                        }
+                        break;
+
+                    default:
+                    case NORMAL:
+                        // Trạng thái BÌNH THƯỜNG (Đây là code cũ của bạn)
+                        SoundManager.playSound(SoundManager.Sound.HIT_BRICK);
+                        if (brick.takeHit()) {
+                            manager.addScore(100);
+                            manager.spawnPowerUpFromBrick(brick);
+                        } else {
+                            manager.addScore(25);
+                        }
+                        break;
                 }
             }
 
