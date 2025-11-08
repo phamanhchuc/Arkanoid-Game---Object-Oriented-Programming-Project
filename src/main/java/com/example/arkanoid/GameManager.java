@@ -100,7 +100,7 @@ public class GameManager {
             // --- Viền ngoài ---
             borderImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border1.png")));
             borderImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border2.png")));
-            borderImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border3.png")));
+            borderImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border31.jpg")));
 
             // --- Viền trái ---
             leftSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
@@ -119,7 +119,7 @@ public class GameManager {
             //--- Phu kien game map ---
             angle1.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1_1.png")));
             angle1.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1_2.png")));
-            angle1.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1_3.png")));
+            angle1.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle1_31.png")));
 
             angle2.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle2_1.png")));
             angle2.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/angle2_2.png")));
@@ -459,10 +459,6 @@ public class GameManager {
         } else {
             gc.setFill(Color.BLACK); gc.fillRect(0, 0, screenWidth, screenHeight);
         }
-
-        gc.setFill(Color.rgb(0, 0, 0, 0.6));
-        gc.fillRect(playAreaOffsetX, 0, playAreaWidth, screenHeight);
-
         // --- THÊM RENDER BOSS ---
         // (Vẽ boss *sau* nền đen, nhưng *trước* gạch)
         if (boss != null) {
