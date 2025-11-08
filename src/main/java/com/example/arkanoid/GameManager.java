@@ -85,6 +85,7 @@ public class GameManager {
     private List<String> levelFiles = List.of("level1.txt", "level2.txt", "level3.txt");
 
     private Map<Integer, BrickFactory> brickFactories;
+    private LevelBuilder levelBuilder;
 
     // --- Constructor (Không đổi) ---
     public GameManager(int screenWidth, int screenHeight, String playerName) {
@@ -134,6 +135,7 @@ public class GameManager {
 
         highScores = new HighScores();
         initializeFactories();
+        this.levelBuilder = new LevelBuilder(playAreaWidth, playAreaOffsetX, brickFactories);
         initGame();
     }
 
@@ -146,6 +148,7 @@ public class GameManager {
         brickFactories.put(4, new IndestructibleBrickFactory());
         brickFactories.put(5, new NormalBrickFactory(5));
     }
+
 
     public void initGame() {
         score = 0;
@@ -180,6 +183,10 @@ public class GameManager {
 
         String levelFile = levelFiles.get(currentLevelIndex);
 
+        if (!levelBuilder.buildLevelBricks(levelFile, bricks, movingBrickRows)) {
+            System.err.println("Không thể tải cấp độ: " + levelFile);
+            // Xử lý lỗi, có thể về menu chính hoặc thoát game
+        }
         paddle = new Paddle(
                 playAreaOffsetX + playAreaWidth / 2.0 - 60,
                 screenHeight - 40, 120, 20, screenWidth
@@ -253,118 +260,8 @@ public class GameManager {
         }
     }
     private void createBricks(String levelFileName) {
-        bricks.clear();
-        String path = "/com/example/arkanoid/levels/" + levelFileName;
-        List<String[]> mapData = new ArrayList<>();
-        int cols = 0;
-        try (InputStream is = getClass().getResourceAsStream(path);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(is))) {
-            if (is == null) { System.err.println("Lỗi nghiêm trọng: Không tìm thấy file map: " + path); return; }
-            String line;
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                if (!line.isEmpty()) {
-                    String[] numbers = line.split("\\s+");
-                    mapData.add(numbers);
-                    if (cols == 0) { cols = numbers.length; }
-                }
-            }
-        } catch (IOException | NullPointerException e) {
-            System.err.println("Lỗi khi đọc file map: " + path); e.printStackTrace(); return;
-        }
-        if (mapData.isEmpty() || cols == 0) { System.err.println("Lỗi: Map file rỗng...: " + path); return; }
-        int rows = mapData.size();
-        double horizontalPadding = 50.0;
-        double verticalPaddingTop = 60.0;
-        double brickSpacingX = 0.0;
-        double brickSpacingY = 0.0;
-        double brickW = (playAreaWidth - horizontalPadding * 2 - (cols - 1) * brickSpacingX) / cols;
-        double brickH = 22;
-        for (int r = 0; r < rows; r++) {
-            String[] numbers = mapData.get(r);
-            for (int c = 0; c < numbers.length; c++) {
-                int brickType = 0;
-                try {
-                    brickType = Integer.parseInt(numbers[c]);
-                } catch (NumberFormatException e) {
-                    continue;
-                }
-                if (brickFactories.containsKey(brickType)) {
-                    BrickFactory factory = brickFactories.get(brickType);
-                    double x = playAreaOffsetX + horizontalPadding + c * (brickW + brickSpacingX);
-                    double y = verticalPaddingTop + r * (brickH + brickSpacingY);
-                    Brick brick = factory.createBrick(x, y, brickW, brickH);
-                    bricks.add(brick);
-                }
-            }
-        }
-
-        if ("level1.txt".equals(levelFileName)) {
-            System.out.println("Thêm hàng gạch di chuyển đồng bộ cho Level 1.");
-
-            double BRICK_W = 60;
-            double BRICK_H = 22;
-            int brickSpacing = 10; // Khoảng cách giữa các viên gạch
-
-            // --- CẤU HÌNH CHO HÀNG GẠCH DI CHUYỂN NGANG THỨ NHẤT ---
-            int numBricksInRow1 = 5;
-            int brickType1 = 5; // Gạch loại 5 hits
-            double velocityX1 = 70.0; // Tốc độ di chuyển ngang
-            double rowY1 = 300;       // Vị trí Y của hàng
-
-            // Tính toán vị trí X bắt đầu cho hàng gạch để căn giữa
-            double totalRowWidth1 = (numBricksInRow1 * BRICK_W) + ((numBricksInRow1 - 1) * brickSpacing);
-            double startXForRow1 = playAreaOffsetX + (playAreaWidth - totalRowWidth1) / 2.0;
-
-            // Giới hạn di chuyển cho CẢ HÀNG
-            double limitLeft = playAreaOffsetX + 20;
-            double limitRight = playAreaOffsetX + playAreaWidth - 20;
-
-            // TẠO ĐỐI TƯỢNG MOVINGBRICKROW
-            MovingBrickRow row1 = new MovingBrickRow(
-                    startXForRow1, rowY1, // Vị trí ban đầu của hàng (x, y)
-                    totalRowWidth1, BRICK_H, // Kích thước ban đầu của hàng (width, height)
-                    velocityX1, 0.0,      // Vận tốc X, Y cho cả hàng
-                    limitLeft, limitRight, rowY1, rowY1 // Giới hạn di chuyển (Y không đổi)
-            );
-
-            // TẠO CÁC VIÊN GẠCH VÀ THÊM VÀO MOVINGBRICKROW
-            for (int i = 0; i < numBricksInRow1; i++) {
-                double currentBrickX = startXForRow1 + (i * (BRICK_W + brickSpacing));
-                // Tạo Brick thông thường (không phải MovingBrick)
-                Brick brick = new Brick(currentBrickX, rowY1, BRICK_W, BRICK_H, brickType1);
-                row1.addBrick(brick); // Thêm vào MovingBrickRow
-                bricks.add(brick);    // Thêm vào danh sách bricks chung để xử lý va chạm và render
-            }
-            movingBrickRows.add(row1); // Thêm hàng vào danh sách các hàng di chuyển
-
-
-            // --- CẤU HÌNH CHO HÀNG GẠCH DI CHUYỂN NGANG THỨ HAI (Di chuyển ngược lại) ---
-            int numBricksInRow2 = 4;
-            int brickType2 = 3; // Gạch loại 3 hits
-            double velocityX2 = -60.0; // Tốc độ di chuyển ngang (ngược chiều)
-            double rowY2 = 200;
-
-            double totalRowWidth2 = (numBricksInRow2 * BRICK_W) + ((numBricksInRow2 - 1) * brickSpacing);
-            double startXForRow2 = playAreaOffsetX + (playAreaWidth - totalRowWidth2) / 2.0;
-
-            MovingBrickRow row2 = new MovingBrickRow(
-                    startXForRow2, rowY2,
-                    totalRowWidth2, BRICK_H,
-                    velocityX2, 0.0,
-                    limitLeft, limitRight, rowY2, rowY2
-            );
-
-            for (int i = 0; i < numBricksInRow2; i++) {
-                double currentBrickX = startXForRow2 + (i * (BRICK_W + brickSpacing));
-                Brick brick = new Brick(currentBrickX, rowY2, BRICK_W, BRICK_H, brickType2);
-                row2.addBrick(brick);
-                bricks.add(brick);
-            }
-            movingBrickRows.add(row2);
-        }
-        System.out.println("Đã tải thành công map: " + levelFileName + " (" + rows + "x" + cols + ")");
-    }
+            levelBuilder.buildLevelBricks(levelFileName, bricks, movingBrickRows);
+         }
     public boolean hasWonLevel() { return levelWon; }
     public boolean hasWonGame() { return gameWon; }
     public int getCurrentLevelIndex() { return currentLevelIndex; }
