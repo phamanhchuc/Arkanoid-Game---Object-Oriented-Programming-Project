@@ -28,6 +28,7 @@ public class GameManager {
     private Paddle paddle;
     private List<Ball> balls = new ArrayList<>();
     private List<Brick> bricks = new ArrayList<>();
+    private List<MovingBrickRow> movingBrickRows = new ArrayList<>();
     private List<PowerUp> powerUps = new ArrayList<>();
     private List<Particle> particles = new ArrayList<>();
     private List<Projectile> projectiles = new ArrayList<>();
@@ -297,6 +298,71 @@ public class GameManager {
                 }
             }
         }
+
+        if ("level1.txt".equals(levelFileName)) {
+            System.out.println("Thêm hàng gạch di chuyển đồng bộ cho Level 1.");
+
+            double BRICK_W = 60;
+            double BRICK_H = 22;
+            int brickSpacing = 10; // Khoảng cách giữa các viên gạch
+
+            // --- CẤU HÌNH CHO HÀNG GẠCH DI CHUYỂN NGANG THỨ NHẤT ---
+            int numBricksInRow1 = 5;
+            int brickType1 = 5; // Gạch loại 5 hits
+            double velocityX1 = 70.0; // Tốc độ di chuyển ngang
+            double rowY1 = 300;       // Vị trí Y của hàng
+
+            // Tính toán vị trí X bắt đầu cho hàng gạch để căn giữa
+            double totalRowWidth1 = (numBricksInRow1 * BRICK_W) + ((numBricksInRow1 - 1) * brickSpacing);
+            double startXForRow1 = playAreaOffsetX + (playAreaWidth - totalRowWidth1) / 2.0;
+
+            // Giới hạn di chuyển cho CẢ HÀNG
+            double limitLeft = playAreaOffsetX + 20;
+            double limitRight = playAreaOffsetX + playAreaWidth - 20;
+
+            // TẠO ĐỐI TƯỢNG MOVINGBRICKROW
+            MovingBrickRow row1 = new MovingBrickRow(
+                    startXForRow1, rowY1, // Vị trí ban đầu của hàng (x, y)
+                    totalRowWidth1, BRICK_H, // Kích thước ban đầu của hàng (width, height)
+                    velocityX1, 0.0,      // Vận tốc X, Y cho cả hàng
+                    limitLeft, limitRight, rowY1, rowY1 // Giới hạn di chuyển (Y không đổi)
+            );
+
+            // TẠO CÁC VIÊN GẠCH VÀ THÊM VÀO MOVINGBRICKROW
+            for (int i = 0; i < numBricksInRow1; i++) {
+                double currentBrickX = startXForRow1 + (i * (BRICK_W + brickSpacing));
+                // Tạo Brick thông thường (không phải MovingBrick)
+                Brick brick = new Brick(currentBrickX, rowY1, BRICK_W, BRICK_H, brickType1);
+                row1.addBrick(brick); // Thêm vào MovingBrickRow
+                bricks.add(brick);    // Thêm vào danh sách bricks chung để xử lý va chạm và render
+            }
+            movingBrickRows.add(row1); // Thêm hàng vào danh sách các hàng di chuyển
+
+
+            // --- CẤU HÌNH CHO HÀNG GẠCH DI CHUYỂN NGANG THỨ HAI (Di chuyển ngược lại) ---
+            int numBricksInRow2 = 4;
+            int brickType2 = 3; // Gạch loại 3 hits
+            double velocityX2 = -60.0; // Tốc độ di chuyển ngang (ngược chiều)
+            double rowY2 = 200;
+
+            double totalRowWidth2 = (numBricksInRow2 * BRICK_W) + ((numBricksInRow2 - 1) * brickSpacing);
+            double startXForRow2 = playAreaOffsetX + (playAreaWidth - totalRowWidth2) / 2.0;
+
+            MovingBrickRow row2 = new MovingBrickRow(
+                    startXForRow2, rowY2,
+                    totalRowWidth2, BRICK_H,
+                    velocityX2, 0.0,
+                    limitLeft, limitRight, rowY2, rowY2
+            );
+
+            for (int i = 0; i < numBricksInRow2; i++) {
+                double currentBrickX = startXForRow2 + (i * (BRICK_W + brickSpacing));
+                Brick brick = new Brick(currentBrickX, rowY2, BRICK_W, BRICK_H, brickType2);
+                row2.addBrick(brick);
+                bricks.add(brick);
+            }
+            movingBrickRows.add(row2);
+        }
         System.out.println("Đã tải thành công map: " + levelFileName + " (" + rows + "x" + cols + ")");
     }
     public boolean hasWonLevel() { return levelWon; }
@@ -342,6 +408,9 @@ public class GameManager {
         paddle.update(dt);
         for (Ball b : balls) {
             b.update(dt);
+        }
+        for (MovingBrickRow row : movingBrickRows) {
+            row.update(dt);
         }
 
         // (Code crossbow, trail, ball-out-of-bounds... không đổi)

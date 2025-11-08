@@ -4,7 +4,7 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
-public class Brick extends GameObject {
+public class Brick extends MovableObject {
 
     private enum BrickType {
         STONE,      // Loại 3
@@ -73,6 +73,8 @@ public class Brick extends GameObject {
     // --- SỬA LẠI CONSTRUCTOR ---
     public Brick(double x, double y, double w, double h, int typeCode) {
         super(x, y, w, h);
+        this.setDx(0);
+        this.setDy(0);
 
         // Gán hits VÀ maxHits
         switch (typeCode) {
