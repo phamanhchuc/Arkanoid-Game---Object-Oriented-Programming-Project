@@ -100,7 +100,7 @@ public class GameManager {
             // --- Viền ngoài ---
             borderImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border1.png")));
             borderImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border2.png")));
-            borderImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border31.jpg")));
+            borderImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/play_Border31.png")));
 
             // --- Viền trái ---
             leftSideImage.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/BorderSide1.jpg")));
