@@ -371,6 +371,10 @@ public class MainController {
 
                 winText1.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 48) : new Font("Arial", 45));
                 winText1.setStyle("-fx-fill: white; -fx-stroke: #bd7244; -fx-stroke-width: 1.5;");
+                winText1.setLayoutX(50);
+                winText1.setLayoutY(100);
+                winText1.setWrappingWidth(800);
+                winText1.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
                 winText1.setVisible(true);
 
                 startWinTypewriter(winText1, scene3_Text1, () -> {
@@ -380,6 +384,10 @@ public class MainController {
 
                         winText2.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 46) : new Font("Arial", 43));
                         winText2.setStyle("-fx-fill: white; -fx-stroke: #864c39; -fx-stroke-width: 1.5;");
+                        winText2.setLayoutX(600);
+                        winText2.setLayoutY(650);
+                        winText2.setWrappingWidth(550);
+                        winText2.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
                         winText2.setVisible(true);
 
                         startWinTypewriter(winText2, scene3_Text2, () -> {
@@ -401,6 +409,10 @@ public class MainController {
 
             winText1.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 48) : new Font("Arial", 45));
             winText1.setStyle("-fx-fill: white; -fx-stroke: #bd7244; -fx-stroke-width: 1.5;");
+            winText1.setLayoutX(80);
+            winText1.setLayoutY(150);
+            winText1.setWrappingWidth(700);
+            winText1.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
             winText1.setVisible(true);
 
             startWinTypewriter(winText1, scene2_Text3, () -> {
@@ -410,6 +422,10 @@ public class MainController {
 
                     winText2.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 46) : new Font("Arial", 43));
                     winText2.setStyle("-fx-fill: white; -fx-stroke: #821010; -fx-stroke-width: 1.5;");
+                    winText2.setLayoutX(50);
+                    winText2.setLayoutY(600);
+                    winText2.setWrappingWidth(700);
+                    winText2.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
                     winText2.setVisible(true);
 
                     startWinTypewriter(winText2, scene2_Text4, () -> {
@@ -419,6 +435,10 @@ public class MainController {
 
                             winText3.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 44) : new Font("Arial", 41));
                             winText3.setStyle("-fx-fill: white; -fx-stroke: #864c39; -fx-stroke-width: 1.5;");
+                            winText3.setLayoutX(750);
+                            winText3.setLayoutY(750);
+                            winText3.setWrappingWidth(450);
+                            winText3.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
                             winText3.setVisible(true);
 
                             startWinTypewriter(winText3, scene2_Text5, () -> {
@@ -455,7 +475,7 @@ public class MainController {
         winText.setVisible(false);
 
         String scene3_Text3 = "Ánh sáng cuối cùng bùng nổ, xé tan cả Thiên Đàng lẫn Địa Ngục. " +
-                "Bạo Chúa Nem Chua gào thét, và bầu trời sụp đổ cùng nhịp tim nhân loại. \n" +
+                "Bạo Chúa Nem Chua gào thét, và bầu trời sụp đổ cùng nhịp tim nhân loại. " +
                 "ConMel tan vào luồng sáng của lời hứa cuối cùng.";
         String scene3_Text4 = "Trên mặt đất nứt vỡ, một bàn tay gãy nát nằm lại giữa đống " +
                 "tro tàn - như dấu chấm hết cho giấc mơ của nhân loại.";
