@@ -9,7 +9,6 @@ public class PowerUpFactory {
 
     /**
      * Tạo một PowerUp ngẫu nhiên dựa trên tỷ lệ bạn đã định nghĩa.
-     *
      */
     public static PowerUp createRandomPowerUp(double x, double y, double width, double height) {
         double dropChance = random.nextDouble();
