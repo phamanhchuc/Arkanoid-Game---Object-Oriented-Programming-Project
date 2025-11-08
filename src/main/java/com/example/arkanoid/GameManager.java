@@ -7,10 +7,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -29,6 +25,7 @@ public class GameManager {
     private List<Ball> balls = new ArrayList<>();
     private List<Brick> bricks = new ArrayList<>();
     private List<MovingBrickRow> movingBrickRows = new ArrayList<>();
+    private List<RotatingBrickGroup> rotatingBrickGroups = new ArrayList<>();
     private List<PowerUp> powerUps = new ArrayList<>();
     private List<Particle> particles = new ArrayList<>();
     private List<Projectile> projectiles = new ArrayList<>();
@@ -160,6 +157,7 @@ public class GameManager {
 
     // --- HÀM NÀY ĐÃ SỬA ---
     private void loadLevelData() {
+        String levelFile = levelFiles.get(currentLevelIndex);
         int bgIndex = Math.min(currentLevelIndex, backgroundImages.size() - 1);
         currentBackgroundImage = backgroundImages.get(bgIndex);
 
@@ -181,9 +179,7 @@ public class GameManager {
         int angle2Index = Math.min(currentLevelIndex, angle2.size() - 1);
         currentAngle2Image = angle2.get(angle2Index);
 
-        String levelFile = levelFiles.get(currentLevelIndex);
-
-        if (!levelBuilder.buildLevelBricks(levelFile, bricks, movingBrickRows)) {
+        if (!levelBuilder.buildLevelBricks(levelFile, bricks, movingBrickRows, rotatingBrickGroups)) {
             System.err.println("Không thể tải cấp độ: " + levelFile);
             // Xử lý lỗi, có thể về menu chính hoặc thoát game
         }
@@ -208,8 +204,6 @@ public class GameManager {
         newBall.setPlayArea(playAreaOffsetX, playAreaWidth);
         newBall.stickTo(paddle);
         balls.add(newBall);
-
-        createBricks(levelFile);
 
         // --- THÊM KHỞI TẠO BOSS ---
         // Chỉ tạo boss nếu là Màn 1 (index = 0)
@@ -259,9 +253,6 @@ public class GameManager {
             loadLevelData();
         }
     }
-    private void createBricks(String levelFileName) {
-            levelBuilder.buildLevelBricks(levelFileName, bricks, movingBrickRows);
-         }
     public boolean hasWonLevel() { return levelWon; }
     public boolean hasWonGame() { return gameWon; }
     public int getCurrentLevelIndex() { return currentLevelIndex; }
@@ -308,6 +299,9 @@ public class GameManager {
         }
         for (MovingBrickRow row : movingBrickRows) {
             row.update(dt);
+        }
+        for (RotatingBrickGroup group : rotatingBrickGroups) {
+            group.update(dt);
         }
 
         // (Code crossbow, trail, ball-out-of-bounds... không đổi)

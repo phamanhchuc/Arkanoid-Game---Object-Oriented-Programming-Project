@@ -29,10 +29,10 @@ public class LevelBuilder {
      * @param movingBrickRows Danh sách để thêm các MovingBrickRow vào.
      * @return true nếu tải thành công, false nếu có lỗi.
      */
-    public boolean buildLevelBricks(String levelFileName, List<Brick> allBricks, List<MovingBrickRow> movingBrickRows) {
+    public boolean buildLevelBricks(String levelFileName, List<Brick> allBricks, List<MovingBrickRow> movingBrickRows,List<RotatingBrickGroup> rotatingBrickGroups) {
         allBricks.clear();
         movingBrickRows.clear();
-
+        rotatingBrickGroups.clear();
         String path = "/com/example/arkanoid/levels/" + levelFileName;
         List<String[]> mapData = new ArrayList<>(); // Dữ liệu cho gạch tĩnh
         int cols = 0;
@@ -54,7 +54,11 @@ public class LevelBuilder {
                 if (line.startsWith("#ROW")) {
                     // Đây là một định nghĩa MovingBrickRow
                     parseAndCreateMovingBrickRow(line, allBricks, movingBrickRows);
-                } else {
+                }
+                else if (line.startsWith("#ROTATING_GROUP")) {
+                    parseAndCreateRotatingBrickGroup(line, allBricks, rotatingBrickGroups);
+                }
+                else {
                     // Đây là dữ liệu gạch tĩnh bình thường
                     String[] numbers = line.split("\\s+");
                     mapData.add(numbers);
@@ -155,6 +159,67 @@ public class LevelBuilder {
         } catch (NumberFormatException e) {
             System.err.println("Lỗi chuyển đổi số trong dòng #ROW: " + line);
             e.printStackTrace();
+        }
+    }
+
+    private void parseAndCreateRotatingBrickGroup(String line,
+                                                  List<Brick> allBricks,
+                                                  List<RotatingBrickGroup> rotatingBrickGroups) {
+        String[] parts = line.split("\\s+");
+
+        // Cần 10 tham số: "#ROTATING_GROUP" + 9 giá trị
+        if (parts.length != 10) {
+            System.err.println("Lỗi định dạng dòng #ROTATING_GROUP: " + line + ". Cần 10 tham số.");
+            return;
+        }
+
+        try {
+            int numBricks = Integer.parseInt(parts[1]);
+            int brickType = Integer.parseInt(parts[2]);
+            double brickW = Double.parseDouble(parts[3]);
+            double brickH = Double.parseDouble(parts[4]);
+            double centerX = Double.parseDouble(parts[5]);
+            double centerY = Double.parseDouble(parts[6]);
+            double radius = Double.parseDouble(parts[7]);
+            double rotationSpeed = Double.parseDouble(parts[8]);
+            double initialAngle = Double.parseDouble(parts[9]);
+
+            // Căn chỉnh tọa độ X theo playAreaOffsetX
+            centerX += playAreaOffsetX;
+
+            List<Brick> bricksInNewGroup = new ArrayList<>();
+            BrickFactory factory = brickFactories.get(brickType);
+
+            if (factory == null) {
+                System.err.println("Loại gạch không hợp lệ cho #ROTATING_GROUP: " + brickType);
+                return;
+            }
+
+            double angleStep = 360.0 / numBricks;
+            for (int i = 0; i < numBricks; i++) {
+                double currentBrickAngle = initialAngle + (i * angleStep);
+                double angleRad = Math.toRadians(currentBrickAngle);
+
+                // Tính toán vị trí X, Y ban đầu cho viên gạch trên vòng tròn
+                double brickX = centerX + (radius * Math.cos(angleRad)) - (brickW / 2.0);
+                double brickY = centerY + (radius * Math.sin(angleRad)) - (brickH / 2.0);
+
+                Brick brick = factory.createBrick(brickX, brickY, brickW, brickH);
+                bricksInNewGroup.add(brick);
+                allBricks.add(brick); // <--- ĐẢM BẢO VIÊN GẠCH ĐƯỢC THÊM VÀO DANH SÁCH CHUNG
+            }
+
+            // Tạo đối tượng RotatingBrickGroup để quản lý nhóm
+            RotatingBrickGroup newGroup = new RotatingBrickGroup(
+                    bricksInNewGroup, centerX, centerY, radius, rotationSpeed, initialAngle
+            );
+            rotatingBrickGroups.add(newGroup); // Thêm nhóm vào danh sách quản lý
+
+        } catch (NumberFormatException e) {
+            System.err.println("Lỗi chuyển đổi số trong dòng #ROTATING_GROUP: " + line);
+            e.printStackTrace();
+        } catch (ArithmeticException e) {
+            System.err.println("Lỗi số học (numBricks = 0) khi tạo #ROTATING_GROUP: " + line);
         }
     }
 }
