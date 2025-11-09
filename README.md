@@ -1,1 +1,1 @@
-Arkanoid Game
+# Arkanoid Game - Object-Oriented Programming Project
