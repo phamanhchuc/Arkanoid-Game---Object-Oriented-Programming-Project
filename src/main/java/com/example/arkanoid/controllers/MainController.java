@@ -21,6 +21,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.scene.media.MediaView;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -247,6 +250,58 @@ public class MainController {
         else loadNextLevelAndRestart();
     }
 
+    // Phát video man2
+    private void playVideoMan2(Runnable onFinished) {
+        try {
+            String path = "/com/example/arkanoid/videos/man2.mp4";
+            Media media = new Media(getClass().getResource(path).toExternalForm());
+            MediaPlayer player = new MediaPlayer(media);
+            MediaView mediaView = new MediaView(player);
+
+            // ✅ Cố định kích thước video
+            mediaView.setFitWidth(1280);
+            mediaView.setFitHeight(800);
+            mediaView.setPreserveRatio(false); // Không cần giữ tỉ lệ, khớp đúng 1280x800
+
+            // Tạo lớp phủ căn giữa
+            StackPane overlayPane = new StackPane(mediaView);
+            overlayPane.setAlignment(Pos.CENTER);
+            overlayPane.setStyle("-fx-background-color: black;"); // nền đen để nổi bật video
+
+            // Thêm overlay vào Scene gốc
+            ((Pane) winImageView.getScene().getRoot()).getChildren().add(overlayPane);
+
+            // Khi video kết thúc
+            player.setOnEndOfMedia(() -> {
+                ((Pane) winImageView.getScene().getRoot()).getChildren().remove(overlayPane);
+                player.dispose();
+                if (onFinished != null) onFinished.run();
+            });
+
+            // Khi lỗi
+            player.setOnError(() -> {
+                System.err.println("Video man2 lỗi: " + player.getError());
+                ((Pane) winImageView.getScene().getRoot()).getChildren().remove(overlayPane);
+                if (onFinished != null) onFinished.run();
+            });
+
+            // Cho phép click để skip video
+            overlayPane.setOnMousePressed(e -> {
+                player.stop();
+                ((Pane) winImageView.getScene().getRoot()).getChildren().remove(overlayPane);
+                player.dispose();
+                if (onFinished != null) onFinished.run();
+            });
+
+            player.play();
+
+        } catch (Exception e) {
+            System.err.println("Không thể phát video man2");
+            e.printStackTrace();
+            if (onFinished != null) onFinished.run();
+        }
+    }
+
     private void runCutscene_WinLevel1() {
         if (storyImage2 == null || storyImage3 == null || winImageView == null) {
             System.err.println("Thiếu ảnh cutscene 2 hoặc 3");
@@ -257,7 +312,7 @@ public class MainController {
         if (gameCanvas != null) gameCanvas.setVisible(false);
         isWinSkipped = false;
 
-        // (Cài đặt font)
+        // --- Cài đặt font ---
         if (isabellaBodyFont != null) {
             winText.setFont(Font.font(isabellaBodyFont.getFamily(), 60));
             winTitleText.setFont(Font.font(isabellaBodyFont.getFamily(), 70));
@@ -270,27 +325,31 @@ public class MainController {
             winText2.setFont(new Font("Arial", 38));
         }
 
-        // (Nội dung text)
-        String scene1_Text = "Linh thạch sáng chói. Bầu trời tỉnh dậy, mở mắt,... ";
+        // --- Nội dung text ---
+        String scene1_Text = "Linh thạch sáng chói. Bầu trời tỉnh dậy, mở mắt,...";
         String scene2_Text1 = "THÀNH PHỐ NỔI AETHERION";
         String scene2_Text2 = "Cổng Trời mở ra, \nkhông phải nơi Thượng Đế \nngự trị, mà là công trình của \nnhững kẻ muốn thay thế Ngài.";
         String scene2_Text3 = "Dưới bầu trời vàng kim, bóng con muỗi khổng lồ uốn lượn như một vị thánh bị xiềng bằng thép. ConMel đứng lặng, nhìn đôi mắt vô hồn ấy, cảm thấy như bầu trời đang thở bằng nỗi đau của loài người.";
 
-        Runnable onScene2Finished = () -> {
-            PauseTransition pause = new PauseTransition(Duration.millis(3000));
-            pause.setOnFinished(e -> {
-                if (isWinSkipped) return;
-                loadNextLevelAndRestart();
-            });
-            pause.play();
-        };
+        // --- Bắt đầu cảnh 1 ---
+        winImageView.setImage(storyImage2);
+        winImageView.setVisible(true);
 
-        Runnable onScene1Finished = () -> {
+        winText.setText("");
+        winText.setVisible(true);
+        winText.setStyle("-fx-fill: white; -fx-stroke: #723f3f; -fx-stroke-width: 1.5;");
+        winText.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+        winText.setLayoutX(50);
+        winText.setLayoutY(100);
+
+        startWinTypewriter(winText, scene1_Text, () -> {
             if (isWinSkipped) return;
-            PauseTransition pause = new PauseTransition(Duration.millis(3000));
-            pause.setOnFinished(e -> {
+
+            // --- Sau khi text xong, phát video Man2 ---
+            playVideoMan2(() -> {
                 if (isWinSkipped) return;
 
+                // --- Cảnh 2: storyImage3 + text ---
                 winImageView.setImage(storyImage3);
                 winText.setVisible(false);
 
@@ -301,15 +360,25 @@ public class MainController {
                     PauseTransition pause2 = new PauseTransition(Duration.millis(1000));
                     pause2.setOnFinished(e2 -> {
                         if (isWinSkipped) return;
+
                         winText1.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
                         winText1.setVisible(true);
                         startWinTypewriter(winText1, scene2_Text2, () -> {
                             PauseTransition pause3 = new PauseTransition(Duration.millis(800));
                             pause3.setOnFinished(e3 -> {
                                 if (isWinSkipped) return;
+
                                 winText2.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
                                 winText2.setVisible(true);
-                                startWinTypewriter(winText2, scene2_Text3, onScene2Finished);
+                                startWinTypewriter(winText2, scene2_Text3, () -> {
+                                    // --- Kết thúc cutscene, load level tiếp theo ---
+                                    PauseTransition endPause = new PauseTransition(Duration.millis(3000));
+                                    endPause.setOnFinished(ev -> {
+                                        if (isWinSkipped) return;
+                                        loadNextLevelAndRestart();
+                                    });
+                                    endPause.play();
+                                });
                             });
                             pause3.play();
                         });
@@ -317,20 +386,59 @@ public class MainController {
                     pause2.play();
                 });
             });
-            pause.play();
-        };
+        });
+    }
 
-        System.out.println("Bắt đầu Cảnh 1 (Thắng màn 1)...");
-        winImageView.setImage(storyImage2);
-        winImageView.setVisible(true);
+    // Phát video man3
+    private void playVideoMan3(Runnable onFinished) {
+        try {
+            String path = "/com/example/arkanoid/videos/man3.mp4";
+            Media media = new Media(getClass().getResource(path).toExternalForm());
+            MediaPlayer player = new MediaPlayer(media);
+            MediaView mediaView = new MediaView(player);
 
-        winText.setText("");
-        winText.setVisible(true);
-        winText.setStyle("-fx-fill: white; -fx-stroke: #723f3f; -fx-stroke-width: 1.5;");
-        winText.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
-        winText.setLayoutX(50);
-        winText.setLayoutY(100);
-        startWinTypewriter(winText, scene1_Text, onScene1Finished);
+            // ✅ Cố định kích thước video
+            mediaView.setFitWidth(1280);
+            mediaView.setFitHeight(800);
+            mediaView.setPreserveRatio(false); // Không cần giữ tỉ lệ, khớp đúng 1280x800
+
+            // Tạo lớp phủ căn giữa
+            StackPane overlayPane = new StackPane(mediaView);
+            overlayPane.setAlignment(Pos.CENTER);
+            overlayPane.setStyle("-fx-background-color: black;"); // nền đen để nổi bật video
+
+            // Thêm overlay vào Scene gốc
+            ((Pane) winImageView.getScene().getRoot()).getChildren().add(overlayPane);
+
+            // Khi video kết thúc
+            player.setOnEndOfMedia(() -> {
+                ((Pane) winImageView.getScene().getRoot()).getChildren().remove(overlayPane);
+                player.dispose();
+                if (onFinished != null) onFinished.run();
+            });
+
+            // Khi lỗi
+            player.setOnError(() -> {
+                System.err.println("Video man3 lỗi: " + player.getError());
+                ((Pane) winImageView.getScene().getRoot()).getChildren().remove(overlayPane);
+                if (onFinished != null) onFinished.run();
+            });
+
+            // Cho phép click để skip video
+            overlayPane.setOnMousePressed(e -> {
+                player.stop();
+                ((Pane) winImageView.getScene().getRoot()).getChildren().remove(overlayPane);
+                player.dispose();
+                if (onFinished != null) onFinished.run();
+            });
+
+            player.play();
+
+        } catch (Exception e) {
+            System.err.println("Không thể phát video man3");
+            e.printStackTrace();
+            if (onFinished != null) onFinished.run();
+        }
     }
 
     private void runCutscene_WinLevel2() {
@@ -344,7 +452,7 @@ public class MainController {
         isWinSkipped = false;
         winText.setVisible(false);
 
-        // (Nội dung text Màn 2)
+        // Nội dung text Màn 2
         String scene2_Text3 = "Ánh sáng vỡ tung, Cổng Trời sụp đổ trong \ntiếng cầu nguyện bị xé vụn.";
         String scene2_Text4 = "ConMel với tay về phía AnhChuc, \nnhưng chỉ còn khoảng không nuốt lấy anh.";
         String scene2_Text5 = "Trong tro sáng còn lại, \nQuanBew mỉm cười lặng lẽ. \nThiên Đàng cuối cùng đã mở ra.";
@@ -358,7 +466,7 @@ public class MainController {
             loadNextLevelAndRestart();
         };
 
-        // (Cảnh 2: Mở đầu Màn 3)
+        // Cảnh 2: Mở đầu Màn 3
         Runnable playScene3 = () -> {
             if (isWinSkipped) return;
             winText1.setVisible(false);
@@ -402,7 +510,7 @@ public class MainController {
             waitForImage.play();
         };
 
-        // (Cảnh 1: Kết thúc Màn 2)
+        // Cảnh 1: Kết thúc Màn 2
         Runnable playScene2 = () -> {
             if (isWinSkipped) return;
             winImageView.setImage(storyImage4);
@@ -441,10 +549,12 @@ public class MainController {
                             winText3.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
                             winText3.setVisible(true);
 
+                            // --- CHÈN VIDEO MAN3 TRƯỚC KHI CẢNH 3 BẮT ĐẦU ---
                             startWinTypewriter(winText3, scene2_Text5, () -> {
-                                PauseTransition nextScene = new PauseTransition(Duration.seconds(2));
-                                nextScene.setOnFinished(e3 -> playScene3.run());
-                                nextScene.play();
+                                playVideoMan3(() -> {
+                                    // Sau khi video xong, tiếp tục cảnh 3
+                                    playScene3.run();
+                                });
                             });
                         });
                         p2.play();
@@ -461,6 +571,99 @@ public class MainController {
         PauseTransition startDelay = new PauseTransition(Duration.millis(2000));
         startDelay.setOnFinished(e -> playScene2.run());
         startDelay.play();
+    }
+
+    // Phát video kết thúc cuối cùng
+    private void playVideoKetCuoi(Runnable onFinished) {
+        try {
+            String path = "/com/example/arkanoid/videos/ketcuoi.mp4";
+            Media media = new Media(getClass().getResource(path).toExternalForm());
+            MediaPlayer player = new MediaPlayer(media);
+            MediaView mediaView = new MediaView(player);
+
+            // Cố định kích thước video
+            mediaView.setFitWidth(1280);
+            mediaView.setFitHeight(800);
+            mediaView.setPreserveRatio(false);
+
+            // Lớp overlay căn giữa
+            StackPane overlayPane = new StackPane(mediaView);
+            overlayPane.setAlignment(Pos.CENTER);
+            overlayPane.setStyle("-fx-background-color: black;");
+
+            // Thêm overlay vào Scene gốc
+            ((Pane) winImageView.getScene().getRoot()).getChildren().add(overlayPane);
+
+            player.setOnEndOfMedia(() -> {
+                ((Pane) winImageView.getScene().getRoot()).getChildren().remove(overlayPane);
+                player.dispose();
+                if (onFinished != null) onFinished.run();
+            });
+
+            player.setOnError(() -> {
+                System.err.println("Video kết thúc lỗi: " + player.getError());
+                ((Pane) winImageView.getScene().getRoot()).getChildren().remove(overlayPane);
+                if (onFinished != null) onFinished.run();
+            });
+
+            overlayPane.setOnMousePressed(e -> {
+                player.stop();
+                ((Pane) winImageView.getScene().getRoot()).getChildren().remove(overlayPane);
+                player.dispose();
+                if (onFinished != null) onFinished.run();
+            });
+
+            player.play();
+
+        } catch (Exception e) {
+            System.err.println("Không thể phát video ketcuoi");
+            e.printStackTrace();
+            if (onFinished != null) onFinished.run();
+        }
+    }
+
+    private void playVideoAfterCredit(Runnable onFinished) {
+        try {
+            String path = "/com/example/arkanoid/videos/aftercredit.mp4";
+            Media media = new Media(getClass().getResource(path).toExternalForm());
+            MediaPlayer player = new MediaPlayer(media);
+            MediaView mediaView = new MediaView(player);
+
+            mediaView.setFitWidth(1280);
+            mediaView.setFitHeight(800);
+            mediaView.setPreserveRatio(false);
+
+            StackPane overlayPane = new StackPane(mediaView);
+            overlayPane.setAlignment(Pos.CENTER);
+            overlayPane.setStyle("-fx-background-color: black;");
+
+            ((Pane) winImageView.getScene().getRoot()).getChildren().add(overlayPane);
+
+            player.setOnEndOfMedia(() -> {
+                ((Pane) winImageView.getScene().getRoot()).getChildren().remove(overlayPane);
+                player.dispose();
+                if (onFinished != null) onFinished.run();
+            });
+
+            player.setOnError(() -> {
+                System.err.println("Video aftercredit lỗi: " + player.getError());
+                ((Pane) winImageView.getScene().getRoot()).getChildren().remove(overlayPane);
+                if (onFinished != null) onFinished.run();
+            });
+
+            overlayPane.setOnMousePressed(e -> {
+                player.stop();
+                ((Pane) winImageView.getScene().getRoot()).getChildren().remove(overlayPane);
+                player.dispose();
+                if (onFinished != null) onFinished.run();
+            });
+
+            player.play();
+        } catch (Exception e) {
+            System.err.println("Không thể phát video aftercredit");
+            e.printStackTrace();
+            if (onFinished != null) onFinished.run();
+        }
     }
 
     private void runCutscene_WinLevel3() {
@@ -492,6 +695,10 @@ public class MainController {
             winText3.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 50) : new Font("Arial", 45));
             winText3.setStyle("-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;");
             winText3.setVisible(true);
+            winText3.setLayoutX(50);
+            winText3.setLayoutY(100);
+            winText3.setWrappingWidth(750);
+            winText3.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
 
             startWinTypewriter(winText3, scene3_Text3, () -> {
                 PauseTransition after1 = new PauseTransition(Duration.millis(1000));
@@ -502,14 +709,20 @@ public class MainController {
                     winText4.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 50) : new Font("Arial", 42));
                     winText4.setStyle("-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;");
                     winText4.setVisible(true);
+                    winText4.setLayoutX(760);
+                    winText4.setLayoutY(600);
+                    winText4.setWrappingWidth(450);
+                    winText4.setTextAlignment(javafx.scene.text.TextAlignment.LEFT);
 
                     startWinTypewriter(winText4, scene3_Text4, () -> {
-                        PauseTransition done = new PauseTransition(Duration.seconds(4));
-                        done.setOnFinished(e2 -> {
-                            if (isWinSkipped) return;
-                            handleQuit();
+                        // --- Phát video ketcuoi ---
+                        playVideoKetCuoi(() -> {
+                            // --- Phát video aftercredit ---
+                            playVideoAfterCredit(() -> {
+                                if (isWinSkipped) return;
+                                handleQuit(); // kết thúc cutscene
+                            });
                         });
-                        done.play();
                     });
                 });
                 after1.play();
@@ -517,7 +730,6 @@ public class MainController {
         });
         waitImage.play();
     }
-
 
     // --- SỬA HÀM NÀY: Dùng Text cụ thể, và lưu trạng thái ---
     private void startWinTypewriter(Text target, String content, Runnable onFinished) {
