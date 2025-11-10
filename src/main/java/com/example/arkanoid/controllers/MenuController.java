@@ -407,6 +407,13 @@ public class MenuController {
     private void handleSettings() { showPanel(settingsPane); }
     private void handleRanking() {
         try {
+            // ✅ SỬA LỖI: Thêm logic tải ảnh
+            Image rankingImg = rankingImageView.getImage();
+            if (rankingImg == null) {
+                rankingImg = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/ranking.jpg"));
+                rankingImageView.setImage(rankingImg);
+            }
+            // (Phần còn lại giữ nguyên)
             showPanel(rankingImageView);
 
             List<ScoreEntry> topScores = highScores.getScores();
@@ -414,6 +421,7 @@ public class MenuController {
             rank2Text.setText(getRankText(topScores, 1));
             rank3Text.setText(getRankText(topScores, 2));
         } catch (Exception e) {
+            System.err.println("Lỗi khi tải ảnh /com/example/arkanoid/images/ranking.jpg");
             e.printStackTrace();
             showPanel(null);
         }
@@ -427,7 +435,22 @@ public class MenuController {
         return (index + 1) + ". N/A";
     }
 
-    private void handleGuide() { showPanel(guideImageView); }
+    private void handleGuide() {
+        try {
+            // ✅ SỬA LỖI: Thêm logic tải ảnh
+            Image guideImg = guideImageView.getImage();
+            if (guideImg == null) {
+                guideImg = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/guideMenu.png"));
+                guideImageView.setImage(guideImg);
+            }
+            // (Phần còn lại giữ nguyên)
+            showPanel(guideImageView);
+        } catch (Exception e) {
+            System.err.println("Lỗi khi tải ảnh /com/example/arkanoid/images/guideMenu.png");
+            e.printStackTrace();
+            showPanel(null);
+        }
+    }
     private void handleBackFromGuide() { showPanel(null); }
     private void handleBackFromRanking() { showPanel(null); }
     private void handleBackFromSettings() { showPanel(null); }
@@ -463,6 +486,9 @@ public class MenuController {
         if (settingImage != null) settingImage.setVisible(isVisible);
         if (rankingImage != null) rankingImage.setVisible(isVisible);
         if (guideImageBtn != null) guideImageBtn.setVisible(isVisible);
+
+        // ✅ DÒNG SỬA LỖI: Thêm dòng này để ẩn/hiện ảnh nền chính
+        if (mainBackground != null) mainBackground.setVisible(isVisible);
     }
 
     private void addScaleAnimation(Button button, ImageView image) {
