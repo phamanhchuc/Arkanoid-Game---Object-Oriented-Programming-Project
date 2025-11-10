@@ -373,7 +373,6 @@ public class MenuController {
     }
 
     private void loadGameSceneAndMusic(Stage stage, Scene scene) {
-        SoundManager.playMusic(SoundManager.Music.BACKGROUND_GAME);
         loadGameScene(stage, scene);
     }
 

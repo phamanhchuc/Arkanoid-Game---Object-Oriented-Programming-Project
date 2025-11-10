@@ -223,6 +223,15 @@ public class GameManager {
         gameOver = false;
         levelWon = false;
         mouseControlled = false;
+
+        // PHÁT NHẠC THEO LEVEL
+        if (currentLevelIndex == 0) {
+            SoundManager.playMusic(SoundManager.Music.LEVEL1);
+        } else if (currentLevelIndex == 1) {
+            SoundManager.playMusic(SoundManager.Music.LEVEL2);
+        } else if (currentLevelIndex == 2) {
+            SoundManager.playMusic(SoundManager.Music.LEVEL3);
+        }
     }
 
     // (Các hàm resetCurrentLevel, nextLevel, createBricks... không đổi)
