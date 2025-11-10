@@ -179,8 +179,7 @@ public class MainController {
             SoundManager.stopMusic();
         } else {
             gameManager.resumeGame();
-            if(gameCanvas != null) gameCanvas.setOpacity(1.0);
-            SoundManager.playMusic(SoundManager.Music.BACKGROUND_GAME);
+            if(gameCanvas != null) gameCanvas.setOpacity(1.0);;
             if(gameCanvas != null) gameCanvas.requestFocus();
         }
     }
