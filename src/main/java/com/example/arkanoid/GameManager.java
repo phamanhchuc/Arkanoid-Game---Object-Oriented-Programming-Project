@@ -224,14 +224,23 @@ public class GameManager {
         levelWon = false;
         mouseControlled = false;
 
+        // ===============================================
+        // ===== BẮT ĐẦU SỬA: CHỈ PHÁT NHẠC MÀN 1 =====
+        // ===============================================
         // PHÁT NHẠC THEO LEVEL
         if (currentLevelIndex == 0) {
             SoundManager.playMusic(SoundManager.Music.LEVEL1);
-        } else if (currentLevelIndex == 1) {
+        }
+        /* (XÓA BỎ else if cho Màn 2 và Màn 3 khỏi đây)
+        else if (currentLevelIndex == 1) {
             SoundManager.playMusic(SoundManager.Music.LEVEL2);
         } else if (currentLevelIndex == 2) {
             SoundManager.playMusic(SoundManager.Music.LEVEL3);
         }
+        */
+        // ===============================================
+        // ===== KẾT THÚC SỬA                             =====
+        // ===============================================
     }
 
     // (Các hàm resetCurrentLevel, nextLevel, createBricks... không đổi)

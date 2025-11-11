@@ -24,12 +24,13 @@ public class LevelBuilder {
 
     /**
      * Tải và tạo tất cả các viên gạch (tĩnh và di chuyển) cho một cấp độ.
-     * @param levelFileName Tên file map của cấp độ.
-     * @param allBricks Danh sách để thêm tất cả các viên gạch vào (tĩnh và từ hàng di chuyển).
+     *
+     * @param levelFileName   Tên file map của cấp độ.
+     * @param allBricks       Danh sách để thêm tất cả các viên gạch vào (tĩnh và từ hàng di chuyển).
      * @param movingBrickRows Danh sách để thêm các MovingBrickRow vào.
      * @return true nếu tải thành công, false nếu có lỗi.
      */
-    public boolean buildLevelBricks(String levelFileName, List<Brick> allBricks, List<MovingBrickRow> movingBrickRows,List<RotatingBrickGroup> rotatingBrickGroups) {
+    public boolean buildLevelBricks(String levelFileName, List<Brick> allBricks, List<MovingBrickRow> movingBrickRows, List<RotatingBrickGroup> rotatingBrickGroups) {
         allBricks.clear();
         movingBrickRows.clear();
         rotatingBrickGroups.clear();
@@ -54,15 +55,15 @@ public class LevelBuilder {
                 if (line.startsWith("#ROW")) {
                     // Đây là một định nghĩa MovingBrickRow
                     parseAndCreateMovingBrickRow(line, allBricks, movingBrickRows);
-                }
-                else if (line.startsWith("#ROTATING_GROUP")) {
+                } else if (line.startsWith("#ROTATING_GROUP")) {
                     parseAndCreateRotatingBrickGroup(line, allBricks, rotatingBrickGroups);
-                }
-                else {
+                } else {
                     // Đây là dữ liệu gạch tĩnh bình thường
                     String[] numbers = line.split("\\s+");
                     mapData.add(numbers);
-                    if (cols == 0) { cols = numbers.length; }
+                    if (cols == 0) {
+                        cols = numbers.length;
+                    }
                 }
             }
         } catch (IOException | NullPointerException e) {

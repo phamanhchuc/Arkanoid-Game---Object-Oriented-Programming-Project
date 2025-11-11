@@ -235,7 +235,12 @@ public class MainController {
         loadNextLevelAndRestart();
     }
 
+    // ===============================================
+    // ===== BẮT ĐẦU SỬA: DỪNG NHẠC KHI WIN     =====
+    // ===============================================
     private void handleLevelWin() {
+        SoundManager.stopMusic(); // <-- THÊM DÒNG NÀY ĐỂ TẮT NHẠC NGAY LẬP TỨC
+
         int levelWonIndex = gameManager.getCurrentLevelIndex();
         gameManager.nextLevel();
 
@@ -269,6 +274,9 @@ public class MainController {
         else if (levelWonIndex == 1) runCutscene_WinLevel2();
         else loadNextLevelAndRestart();
     }
+    // ===============================================
+    // ===== KẾT THÚC SỬA                             =====
+    // ===============================================
 
     // Phát video man2
     private void playVideoMan2(Runnable onFinished) {
@@ -815,6 +823,9 @@ public class MainController {
         restartGameAfterWin();
     }
 
+    // ===============================================
+    // ===== BẮT ĐẦU SỬA: PHÁT NHẠC MÀN MỚI      =====
+    // ===============================================
     private void restartGameAfterWin() {
         if (winImageView != null) {
             winImageView.setVisible(false);
@@ -827,8 +838,28 @@ public class MainController {
             gameCanvas.setVisible(true);
             gameCanvas.requestFocus();
         }
+
+        // --- THÊM LOGIC PHÁT NHẠC MỚI TẠI ĐÂY ---
+        // (Lấy màn chơi *hiện tại* mà game vừa tải)
+        int levelIndex = gameManager.getCurrentLevelIndex();
+
+        // Chỉ phát nhạc nếu game chưa kết thúc (chưa thắng màn cuối)
+        if (!gameManager.hasWonGame()) {
+            if (levelIndex == 1) { // Đã thắng màn 1, chuẩn bị vào màn 2
+                SoundManager.playMusic(SoundManager.Music.LEVEL2);
+            } else if (levelIndex == 2) { // Đã thắng màn 2, chuẩn bị vào màn 3
+                SoundManager.playMusic(SoundManager.Music.LEVEL3);
+            }
+            // (Nếu levelIndex == 0, nó đã được xử lý bởi GameManager)
+        }
+        // --- KẾT THÚC LOGIC PHÁT NHẠC ---
+
+
         if (gameLoop != null) gameLoop.start();
     }
+    // ===============================================
+    // ===== KẾT THÚC SỬA                             =====
+    // ===============================================
 
     private void handleRestart() {
         if (isPaused) togglePause(false);
@@ -843,8 +874,10 @@ public class MainController {
         currentTypingCallback = null;
         clearAllCutsceneTexts();
 
-        gameManager.initGame();
-        restartGameAfterWin();
+        gameManager.initGame(); // <-- Lệnh này sẽ gọi loadLevelData() của màn 1
+        // và tự động phát nhạc màn 1 (do logic trong GameManager)
+
+        restartGameAfterWin(); // <-- Lệnh này sẽ không phát nhạc vì levelIndex là 0
     }
 
     private void handleQuit() {

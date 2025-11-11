@@ -163,7 +163,6 @@ public class MenuController {
     private void playIntroVideo(Runnable onFinished) {
         try {
             String path = "/com/example/arkanoid/videos/man1.mp4";
-
             Media media = new Media(getClass().getResource(path).toExternalForm());
             introPlayer = new MediaPlayer(media);
 

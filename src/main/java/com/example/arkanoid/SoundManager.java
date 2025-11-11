@@ -167,6 +167,7 @@ public class SoundManager {
         if (backgroundMusicPlayer != null) {
             try {
                 backgroundMusicPlayer.stop();
+                backgroundMusicPlayer.dispose();
             } catch (Exception ignored) {}
 
             backgroundMusicPlayer = null;
