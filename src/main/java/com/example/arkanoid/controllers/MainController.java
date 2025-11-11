@@ -32,12 +32,15 @@ import javafx.scene.image.ImageView;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.animation.FadeTransition;
 import javafx.animation.ParallelTransition;
 import javafx.animation.PauseTransition;
+
 import java.io.InputStream;
 
 import java.io.IOException;
@@ -46,20 +49,33 @@ import java.util.Set;
 
 public class MainController {
 
-    @FXML private Canvas gameCanvas;
-    @FXML private VBox pausePane;
-    @FXML private Button resumeButton;
-    @FXML private Button restartButton;
-    @FXML private Button quitButton;
-    @FXML private ImageView pauseBackground;
-    @FXML private ImageView winImageView;
+    @FXML
+    private Canvas gameCanvas;
+    @FXML
+    private VBox pausePane;
+    @FXML
+    private Button resumeButton;
+    @FXML
+    private Button restartButton;
+    @FXML
+    private Button quitButton;
+    @FXML
+    private ImageView pauseBackground;
+    @FXML
+    private ImageView winImageView;
 
-    @FXML private Text winText;
-    @FXML private Text winTitleText;
-    @FXML private Text winText1;
-    @FXML private Text winText2;
-    @FXML private Text winText3;
-    @FXML private Text winText4;
+    @FXML
+    private Text winText;
+    @FXML
+    private Text winTitleText;
+    @FXML
+    private Text winText1;
+    @FXML
+    private Text winText2;
+    @FXML
+    private Text winText3;
+    @FXML
+    private Text winText4;
     private Text[] allWinTexts;
 
     private GameManager gameManager;
@@ -93,9 +109,13 @@ public class MainController {
 
         gameLoop = new AnimationTimer() {
             private long lastTime = 0;
+
             @Override
             public void handle(long now) {
-                if (lastTime == 0) { lastTime = now; return; }
+                if (lastTime == 0) {
+                    lastTime = now;
+                    return;
+                }
                 double delta = (now - lastTime) / 1_000_000_000.0;
                 lastTime = now;
 
@@ -170,17 +190,18 @@ public class MainController {
     private void togglePause(boolean pause) {
         if (gameManager.isGameOver() || gameManager.hasWonLevel()) return;
         isPaused = pause;
-        if(pausePane != null) pausePane.setVisible(isPaused);
-        if(pauseBackground != null) pauseBackground.setVisible(isPaused);
+        if (pausePane != null) pausePane.setVisible(isPaused);
+        if (pauseBackground != null) pauseBackground.setVisible(isPaused);
 
         if (isPaused) {
             gameManager.pauseGame();
-            if(gameCanvas != null) gameCanvas.setOpacity(0.5);
+            if (gameCanvas != null) gameCanvas.setOpacity(0.5);
             SoundManager.stopMusic();
         } else {
             gameManager.resumeGame();
-            if(gameCanvas != null) gameCanvas.setOpacity(1.0);;
-            if(gameCanvas != null) gameCanvas.requestFocus();
+            if (gameCanvas != null) gameCanvas.setOpacity(1.0);
+            ;
+            if (gameCanvas != null) gameCanvas.requestFocus();
         }
     }
 
@@ -790,7 +811,7 @@ public class MainController {
         currentTypingCallback = null;
         // --- KẾT THÚC ---
 
-       // gameManager.nextLevel();
+        // gameManager.nextLevel();
         restartGameAfterWin();
     }
 
