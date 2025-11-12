@@ -13,11 +13,12 @@ public class Brick extends MovableObject {
         SPECIAL_STONE // <-- THÊM MỚI: Loại 5
     }
 
-    private int hits;
-    private int maxHits; // <-- THÊM BIẾN NÀY
-    private boolean destroyed = false;
+    protected int hits;
+    protected int maxHits; // <-- THÊM BIẾN NÀY
+    protected boolean destroyed = false;
     private BrickType type;
-
+    protected int scoreValue;
+    protected boolean indestructible = false;
 
     // --- THÊM MẢNG ẢNH MỚI ---
     private static final Image[] stoneImages = new Image[3];
@@ -78,32 +79,36 @@ public class Brick extends MovableObject {
 
         // Gán hits VÀ maxHits
         switch (typeCode) {
-            case 5: // <-- THÊM CASE 5
+            case 5: // Gạch 5 hit
                 this.type = BrickType.SPECIAL_STONE;
                 this.hits = 5;
-                this.maxHits = 5; // <-- THÊM
+                this.maxHits = 5;
+                this.scoreValue = 150; // Điểm mặc định
                 break;
-            case 4:
+            case 4: // Gạch bất tử
                 this.type = BrickType.INDESTRUCTIBLE;
                 this.hits = 1;
-                this.maxHits = 1; // <-- THÊM
+                this.maxHits = 1;
+                this.scoreValue = 0;
                 break;
-            case 3:
+            case 3: // Gạch 3 hit
                 this.type = BrickType.STONE;
                 this.hits = 3;
-                this.maxHits = 3; // <-- THÊM
+                this.maxHits = 3;
+                this.scoreValue = 100;
                 break;
-            case 2:
+            case 2: // Gạch 2 hit
                 this.type = BrickType.CLOUD;
                 this.hits = 2;
-                this.maxHits = 2; // <-- THÊM
+                this.maxHits = 2;
+                this.scoreValue = 50;
                 break;
-            default:
-                // (Gạch loại 1 mặc định là gạch đá 1 hit)
+            default: // Gạch 1 hit
                 this.type = BrickType.STONE;
                 this.hits = 1;
-                this.maxHits = 1; // <-- THÊM
-                if (stoneImages[0] == null) { // Đảm bảo ảnh tồn tại
+                this.maxHits = 1;
+                this.scoreValue = 25;
+                if (stoneImages[0] == null) {
                     stoneImages[0] = new Image(Brick.class.getResourceAsStream("/com/example/arkanoid/images/brick_state_3.2.png"));
                 }
                 break;

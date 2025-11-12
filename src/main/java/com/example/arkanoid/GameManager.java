@@ -31,13 +31,25 @@ public class GameManager {
     private List<Projectile> projectiles = new ArrayList<>();
 
     // --- THÊM BIẾN BOSS ---
-    private Boss boss; // Thêm 1 con boss
+    private MovableObject currentBoss; //Boss
+    public MovableObject getCurrentBoss() { // <--- THÊM GETTER NÀY
+        return currentBoss;
+    }
+
+    public void setCurrentBoss(MovableObject boss) {
+        this.currentBoss = boss;
+    }
 
     private double medicineSpawnTimer = 0.0;
     private double medicineSpawnInterval = 1.0; // Thả lần đầu sau 15s
     private final double MEDICINE_WIDTH = 30.0;  // Chỉnh kích thước viên thuốc
     private final double MEDICINE_HEIGHT = 20.0; // Chỉnh kích thước viên thuốc
     private final double BALL_STATE_DURATION = 10.0; // Hiệu ứng kéo dài 10 giây
+
+    // Biến cho hiệu ứng STUN
+    private boolean paddleIsStunned = false;
+    private double stunTimer = 0.0;
+    private final double STUN_DURATION = 3.0;
 
     private Random random = new Random();
     private double trailSpawnTimer = 0;
@@ -193,7 +205,7 @@ public class GameManager {
         powerUps.clear();
         particles.clear();
         projectiles.clear();
-        boss = null; // Xóa boss cũ (nếu có)
+        currentBoss = null; // Xóa boss cũ (nếu có)
         medicineSpawnTimer = 0.0;
         int ballRadius = 6;
         Ball newBall = new Ball(
@@ -208,9 +220,42 @@ public class GameManager {
         // --- THÊM KHỞI TẠO BOSS ---
         // Chỉ tạo boss nếu là Màn 1 (index = 0)
         if (currentLevelIndex == 0) {
-            // Tạo boss ở tọa độ Y=20 (trên cùng), kích thước 80x60 (bạn có thể đổi)
-            boss = new Boss(playAreaOffsetX, 20, 80, 60);
-            boss.setPlayArea(playAreaOffsetX, playAreaWidth);
+            // Màn 1: Sử dụng lớp Boss cũ
+            // Giả định Boss có constructor: Boss(x, y, width, height)
+            currentBoss = new Boss(playAreaOffsetX, 20, 80, 60);
+            currentBoss.setPlayArea(playAreaOffsetX, playAreaWidth);
+
+            // Nếu lớp Boss cũ không có GameManagerHolder, bạn KHÔNG cần dòng này
+            // Boss.GameManagerHolder.INSTANCE = this;
+
+        } else if (currentLevelIndex == 1) {
+            // Màn 2: Sử dụng BossLevel2
+            // Giả định BossLevel2 có constructor: BossLevel2(x, y, width, height, hp, playAreaX, playAreaWidth)
+            // (như code bạn cung cấp ở yêu cầu đầu tiên)
+            int initialHp = 50; // Ví dụ: 500 HP
+            currentBoss = new BossLevel2(playAreaOffsetX, 20, 100, 70, initialHp, playAreaOffsetX, playAreaWidth);
+
+            // BẮT BUỘC: Gán tham chiếu cho BossLevel2 để nó có thể gọi spawnMedicine()
+            BossLevel2.GameManagerHolder.INSTANCE = this;
+
+        } else if (currentLevelIndex == 2) { // <--- THÊM KHỐI NÀY CHO MÀN 3
+            int initialHp = 1000; // Máu cho Boss Level 3
+            // Vị trí của Boss Level 3 (cố định ở giữa màn hình)
+            double boss3Width = 280;
+            double boss3Height = 250;
+            double boss3X = playAreaOffsetX + playAreaWidth / 2 - boss3Width / 2;
+            double boss3Y = -20; // Vị trí Y cố định
+
+            currentBoss = new BossLevel3(boss3X, boss3Y, boss3Width, boss3Height, initialHp, playAreaOffsetX, playAreaWidth);
+
+            // Gán tham chiếu cho BossLevel3
+            BossLevel3.GameManagerHolder.INSTANCE = this;
+
+            // Thêm HeartBrick của BossLevel3 vào danh sách bricks để bóng có thể va chạm
+            // (Điều này quan trọng để bóng có thể va chạm và phá hủy trái tim)
+            if (currentBoss instanceof BossLevel3) {
+                bricks.add(((BossLevel3)currentBoss).getHeartBrick());
+            }
         }
         // --- KẾT THÚC THÊM ---
 
@@ -277,6 +322,13 @@ public class GameManager {
         return levelWon;
     }
 
+    /**
+     * Đặt trạng thái thắng màn chơi (được gọi từ các đối tượng va chạm).
+     */
+    public void setLevelWon(boolean won) {
+        this.levelWon = won;
+    }
+
     public boolean hasWonGame() {
         return gameWon;
     }
@@ -300,6 +352,13 @@ public class GameManager {
 
     public boolean isGameOver() {
         return gameOver;
+    }
+
+    /**
+     * Đặt trạng thái chạy của trò chơi.
+     */
+    public void setRunning(boolean status) {
+        this.running = status;
     }
 
     public Paddle getPaddle() {
@@ -343,22 +402,20 @@ public class GameManager {
     public void update(double dt) {
         // --- THÊM UPDATE BOSS ---
         // (Boss di chuyển ngay cả khi game chưa bắt đầu)
-        if (boss != null) {
-            boss.update(dt);
-        }
-        if (boss != null && running) {
-            medicineSpawnTimer += dt;
-            if (medicineSpawnTimer >= medicineSpawnInterval) {
-                // Thả thuốc ở giữa, bên dưới boss
-                spawnMedicine(boss.getX() + boss.getWidth() / 2 - (MEDICINE_WIDTH / 2),
-                        boss.getY() + boss.getHeight());
-
-                medicineSpawnTimer = 0.0; // Reset timer
-                // Lần thả tiếp theo ngẫu nhiên từ 15-20s
-                medicineSpawnInterval = 15.0 + random.nextDouble() * 5.0;
-            }
+        if (currentBoss != null) {
+            currentBoss.update(dt);
         }
         // --- KẾT THÚC THÊM ---
+
+        if (paddleIsStunned) {
+            stunTimer += dt;
+            paddle.stop(); // Buộc Paddle dừng lại
+            if (stunTimer >= STUN_DURATION) {
+                paddleIsStunned = false;
+                stunTimer = 0.0;
+                System.out.println("Paddle hết tê liệt!");
+            }
+        }
 
         if (gameOver || !running) {
             paddle.update(dt);
@@ -425,6 +482,36 @@ public class GameManager {
                 b.handleCollision(paddle, this);
             }
         }
+        // ----------------------------------------------------------------------------------
+// ===== BẮT ĐẦU XỬ LÝ VA CHẠM BALL VỚI BOSS =====
+// ----------------------------------------------------------------------------------
+        if (currentBoss instanceof BossLevel2) {
+            BossLevel2 bossL2 = (BossLevel2) currentBoss;
+
+            for (Ball b : balls) {
+                if (bossL2.checkCollisionWithBall(b)) {
+                    // Xử lý va chạm: Đổi hướng bóng và gây sát thương
+                    b.handleCollision(bossL2, this); // Dùng hàm handleCollision của Ball
+
+                    // Lượng sát thương tùy thuộc vào trạng thái bóng (ví dụ: Ball thường gây 1 sát thương)
+                    int damage = 1;
+
+                    if (!bossL2.takeDamage(damage)) {
+                        // BossLevel2 bị tiêu diệt
+                        currentBoss = null;
+                        // Thêm điểm lớn khi tiêu diệt Boss
+                        addScore(5000);
+                        // Kích hoạt thắng màn chơi (nếu Boss là mục tiêu duy nhất)
+                        levelWon = true;
+                        running = false;
+                        break;
+                    }
+                }
+            }
+        }
+// ----------------------------------------------------------------------------------
+// ===== KẾT THÚC XỬ LÝ VA CHẠM BALL VỚI BOSS =====
+// ----------------------------------------------------------------------------------
         boolean allBricksDestroyed = true;
         Iterator<Brick> brickIterator = bricks.iterator();
         while (brickIterator.hasNext()) {
@@ -474,6 +561,24 @@ public class GameManager {
             p.update(dt);
             if (p.getY() + p.getHeight() < 0) {
                 p.setDestroyed(true);
+            }
+
+            if (!p.isDestroyed() && currentBoss instanceof BossLevel2) {
+                BossLevel2 bossL2 = (BossLevel2) currentBoss;
+                if (checkCollisionRectRect(p, bossL2)) {
+                    p.setDestroyed(true); // Projectile bị phá hủy (trừ khi là xuyên thấu)
+                    int damage = p.isPiercing() ? 5 : 1; // Projectile xuyên thấu gây nhiều sát thương hơn
+
+                    if (!bossL2.takeDamage(damage)) {
+                        // BossLevel2 bị tiêu diệt
+                        currentBoss = null;
+                        addScore(5000);
+                        levelWon = true;
+                        running = false;
+                    }
+                    // Nếu Boss chết, không cần kiểm tra va chạm với gạch nữa
+                    if (currentBoss == null) break;
+                }
             }
             if (!p.isDestroyed()) {
                 for (Brick b : bricks) {
@@ -643,6 +748,15 @@ public class GameManager {
                 System.out.println("Kích hoạt trạng thái LỬA!");
                 applyBallState(Ball.BallState.FIRE);
             }
+        } else if (pu.getType() == PowerUp.PowerUpType.STUN_PADDLE) { // ĐÃ SỬA: Đặt ELSE IF này ở ngoài khối MEDICINE
+            // Kích hoạt hiệu ứng Stun
+            if (!paddleIsStunned) {
+                SoundManager.playSound(SoundManager.Sound.MISSED_BALL); // Âm thanh tiêu cực
+                paddleIsStunned = true;
+                stunTimer = 0.0;
+                paddle.stop(); // Dừng ngay lập tức
+                System.out.println("Paddle bị TÊ LIỆT trong " + STUN_DURATION + " giây!");
+            }
         }
     }
 
@@ -660,6 +774,27 @@ public class GameManager {
     public void spawnMedicine(double x, double y) {
         PowerUp powerUp = new PowerUp(x, y, MEDICINE_WIDTH, MEDICINE_HEIGHT, PowerUp.PowerUpType.MEDICINE);
         powerUps.add(powerUp);
+    }
+
+    /**
+     * Thêm một PowerUp vào danh sách.
+     */
+    public void addPowerUp(PowerUp pu) {
+        if (pu != null) {
+            powerUps.add(pu);
+        }
+    }
+
+    /**
+     * Xử lý khi một Boss (BossLevel2) bị phá hủy, dùng để xóa tham chiếu.
+     */
+    public void handleBossDefeated(BossLevel2 defeatedBoss) {
+        if (currentBoss == defeatedBoss) {
+            currentBoss = null; // Xóa tham chiếu
+            // Các logic Game Over, Level Won... đã được xử lý trong Strategy,
+            // nhưng bạn có thể lặp lại ở đây nếu muốn:
+            SoundManager.playSound(SoundManager.Sound.LEVEL_COMPLETED);
+        }
     }
 
     private boolean checkCollisionCircleRect(Ball ball, GameObject rect) {
@@ -681,12 +816,10 @@ public class GameManager {
             gc.setFill(Color.BLACK);
             gc.fillRect(0, 0, screenWidth, screenHeight);
         }
-        // --- THÊM RENDER BOSS ---
-        // (Vẽ boss *sau* nền đen, nhưng *trước* gạch)
-        if (boss != null) {
-            boss.render(gc);
+
+        if (currentBoss != null) {
+            currentBoss.render(gc);
         }
-        // --- KẾT THÚC THÊM ---
 
         // (Code vẽ UI, gạch, bóng... không đổi)
         gc.setFill(Color.WHITE);
@@ -702,6 +835,7 @@ public class GameManager {
                 b.render(gc);
             }
         }
+
         for (PowerUp pu : powerUps) {
             pu.render(gc);
         }
@@ -750,7 +884,6 @@ public class GameManager {
             gc.drawImage(currentAngle2Image, 0, 0, 250, 240);
         }
 
-
 //  Reset lại màu chữ và font sau khi vẽ particle
 
         gc.setFill(Color.WHITE);              // ✅ Đặt lại màu trắng hoặc màu bạn muốn
@@ -767,6 +900,7 @@ public class GameManager {
 
         gc.strokeText("Lives: " + lives, screenWidth - 185, 270);
         gc.fillText("Lives: " + lives, screenWidth - 185, 270);
+
 
     }
 

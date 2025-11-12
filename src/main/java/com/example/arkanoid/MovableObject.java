@@ -1,6 +1,14 @@
 package com.example.arkanoid;
 public abstract class MovableObject extends GameObject {
     protected double dx = 0, dy = 0;
+    protected double playAreaX = 0;
+    protected double playAreaWidth = 0;
+
+    public void setPlayArea(double playAreaX, double playAreaWidth) {
+        this.playAreaX = playAreaX;
+        this.playAreaWidth = playAreaWidth;
+    }
+
     public MovableObject(double x, double y, double w, double h){
         super(x, y, w, h);
     }

@@ -3,6 +3,7 @@ package com.example.arkanoid;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
+import java.util.Objects;
 
 public class PowerUp extends MovableObject {
     public enum PowerUpType {
@@ -11,14 +12,15 @@ public class PowerUp extends MovableObject {
         CROSS_BOW,
         MULTI_BALL,
         PIERCING_SHOT,
-        MEDICINE // <-- Loại mới của bạn
+        MEDICINE,
+        STUN_PADDLE // <-- Loại mới: Làm Paddle dừng lại
     }
 
     private PowerUpType type;
     private double fallSpeed = 200;
     private boolean collected = false;
 
-    // ----- Biến Animation (Logic Grid DUY NHẤT) -----
+    // ----- Biến Animation -----
     private boolean isAnimated = false;
     private int numFrames = 1;
     private double frameDurationSeconds = 0.15;
@@ -28,23 +30,20 @@ public class PowerUp extends MovableObject {
     private int frameHeight = 0;
     private int animationCols = 1;
     private int animationRows = 1;
-    // ----------------------------------------------------
+    // -------------------------
 
     /**
-     * Constructor đã được sửa đổi để TỰ ĐỘNG đặt kích thước (tỉ lệ)
+     * Constructor đã được sửa đổi để TỰ ĐỘNG đặt kích thước và tải ảnh
      * dựa trên loại (type) của PowerUp.
      */
     public PowerUp(double x, double y, double width, double height, PowerUpType type) {
-        // --- SỬA LỖI Java 24: Gọi super() NGAY LẬP TỨC ---
-        // Gọi với kích thước ban đầu (ví dụ: 50x70 từ Factory)
-        super(x, y, width, height);
+        super(x, y, width, height); // Gọi constructor cha
 
         this.type = type;
         this.dy = fallSpeed;
 
-        // Biến tạm để lưu kích thước MỚI (theo ý bạn)
-        double newWidth = this.width; // Bắt đầu bằng kích thước đã super()
-        double newHeight = this.height; // Bắt đầu bằng kích thước đã super()
+        double newWidth = this.width;
+        double newHeight = this.height;
 
         try {
             String imagePath = "";
@@ -58,39 +57,32 @@ public class PowerUp extends MovableObject {
             switch (type) {
                 case LIFE:
                     imagePath = "/com/example/arkanoid/images/1life.png";
-                    // --- KÍCH THƯỚC MỚI CỦA BẠN ---
                     newWidth = 35;
                     newHeight = 55;
                     break;
 
                 case CROSS_BOW:
                     imagePath = "/com/example/arkanoid/images/cross_bow_pickup.png";
-                    // --- KÍCH THƯỚC MỚI CỦA BẠN ---
                     newWidth = 35;
                     newHeight = 35;
                     break;
 
                 case MULTI_BALL:
                     imagePath = "/com/example/arkanoid/images/multi_ball_pickup.png";
-                    // --- KÍCH THƯỚC MỚI CỦA BẠN ---
                     newWidth = 35;
                     newHeight = 35;
                     break;
 
                 case PIERCING_SHOT:
                     imagePath = "/com/example/arkanoid/images/meomeobullet_pickup.png";
-                    // --- KÍCH THƯỚC MỚI CỦA BẠN ---
                     newWidth = 35;
                     newHeight = 35;
                     break;
 
-                // --- SỬA CASE MEDICINE (Grid 1x8) ---
                 case MEDICINE:
                     imagePath = "/com/example/arkanoid/images/medicineItem.png";
-                    // --- KÍCH THƯỚC MỚI CỦA BẠN ---
                     newWidth = 40;
                     newHeight = 30;
-
                     isAnimated = true;
                     animationRows = 1;
                     animationCols = 8;
@@ -98,15 +90,23 @@ public class PowerUp extends MovableObject {
                     frameDurationSeconds = 0.15;
                     break;
 
-                // --- SỬA CASE LOSE_LIFE (Grid 12x5) ---
                 case LOSE_LIFE:
                     imagePath = "/com/example/arkanoid/images/fball.png";
-                    // --- KÍCH THƯỚC MỚI CỦA BẠN ---
                     newWidth = 35;
                     newHeight = 60;
-
                     isAnimated = true;
-                    animationRows = 4; // (Bạn ghi 12x5 nhưng code là 4x5, tôi giữ 4x5)
+                    animationRows = 4;
+                    animationCols = 5;
+                    numFrames = 20;
+                    frameDurationSeconds = 0.05;
+                    break;
+
+                case STUN_PADDLE:
+                    imagePath = "/com/example/arkanoid/images/stun_power.png";
+                    newWidth = 60; // Kích thước vật phẩm Stun
+                    newHeight = 100;
+                    isAnimated = true;
+                    animationRows = 4;
                     animationCols = 5;
                     numFrames = 20;
                     frameDurationSeconds = 0.05;
@@ -115,24 +115,25 @@ public class PowerUp extends MovableObject {
             // --- KẾT THÚC CÀI ĐẶT ---
 
 
-            // --- GHI ĐÈ kích thước của đối tượng (width, height là từ MovableObject) ---
+            // Ghi đè kích thước mới
             this.width = newWidth;
             this.height = newHeight;
 
 
             if (!imagePath.isEmpty()) {
-                image = new Image(getClass().getResourceAsStream(imagePath));
-                if (image == null || image.isError()) {
+                // Sử dụng Objects.requireNonNull để đảm bảo tệp tồn tại và tránh lỗi NullPointerException
+                image = new Image(Objects.requireNonNull(getClass().getResourceAsStream(imagePath)));
+
+                if (image.isError()) {
                     System.err.println("Lỗi: Không thể tải ảnh cho PowerUp: " + imagePath);
-                    if(image != null && image.getException() != null) image.getException().printStackTrace();
+                    if(image.getException() != null) image.getException().printStackTrace();
                     image = null;
                 } else {
-                    // --- Logic tính toán Frame (Đã đơn giản hóa) ---
+                    // Logic tính toán Frame
                     if (isAnimated) {
                         frameWidth = (int) (image.getWidth() / animationCols);
                         frameHeight = (int) (image.getHeight() / animationRows);
                     }
-                    // --- KẾT THÚC ---
                 }
             }
         } catch (Exception e) {
@@ -157,7 +158,7 @@ public class PowerUp extends MovableObject {
     public void update(double dt) {
         move(dt);
 
-        // --- Cập nhật animation (Dùng chung cho tất cả) ---
+        // Cập nhật animation
         if (isAnimated) {
             animationTime += dt;
             if (animationTime >= frameDurationSeconds) {
@@ -165,7 +166,6 @@ public class PowerUp extends MovableObject {
                 currentFrame = (currentFrame + 1) % numFrames; // Quay vòng frame
             }
         }
-        // --- KẾT THÚC ---
     }
 
     @Override
@@ -173,7 +173,7 @@ public class PowerUp extends MovableObject {
         if (!collected) {
             if (image != null && !image.isError()) {
 
-                // --- LOGIC RENDER (Đã đơn giản hóa) ---
+                // LOGIC RENDER
                 if (isAnimated) {
                     int col = currentFrame % animationCols;
                     int row = currentFrame / animationCols;
@@ -187,10 +187,9 @@ public class PowerUp extends MovableObject {
                 } else {
                     gc.drawImage(image, x, y, width, height);
                 }
-                // --- KẾT THÚC ---
-
             } else {
-                // (Khối vẽ màu dự phòng giữ nguyên)
+                // Vẽ màu dự phòng
+                gc.setFill(Color.web("#CCCCCC")); // Mặc định màu xám
                 if (type == PowerUpType.LIFE) {
                     gc.setFill(Color.GREEN);
                 } else if (type == PowerUpType.LOSE_LIFE) {
@@ -207,6 +206,9 @@ public class PowerUp extends MovableObject {
                 }
                 else if (type == PowerUpType.MEDICINE) {
                     gc.setFill(Color.LIGHTPINK);
+                }
+                else if (type == PowerUpType.STUN_PADDLE) {
+                    gc.setFill(Color.YELLOW);
                 }
                 gc.fillRect(x, y, width, height);
             }
