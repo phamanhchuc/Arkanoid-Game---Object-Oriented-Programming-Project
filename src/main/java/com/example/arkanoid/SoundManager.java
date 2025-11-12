@@ -13,7 +13,8 @@ public class SoundManager {
     public enum Sound {
         HIT_BRICK, HIT_PADDLE, HIT_WALL, COLLECT_POWERUP,
         LEVEL_COMPLETED, MISSED_BALL, GAME_OVER,
-        TYPING
+        TYPING,
+        LASER_BEAM
     }
 
     // --- MUSIC TỪNG LEVEL ---
@@ -45,6 +46,8 @@ public class SoundManager {
             sounds.put(Sound.MISSED_BALL, loadMedia("missed_ball.mp3"));
             sounds.put(Sound.GAME_OVER, loadMedia("game_over.mp3"));
             sounds.put(Sound.TYPING, loadMedia("typing_sound.mp3"));
+            sounds.put(Sound.LASER_BEAM, loadMedia("laser_beam.mp3"));
+
 
             // --- Load music từng level ---
             musicTracks.put(Music.LEVEL1, loadMedia("man1.mp3"));
