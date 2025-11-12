@@ -26,6 +26,8 @@ public class BossLevel3 extends MovableObject {
     private Image spawningPhase1SpriteSheet;
     private Image idlePhase2SpriteSheet;
     private Image spawningPhase2SpriteSheet;
+    private Image leftArmImage;
+    private Image rightArmImage;
 
     private final int numFrames = 5; // Tất cả các trạng thái đều có 5 frame
     private int currentFrame = 0;
@@ -57,13 +59,31 @@ public class BossLevel3 extends MovableObject {
     private boolean heartDestroyed = false; // Cờ báo tim đã bị vỡ
 
     // --- Kích thước và vị trí của Boss (cố định) ---
+    // (fixedX, fixedY) là vị trí neo (anchor)
     private final double fixedX, fixedY;
 
     // --- Random cho việc nhả vật thể ---
     private Random random = new Random();
 
+    // =========================================================
+    // 🟢 1. BIẾN DI CHUYỂN "LƠ LỬNG" (HOVER) 🟢
+    // =========================================================
+
+    private double hoverTimer = 0.0; // Bộ đếm thời gian cho hiệu ứng hover
+
+    // (Bạn có thể TÙY CHỈNH các số này)
+    private final double HOVER_AMPLITUDE_X = 150.0; // Di chuyển 15px sang trái/phải
+    private final double HOVER_AMPLITUDE_Y = 10.0; // Di chuyển 10px lên/xuống
+    private final double HOVER_SPEED_X = 0.8;      // Tốc độ di chuyển ngang (rad/giây)
+    private final double HOVER_SPEED_Y = 1.0;      // Tốc độ di chuyển dọc (rad/giây)
+
+    // (Đã xóa 2 biến heartRelativeX, heartRelativeY vì không cần nữa)
+    // =========================================================
+
+
     public BossLevel3(double x, double y, double width, double height, int hp, double playAreaX, double playAreaWidth) {
         super(x, y, width, height);
+        // Lưu lại vị trí neo (anchor)
         this.fixedX = x;
         this.fixedY = y;
         this.hp = hp;
@@ -75,19 +95,43 @@ public class BossLevel3 extends MovableObject {
             spawningPhase1SpriteSheet = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/arkanoid/images/Attack.png")));
             idlePhase2SpriteSheet = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/arkanoid/images/Crazy.png")));
             spawningPhase2SpriteSheet = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/arkanoid/images/Attack.png")));
+            leftArmImage = new Image(Objects.requireNonNull(
+                    getClass().getResourceAsStream("/com/example/arkanoid/images/left.png")
+            ));
+
+            rightArmImage = new Image(Objects.requireNonNull(
+                    getClass().getResourceAsStream("/com/example/arkanoid/images/right.png")
+            ));
         } catch (Exception e) {
             System.err.println("Lỗi: Không thể tải ảnh cho BossLevel3.");
             e.printStackTrace();
         }
 
-        // Khởi tạo HeartBrick - Vị trí của trái tim (ví dụ: ở giữa Boss, hơi thấp xuống)
-        // Kích thước của Brick trái tim
-        double heartWidth = 40;
-        double heartHeight = 30;
-        double heartX = x + width / 2 - heartWidth / 2;
-        double heartY = y + height - heartHeight + 200; // Đặt thấp hơn Boss một chút
+        // =========================================================
+        // 🟢 2. KHỞI TẠO TRÁI TIM (TẠI VỊ TRÍ CỐ ĐỊNH) 🟢
+        // =========================================================
+
+        // Khởi tạo HeartBrick - Vị trí của trái tim
+        double heartWidth = 40; // Kích thước logic (theo code gốc)
+        double heartHeight = 30; // Kích thước logic (theo code gốc)
+
+        // Tính toán vị trí TƯƠNG ĐỐI (so với (x,y) của boss)
+        double heartRelativeX = (width / 2) - (heartWidth / 2);
+        double heartRelativeY = height - heartHeight + 200;
+
+        double heartRenderWidth = 100;
+        double heartRenderHeight = 100;
         int heartHp = 1;
-        this.heartBrick = new HeartBrick(heartX, heartY, 100, 100, heartHp);
+
+        // Tạo trái tim ở vị trí TUYỆT ĐỐI ban đầu (CỐ ĐỊNH)
+        this.heartBrick = new HeartBrick(
+                x + heartRelativeX, // heartX (vị trí tuyệt đối ban đầu)
+                y + heartRelativeY, // heartY (vị trí tuyệt đối ban đầu)
+                heartRenderWidth,
+                heartRenderHeight,
+                heartHp
+        );
+        // =========================================================
     }
 
     public int getHp() { return hp; }
@@ -135,8 +179,10 @@ public class BossLevel3 extends MovableObject {
         return heartDestroyed;
     }
 
+    // =========================================================
+    // 🟢 3. HÀM UPDATE() ĐÃ SỬA (CHỈ DI CHUYỂN BOSS) 🟢
+    // =========================================================
     @Override
-
     public void update(double dt) {
         attackTimer += dt;
         boolean isPhase1 = (hp > maxHp / 2);
@@ -150,8 +196,7 @@ public class BossLevel3 extends MovableObject {
             currentFrame = 0;
             currentState = isPhase1 ? BossState.SPAWNING_PHASE1 : BossState.SPAWNING_PHASE2;
             itemDropped = false;
-            frameTime = -frameDuration / 2; // 🔥 Delay nửa frame trước khi đếm frame
-            return; // 🔥 Ngăn không xử lý logic frame ngay trong frame này
+            frameTime = -frameDuration / 2;
         }
 
         // --- 2️⃣ Nếu đang tấn công ---
@@ -175,7 +220,6 @@ public class BossLevel3 extends MovableObject {
                 }
             }
         }
-
         // --- 3️⃣ Nếu đang IDLE ---
         else {
             frameTime += dt;
@@ -185,54 +229,115 @@ public class BossLevel3 extends MovableObject {
             }
         }
 
-        // --- 4️⃣ Cập nhật HeartBrick ---
+        // =========================================================
+        // 🟢 4. CẬP NHẬT DI CHUYỂN "LƠ LỬNG" (HOVER) CỦA BOSS 🟢
+        // =========================================================
+        hoverTimer += dt;
+
+        // Tính toán độ lệch (offset) dựa trên thời gian
+        double hoverOffsetX = Math.sin(hoverTimer * HOVER_SPEED_X) * HOVER_AMPLITUDE_X;
+        double hoverOffsetY = Math.cos(hoverTimer * HOVER_SPEED_Y) * HOVER_AMPLITUDE_Y;
+
+        // Cập nhật vị trí THÂN BOSS
+        // (this.x, this.y) là vị trí render, (fixedX, fixedY) là vị trí neo
+        this.x = this.fixedX + hoverOffsetX;
+        this.y = this.fixedY + hoverOffsetY;
+
+        // =========================================================
+        // 🟢 5. CẬP NHẬT TRÁI TIM (HEARTBRICK) - (ĐÃ XÓA DI CHUYỂN) 🟢
+        // =========================================================
         if (!heartBrick.isDestroyed()) {
+
+            // 🟢 ĐÃ XÓA 2 DÒNG heartBrick.setX() và setY() ở đây 🟢
+            // (Trái tim sẽ đứng yên)
+
+            // Cập nhật logic bên trong của trái tim (như animation, v.v.)
             heartBrick.update(dt);
         }
     }
+
     @Override
     public void render(GraphicsContext gc) {
+
+        // --- TÙY CHỈNH VỊ TRÍ VÀ KÍCH THƯỚC CÁNH TAY TẠI ĐÂY ---
+        final double DEST_ARM_WIDTH = 200;
+        final double DEST_ARM_HEIGHT = 250;
+        final double LEFT_ARM_OFFSET_X = -200;
+        final double LEFT_ARM_OFFSET_Y = -25;
+        final double RIGHT_ARM_OFFSET_X = 0;
+        final double RIGHT_ARM_OFFSET_Y = -25;
+        // -------------------------------------------------------------
+
         Image currentSpriteSheet = null;
         switch (currentState) {
-            case IDLE_PHASE1:
-                currentSpriteSheet = idlePhase1SpriteSheet;
-                break;
-            case SPAWNING_PHASE1:
-                currentSpriteSheet = spawningPhase1SpriteSheet;
-                break;
-            case IDLE_PHASE2:
-                currentSpriteSheet = idlePhase2SpriteSheet;
-                break;
-            case SPAWNING_PHASE2:
-                currentSpriteSheet = spawningPhase2SpriteSheet;
-                break;
+            case IDLE_PHASE1: currentSpriteSheet = idlePhase1SpriteSheet; break;
+            case SPAWNING_PHASE1: currentSpriteSheet = spawningPhase1SpriteSheet; break;
+            case IDLE_PHASE2: currentSpriteSheet = idlePhase2SpriteSheet; break;
+            case SPAWNING_PHASE2: currentSpriteSheet = spawningPhase2SpriteSheet; break;
         }
 
+        // 1. VẼ CÁNH TAY TRÁI (Sprite Sheet)
+        if (leftArmImage != null && !leftArmImage.isError()) {
+            double armFrameWidth = leftArmImage.getWidth() / numFrames;
+            double armFrameHeight = leftArmImage.getHeight();
+
+            if (armFrameWidth > 0) {
+                double sx = currentFrame * armFrameWidth;
+                double sy = 0;
+                double destX = this.x + LEFT_ARM_OFFSET_X; // Dùng this.x đã được cập nhật
+                double destY = this.y + LEFT_ARM_OFFSET_Y; // Dùng this.y đã được cập nhật
+
+                gc.drawImage(leftArmImage,
+                        sx, sy, armFrameWidth, armFrameHeight,
+                        destX, destY, DEST_ARM_WIDTH, DEST_ARM_HEIGHT
+                );
+            }
+        }
+
+        // 2. VẼ CÁNH TAY PHẢI (Sprite Sheet)
+        if (rightArmImage != null && !rightArmImage.isError()) {
+            double armFrameWidth = rightArmImage.getWidth() / numFrames;
+            double armFrameHeight = rightArmImage.getHeight();
+
+            if (armFrameWidth > 0) {
+                double sx = currentFrame * armFrameWidth;
+                double sy = 0;
+                double destX = (this.x + this.width) + RIGHT_ARM_OFFSET_X; // Dùng this.x
+                double destY = this.y + RIGHT_ARM_OFFSET_Y; // Dùng this.y
+
+                gc.drawImage(rightArmImage,
+                        sx, sy, armFrameWidth, armFrameHeight,
+                        destX, destY, DEST_ARM_WIDTH, DEST_ARM_HEIGHT
+                );
+            }
+        }
+
+        // 3. VẼ THÂN BOSS (Sau khi vẽ tay)
         if (currentSpriteSheet != null) {
             double frameWidth = currentSpriteSheet.getWidth() / numFrames;
-            if (frameWidth > 0) { // <-- THÊM KIỂM TRA NÀY
+            if (frameWidth > 0) {
                 gc.drawImage(currentSpriteSheet, frameWidth * currentFrame, 0, frameWidth, currentSpriteSheet.getHeight(),
-                        x, y, width, height);
+                        x, y, width, height); // x, y ở đây đã được cập nhật
             } else {
-                // Vẽ hình chữ nhật tạm thời để debug
                 gc.setFill(javafx.scene.paint.Color.PURPLE);
                 gc.fillRect(x, y, width, height);
             }
         }
 
-        // Vẽ HeartBrick (nếu nó chưa bị phá hủy)
+        // 4. VẼ TRÁI TIM (HeartBrick)
+        // (Vị trí của trái tim sẽ KHÔNG ĐỔI)
         if (!heartBrick.isDestroyed()) {
             heartBrick.render(gc);
         }
 
-        // Vẽ thanh máu (HP Bar) - CHỈ KHI TRÁI TIM BỊ VỠ
+        // 5. VẼ THANH MÁU (HP Bar)
         if (heartDestroyed && hp > 0) {
             final double BAR_WIDTH = width;
             final double BAR_HEIGHT = 10;
             final double BAR_Y_OFFSET = 15;
 
-            double barX = x;
-            double barY = y - BAR_HEIGHT - BAR_Y_OFFSET;
+            double barX = x; // Dùng x đã được cập nhật
+            double barY = y - BAR_HEIGHT - BAR_Y_OFFSET; // Dùng y đã được cập nhật
 
             gc.setFill(javafx.scene.paint.Color.rgb(0, 0, 0, 0.7));
             gc.fillRect(barX, barY, BAR_WIDTH, BAR_HEIGHT);
@@ -261,13 +366,12 @@ public class BossLevel3 extends MovableObject {
         if (GameManagerHolder.INSTANCE != null) {
             double itemWidth = 30;
             double itemHeight = 20;
+            // Dùng vị trí x, y đã cập nhật để nhả item
             double itemX = x + width / 2 - itemWidth / 2;
-            double itemY = y + height - itemHeight; // Nhả từ dưới Boss
+            double itemY = y + height - itemHeight;
 
-            // Bạn có thể nhả MEDICINE, LOSE_LIFE, hoặc một loại Projectile của Boss
-            // Đây là ví dụ nhả MEDICINE, bạn có thể thay đổi
             PowerUp powerUp = new PowerUp(itemX, itemY, itemWidth, itemHeight, PowerUp.PowerUpType.MEDICINE);
-            GameManagerHolder.INSTANCE.addPowerUp(powerUp); // Cần thêm hàm addPowerUp vào GameManager
+            GameManagerHolder.INSTANCE.addPowerUp(powerUp);
         }
     }
 
@@ -276,37 +380,3 @@ public class BossLevel3 extends MovableObject {
         public static GameManager INSTANCE;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
