@@ -37,13 +37,12 @@ public class GameManager {
     private int currentLevelIndex = 0;
     private String playerName;
 
-    // --- LOGIC CROSSBOW (ĐÃ THÊM LẠI) ---
+    // --- LOGIC CROSSBOW ---
     private boolean crossBowActive = false;
     private double crossBowTimer = 0.0;
     private double arrowSpawnTimer = 0.0;
-    private final double CROSS_BOW_DURATION = 10.0; // Thời gian nỏ: 10s
-    private final double ARROW_SPAWN_INTERVAL = 0.5; // Tốc độ bắn: 0.5s/mũi
-    // ------------------------------------
+    private final double CROSS_BOW_DURATION = 10.0;
+    private final double ARROW_SPAWN_INTERVAL = 0.5;
 
     // --- RESOURCES ---
     private List<Image> backgroundImages = new ArrayList<>();
@@ -52,6 +51,11 @@ public class GameManager {
     private List<Image> rightSideImage = new ArrayList<>();
     private List<Image> scoreBoard = new ArrayList<>();
     private Image currentBackgroundImage, currentBorderImage, currentLeftSideImage, currentRightSideImage, currentScoreBoardImage;
+
+    // --- THÊM: ẢNH GAME OVER ---
+    private Image gameOverBgImage;
+    private Image gameOverTitleImage;
+    private Image gameOverTextImage;
 
     private HighScores highScores;
     private boolean mouseControlled = false;
@@ -90,6 +94,16 @@ public class GameManager {
             scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board1.png")));
             scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board2.png")));
             scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board3.png")));
+
+            // --- THÊM: TẢI ẢNH GAME OVER ---
+            try {
+                gameOverBgImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/game_over_screen.png"));
+                gameOverTitleImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/game_over.png"));
+                gameOverTextImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/game_over_text.png"));
+            } catch (Exception e) {
+                System.err.println("Lỗi tải ảnh Game Over (Kiểm tra lại tên file!)");
+            }
+
         } catch (Exception e) { System.err.println("Lỗi tải ảnh GameManager"); }
     }
 
@@ -126,7 +140,6 @@ public class GameManager {
         balls.clear(); powerUps.clear(); particles.clear(); projectiles.clear();
         currentBoss = null;
 
-        // Reset Crossbow
         crossBowActive = false;
         crossBowTimer = 0;
 
@@ -136,7 +149,6 @@ public class GameManager {
     }
 
     private void setupBossForLevel() {
-        // Cung cấp instance cho Boss để nó gọi hàm spawnMedicine
         BossLevel2.GameManagerHolder.INSTANCE = this;
         BossLevel3.GameManagerHolder.INSTANCE = this;
 
@@ -144,7 +156,7 @@ public class GameManager {
             currentBoss = new Boss(playAreaOffsetX, 20, 80, 60);
             currentBoss.setPlayArea(playAreaOffsetX, playAreaWidth);
         } else if (currentLevelIndex == 1) {
-            currentBoss = new BossLevel2(playAreaOffsetX, 20, 100, 70, 00, playAreaOffsetX, playAreaWidth);
+            currentBoss = new BossLevel2(playAreaOffsetX, 20, 100, 70, 50, playAreaOffsetX, playAreaWidth);
         } else if (currentLevelIndex == 2) {
             double boss3Width = 280;
             double boss3Height = 250;
@@ -181,7 +193,6 @@ public class GameManager {
         for (MovingBrickRow row : movingBrickRows) row.update(dt);
         for (RotatingBrickGroup group : rotatingBrickGroups) group.update(dt);
 
-        // --- LOGIC CROSSBOW (ĐÃ THÊM LẠI) ---
         if (crossBowActive) {
             crossBowTimer -= dt;
             arrowSpawnTimer += dt;
@@ -195,7 +206,6 @@ public class GameManager {
                 System.out.println("Hết giờ Nỏ thần!");
             }
         }
-        // ------------------------------------
 
         updatePowerUps(dt);
         updateParticles(dt);
@@ -205,11 +215,9 @@ public class GameManager {
         checkWinCondition();
     }
 
-    // --- HÀM BẮN TÊN (ĐÃ THÊM LẠI) ---
     private void spawnArrow() {
         double arrowX = paddle.getX() + paddle.getWidth() / 2;
         double arrowY = paddle.getY();
-        // Tạo Projectile thường (isPiercing = false)
         projectiles.add(new Projectile(arrowX, arrowY, 15, 40, false));
     }
 
@@ -327,7 +335,6 @@ public class GameManager {
                 handleLoseLife();
                 break;
             case CROSS_BOW:
-                // Kích hoạt Nỏ
                 if (!crossBowActive) SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
                 crossBowActive = true;
                 crossBowTimer = CROSS_BOW_DURATION;
@@ -409,11 +416,18 @@ public class GameManager {
     }
 
     public void render(GraphicsContext gc) {
-        if (currentBackgroundImage != null) gc.drawImage(currentBackgroundImage, 0, 0, screenWidth, screenHeight);
-        else { gc.setFill(Color.BLACK); gc.fillRect(0, 0, screenWidth, screenHeight); }
+        // 1. Background Game (Vẽ nền game đang chơi)
+        if (currentBackgroundImage != null) {
+            gc.drawImage(currentBackgroundImage, 0, 0, screenWidth, screenHeight);
+        } else {
+            gc.setFill(Color.BLACK);
+            gc.fillRect(0, 0, screenWidth, screenHeight);
+        }
 
+        // 2. Vẽ Boss (nếu có)
         if (currentBoss != null) currentBoss.render(gc);
 
+        // 3. Vẽ các đối tượng game
         for (Brick b : bricks) b.render(gc);
         for (PowerUp p : powerUps) p.render(gc);
         for (Projectile p : projectiles) p.render(gc);
@@ -421,30 +435,88 @@ public class GameManager {
         paddle.render(gc);
         for (Ball b : balls) b.render(gc);
 
+        // 4. Vẽ Viền & UI (Bảng điểm, khung...)
         if (currentLeftSideImage != null) gc.drawImage(currentLeftSideImage, playAreaOffsetX - currentLeftSideImage.getWidth() - 10, 0, currentLeftSideImage.getWidth(), screenHeight);
         if (currentRightSideImage != null) gc.drawImage(currentRightSideImage, playAreaOffsetX + playAreaWidth + 10, 0, currentRightSideImage.getWidth(), screenHeight);
         if (currentBorderImage != null) gc.drawImage(currentBorderImage, 0, 0, screenWidth, screenHeight);
         if (currentScoreBoardImage != null) gc.drawImage(currentScoreBoardImage, 870, 60, 500, 840);
 
+        // Thông tin điểm số
         gc.setFill(Color.WHITE);
         gc.setFont(new Font("Arial Bold", 16));
         gc.fillText("Player: " + playerName, screenWidth - 185, 190);
         gc.fillText("Score: " + score, screenWidth - 185, 230);
         gc.fillText("Lives: " + lives, screenWidth - 185, 270);
 
-        // Vẽ timer Nỏ (nếu có)
         if (crossBowActive) {
             gc.setFill(Color.YELLOW);
             gc.fillText(String.format("Nỏ: %.1fs", crossBowTimer), screenWidth - 185, 310);
         }
 
+        // ============================================================
+        // 5. MÀN HÌNH GAME OVER (ĐÃ CĂN CHỈNH THEO ẢNH MẪU)
+        // ============================================================
         if (gameOver) {
-            gc.setFill(Color.rgb(0, 0, 0, 0.7));
-            gc.fillRect(0, 0, screenWidth, screenHeight);
-            gc.setFill(Color.RED); gc.setFont(new Font("Arial", 80)); gc.setTextAlign(TextAlignment.CENTER);
-            gc.fillText("GAME OVER", screenWidth/2.0, screenHeight/2.0);
-            gc.setFill(Color.WHITE); gc.setFont(new Font("Arial", 24));
-            gc.fillText("Press R to Restart", screenWidth/2.0, screenHeight/2.0 + 50);
+            // --- LỚP 1: NỀN (Hình người trùm mũ bên phải) ---
+            if (gameOverBgImage != null && !gameOverBgImage.isError()) {
+                // Vẽ full màn hình để lấp hết background game cũ
+                gc.drawImage(gameOverBgImage, 0, 0, screenWidth, screenHeight);
+            } else {
+                // Dự phòng màu đen nếu chưa load được ảnh
+                gc.setFill(Color.rgb(0, 0, 0, 1.0));
+                gc.fillRect(0, 0, screenWidth, screenHeight);
+            }
+
+            // --- LỚP 2: TEXT TIẾNG VIỆT (Ở TRÊN CÙNG) ---
+            // "MỌI THỨ DỪNG LẠI..."
+            if (gameOverTextImage != null && !gameOverTextImage.isError()) {
+                double imgW = gameOverTextImage.getWidth();
+                double imgH = gameOverTextImage.getHeight();
+
+                // Tăng kích thước lên cho rõ (Rộng khoảng 900px)
+                double targetWidth = 900;
+                double targetHeight = imgH * (targetWidth / imgW); // Giữ tỉ lệ ảnh
+
+                // Vị trí: Căn giữa chiều ngang, cách đỉnh màn hình 150px
+                double x = (screenWidth - targetWidth) / 2;
+                double y = 150;
+
+                gc.drawImage(gameOverTextImage, x, y, targetWidth, targetHeight);
+            }
+
+            // --- LỚP 3: TIÊU ĐỀ "GAME OVER" (Ở GIỮA) ---
+            if (gameOverTitleImage != null && !gameOverTitleImage.isError()) {
+                double imgW = gameOverTitleImage.getWidth();
+                double imgH = gameOverTitleImage.getHeight();
+
+                // Kích thước chữ GAME OVER (Rộng khoảng 600px)
+                double targetWidth = 600;
+                double targetHeight = imgH * (targetWidth / imgW);
+
+                // Vị trí: Căn giữa chiều ngang, Căn giữa chiều dọc (hơi lệch lên chút)
+                double x = (screenWidth - targetWidth) / 2;
+                double y = (screenHeight - targetHeight) / 2 + 50; // +50 để không đè lên text trên
+
+                gc.drawImage(gameOverTitleImage, x, y, targetWidth, targetHeight);
+            } else {
+                // Fallback text nếu ảnh lỗi
+                gc.setFill(Color.RED);
+                gc.setFont(new Font("Arial Black", 80));
+                gc.setTextAlign(TextAlignment.CENTER);
+                gc.fillText("GAME OVER", screenWidth / 2.0, screenHeight / 2.0 + 50);
+            }
+
+            // --- LỚP 4: HƯỚNG DẪN (Ở DƯỚI CÙNG) ---
+            // "NHẤN R HOẶC SPACE ĐỂ BẮT ĐẦU LẠI"
+            gc.setFill(Color.WHITE); // Màu trắng (hoặc dùng Color.web("#ffe0b2") cho hơi vàng)
+            // Sử dụng Font to, đậm
+            gc.setFont(Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 30));
+            gc.setTextAlign(TextAlignment.CENTER);
+
+            // Vị trí: Gần đáy màn hình (cách đáy 150px)
+            gc.fillText("NHẤN R HOẶC SPACE ĐỂ BẮT ĐẦU LẠI", screenWidth / 2.0 - 50, screenHeight - 150);
+
+            // Reset căn lề để không ảnh hưởng frame sau
             gc.setTextAlign(TextAlignment.LEFT);
         }
     }
