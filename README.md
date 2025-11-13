@@ -164,9 +164,17 @@ SPECIAL_STONE Brick (type 5, 5 hits): scoreValue = 500
 ---
 # Demo
 ## Screenshot
-...
+### 🕹️ Level 1
+![Level 1 Screenshot](https://drive.google.com/uc?export=view&id=1UyQpwTpmSG1nT5p4Pb20NyFU1pdogLWD)
+
+### ⚔️ Level 2
+![Level 2 Screenshot](https://drive.google.com/uc?export=view&id=1e513ik5r0rJAAL6I3EqdNfkbTzLE1Kwm)
+
+### 👑 Level 3 (Boss Stage)
+![Level 3 Screenshot](https://drive.google.com/uc?export=view&id=1idmQlYGVPGZvLhAA3vvd4drvN_e2VRP8)
 ## Video Demo
-...
+[▶️ Watch Demo on Google Drive](https://drive.google.com/file/d/1nNvsTcCXvubSUeF2CnsUwNaNqhzU2f-z/view?usp=drive_link)
+
 ---
 # Future Improvements
 ...
