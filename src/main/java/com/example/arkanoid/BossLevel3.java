@@ -292,10 +292,14 @@ public class BossLevel3 extends MovableObject {
     }
 
     private void spawnItem() {
+        if (!GameManagerHolder.INSTANCE.isRunning()) {
+            return;
+        }
         if (GameManagerHolder.INSTANCE != null) {
             // Tạo vật phẩm STUN
             PowerUp powerUp = new PowerUp(x + width / 2, y + height, 50, 70, PowerUp.PowerUpType.STUN_PADDLE);
             GameManagerHolder.INSTANCE.addPowerUp(powerUp);
+            SoundManager.playSound(SoundManager.Sound.ROAR);
         }
     }
 

@@ -250,6 +250,7 @@ public class MainController {
 
     // --- LEVEL WIN ---
     private void handleLevelWin() {
+        activeKeys.clear();
         SoundManager.stopMusic();
         int levelWonIndex = gameManager.getCurrentLevelIndex();
         gameManager.nextLevel();

@@ -386,7 +386,7 @@ public class GameManager {
                 SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
                 break;
             case LOSE_LIFE:
-                handleLoseLife();
+                lives--;
                 break;
             case CROSS_BOW:
                 if (!crossBowActive) SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
@@ -410,7 +410,7 @@ public class GameManager {
                 break;
             case STUN_PADDLE:
                 System.out.println("Trúng đạn Boss! Mất 1 mạng.");
-                handleLoseLife();
+                lives--;
                 break;
         }
     }
@@ -477,6 +477,9 @@ public class GameManager {
     }
 
     public void spawnMedicine(double x, double y) {
+        if (!this.running) {
+            return; // Không làm gì cả nếu game đang dừng (ví dụ: vừa mất mạng)
+        }
         powerUps.add(new PowerUp(x, y, 30, 20, PowerUp.PowerUpType.MEDICINE));
     }
 
@@ -714,6 +717,29 @@ public class GameManager {
     }
 
     public void processInput(Set<KeyCode> keys) {
+        if ("admin".equalsIgnoreCase(this.playerName)) {
+
+            // 2. Kiểm tra xem phím S VÀ phím K có được nhấn CÙNG LÚC không
+            if (keys.contains(KeyCode.S) && keys.contains(KeyCode.K)) {
+
+                // 3. Kích hoạt thắng màn (nếu game đang chạy)
+                if (running) {
+                    System.out.println("ADMIN CHEAT: Level " + currentLevelIndex + " won!");
+                    setLevelWon(true);  // Đặt trạng thái thắng màn
+                    setRunning(false);// Dừng game loop
+
+                    // (Tùy chọn) Xóa các đối tượng để tránh lỗi
+                    // Ví dụ: nếu đang ở màn boss
+                    if (currentBoss != null) {
+                        currentBoss = null;
+                    }
+                    // Dọn dẹp bóng, đạn...
+                    balls.clear();
+                    projectiles.clear();
+                    powerUps.clear();
+                }
+            }
+        }
         if (gameOver && (keys.contains(KeyCode.SPACE) || keys.contains(KeyCode.R))) initGame();
         if (keys.contains(KeyCode.SPACE)) startGame();
         if (mouseControlled) {
