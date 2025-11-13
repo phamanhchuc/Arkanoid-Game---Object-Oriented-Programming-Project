@@ -3,60 +3,49 @@ package com.example.arkanoid;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
-
 import java.util.Objects;
+import java.util.Random;
 
-/**
- * Lớp Boss, di chuyển qua lại ở đầu màn hình.
- * Kế thừa MovableObject để có thể di chuyển.
- */
 public class Boss extends MovableObject {
 
-    // --- Cấu hình Animation ---
-    private Image imageLeft;  // Spritesheet bên trái
-    private Image imageRight; // Spritesheet bên phải
-    private Image currentImage; // Ảnh đang được dùng để vẽ
-
-    private static final int NUM_FRAMES = 4; // Cả 2 file đều có 4 frame
-    private static final double FRAME_DURATION_SECONDS = 0.15; // Tốc độ animation (0.15s/frame)
+    // Animation
+    private Image imageLeft;
+    private Image imageRight;
+    private Image currentImage;
+    private static final int NUM_FRAMES = 4;
+    private static final double FRAME_DURATION_SECONDS = 0.15;
     private int currentFrame = 0;
     private double animationTime = 0;
     private int frameWidth;
     private int frameHeight;
 
-    // --- Cấu hình Di chuyển ---
-    private double speed = 150; // Tốc độ bay (pixel/giây)
+    // Di chuyển
+    private double speed = 150;
     private double playAreaOffsetX;
     private double playAreaWidth;
+
+    // --- THÊM: Logic thả thuốc ---
+    private Random random = new Random();
+    private double medicineTimer = 0;
+    private double medicineInterval = 10 + random.nextDouble() * 5; // Thả mỗi 10-15 giây
+    // -----------------------------
 
     public Boss(double x, double y, double w, double h) {
         super(x, y, w, h);
 
         try {
-            // Tải 2 ảnh spritesheet
             imageLeft = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/arkanoid/images/boss1_left.png")));
             imageRight = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/arkanoid/images/boss1_right.png")));
-
-            if (imageRight == null || imageLeft == null) {
-                System.err.println("LỖI NGHIÊM TRỌNG: Không tìm thấy file ảnh boss1_left.png hoặc boss1_right.png");
-            } else {
-                // Lấy kích thước 1 frame (giả sử 2 ảnh có kích thước frame như nhau)
-                this.frameWidth = (int) (imageRight.getWidth() / NUM_FRAMES);
-                this.frameHeight = (int) imageRight.getHeight();
-            }
+            this.frameWidth = (int) (imageRight.getWidth() / NUM_FRAMES);
+            this.frameHeight = (int) imageRight.getHeight();
         } catch (Exception e) {
             System.err.println("Lỗi: Không thể tải ảnh cho Boss spritesheet.");
-            e.printStackTrace();
         }
 
-        // --- Cài đặt ban đầu ---
-        this.dx = speed; // Bắt đầu bằng cách bay sang phải
-            this.currentImage = imageRight; // Dùng ảnh bên phải
+        this.dx = speed;
+        this.currentImage = imageRight;
     }
 
-    /**
-     * Gán khu vực hoạt động cho Boss (để nó biết khi nào cần quay đầu).
-     */
     public void setPlayArea(double offsetX, double width) {
         this.playAreaOffsetX = offsetX;
         this.playAreaWidth = width;
@@ -64,49 +53,50 @@ public class Boss extends MovableObject {
 
     @Override
     public void update(double dt) {
-        // 1. Di chuyển (hàm move từ lớp cha MovableObject)
         move(dt);
 
-        // 2. Cập nhật animation (logic giống Ball.java)
+        // Animation
         animationTime += dt;
         if (animationTime >= FRAME_DURATION_SECONDS) {
             animationTime -= FRAME_DURATION_SECONDS;
-            currentFrame++;
-            if (currentFrame >= NUM_FRAMES) {
-                currentFrame = 0;
-            }
+            currentFrame = (currentFrame + 1) % NUM_FRAMES;
         }
 
-        // 3. Xử lý logic quay đầu
-        // Nếu chạm biên trái
+        // Di chuyển qua lại
         if (dx < 0 && x <= playAreaOffsetX) {
-            x = playAreaOffsetX; // Đặt lại vị trí
-            dx = speed; // Đổi hướng sang phải
-            currentImage = imageRight; // Đổi ảnh
-            currentFrame = 0; // Reset animation
+            x = playAreaOffsetX; dx = speed;
+            currentImage = imageRight; currentFrame = 0;
+        } else if (dx > 0 && x + width >= playAreaOffsetX + playAreaWidth) {
+            x = playAreaOffsetX + playAreaWidth - width; dx = -speed;
+            currentImage = imageLeft; currentFrame = 0;
         }
-        // Nếu chạm biên phải
-        else if (dx > 0 && x + width >= playAreaOffsetX + playAreaWidth) {
-            x = playAreaOffsetX + playAreaWidth - width; // Đặt lại vị trí
-            dx = -speed; // Đổi hướng sang trái
-            currentImage = imageLeft; // Đổi ảnh
-            currentFrame = 0; // Reset animation
+
+        // --- THÊM: Logic thả thuốc ---
+        medicineTimer += dt;
+        if (medicineTimer >= medicineInterval) {
+            spawnMedicine();
+            medicineTimer = 0;
+            medicineInterval = 10 + random.nextDouble() * 5;
+        }
+        // -----------------------------
+    }
+
+    // --- THÊM: Hàm sinh ra thuốc ---
+    private void spawnMedicine() {
+        // Boss.java chưa có GameManagerHolder như Boss 2/3,
+        // ta dùng cách truy cập tĩnh hoặc truyền vào (nhưng ở đây dùng tạm cách PowerUp rơi tự do)
+        // Để chuẩn nhất, bạn nên thêm GameManagerHolder cho Boss.java giống BossLevel2
+        if (BossLevel2.GameManagerHolder.INSTANCE != null) {
+            BossLevel2.GameManagerHolder.INSTANCE.spawnMedicine(x + width / 2 - 15, y + height);
         }
     }
 
     @Override
     public void render(GraphicsContext gc) {
-        if (currentImage != null && !currentImage.isError()) {
-            // Tính toán vị trí của frame hiện tại trong spritesheet
-            double sx = currentFrame * frameWidth; // Source X
-            double sy = 0;                          // Source Y
-            double sw = frameWidth;                 // Source Width
-            double sh = frameHeight;                // Source Height
-
-            // Vẽ frame đó lên canvas
-            gc.drawImage(currentImage, sx, sy, sw, sh, x, y, width, height);
+        if (currentImage != null) {
+            double sx = currentFrame * frameWidth;
+            gc.drawImage(currentImage, sx, 0, frameWidth, frameHeight, x, y, width, height);
         } else {
-            // Vẽ dự phòng nếu ảnh lỗi
             gc.setFill(Color.PURPLE);
             gc.fillRect(x, y, width, height);
         }
