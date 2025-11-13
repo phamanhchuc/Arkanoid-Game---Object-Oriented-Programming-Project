@@ -1,4 +1,8 @@
-package com.example.arkanoid;
+package com.example.arkanoid.strategy;
+
+import com.example.arkanoid.core.GameManager;
+import com.example.arkanoid.core.SoundManager;
+import com.example.arkanoid.entities.*;
 
 /**
  * Chiến lược va chạm bình thường: Bóng nảy ra.

@@ -1,5 +1,9 @@
-package com.example.arkanoid;
+package com.example.arkanoid.entities;
 
+import com.example.arkanoid.core.GameManager;
+import com.example.arkanoid.core.SoundManager;
+import com.example.arkanoid.strategy.CollisionStrategy;
+import com.example.arkanoid.strategy.NormalCollisionStrategy;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 

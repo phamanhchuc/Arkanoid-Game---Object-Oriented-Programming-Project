@@ -1,19 +1,17 @@
 package com.example.arkanoid.controllers;
 
-import com.example.arkanoid.HighScores;
+import com.example.arkanoid.data.HighScores;
 import com.example.arkanoid.MainApp;
-import com.example.arkanoid.ScoreEntry;
-import com.example.arkanoid.SoundManager;
+import com.example.arkanoid.data.ScoreEntry;
+import com.example.arkanoid.core.SoundManager;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.animation.Interpolator;
 import javafx.animation.ParallelTransition;
 import javafx.animation.RotateTransition;
 import javafx.animation.ScaleTransition;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
-import javafx.animation.SequentialTransition;
 
 import javafx.util.Duration;
 import javafx.fxml.FXML;
@@ -21,7 +19,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Slider;

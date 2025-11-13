@@ -1,13 +1,12 @@
 package com.example.arkanoid.controllers;
 
-import com.example.arkanoid.GameData;
+import com.example.arkanoid.core.GameData;
 import com.example.arkanoid.MainApp;
 import javafx.animation.FadeTransition;
 import javafx.animation.ScaleTransition;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;

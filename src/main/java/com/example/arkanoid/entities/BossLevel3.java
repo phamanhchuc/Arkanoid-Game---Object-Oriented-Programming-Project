@@ -1,10 +1,10 @@
-package com.example.arkanoid;
+package com.example.arkanoid.entities;
 
+import com.example.arkanoid.core.GameManager;
+import com.example.arkanoid.core.SoundManager;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
-import javafx.scene.transform.Rotate;
-import javafx.geometry.Point2D;
 
 import java.util.Objects;
 import java.util.Random;

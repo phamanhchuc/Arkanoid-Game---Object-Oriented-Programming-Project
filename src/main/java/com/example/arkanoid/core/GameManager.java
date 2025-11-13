@@ -1,5 +1,12 @@
-package com.example.arkanoid;
+package com.example.arkanoid.core;
 
+import com.example.arkanoid.data.HighScores;
+import com.example.arkanoid.entities.*;
+import com.example.arkanoid.factory.BrickFactory;
+import com.example.arkanoid.factory.IndestructibleBrickFactory;
+import com.example.arkanoid.factory.NormalBrickFactory;
+import com.example.arkanoid.factory.PowerUpFactory;
+import com.example.arkanoid.levels.LevelBuilder;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;

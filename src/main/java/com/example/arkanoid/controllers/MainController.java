@@ -1,9 +1,9 @@
 package com.example.arkanoid.controllers;
 
-import com.example.arkanoid.GameData;
-import com.example.arkanoid.GameManager;
+import com.example.arkanoid.core.GameData;
+import com.example.arkanoid.core.GameManager;
 import com.example.arkanoid.MainApp;
-import com.example.arkanoid.SoundManager;
+import com.example.arkanoid.core.SoundManager;
 import javafx.animation.AnimationTimer;
 import javafx.animation.KeyFrame;
 import javafx.animation.ScaleTransition;

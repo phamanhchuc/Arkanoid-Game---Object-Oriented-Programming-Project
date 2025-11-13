@@ -1,6 +1,4 @@
-package com.example.arkanoid;
-
-import javafx.scene.canvas.GraphicsContext;
+package com.example.arkanoid.entities;
 
 public class MovingBrick extends Brick {
 

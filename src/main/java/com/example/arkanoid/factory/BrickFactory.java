@@ -1,4 +1,6 @@
-package com.example.arkanoid;
+package com.example.arkanoid.factory;
+
+import com.example.arkanoid.entities.Brick;
 
 // Dựa theo mẫu Abstract Factory
 public abstract class BrickFactory {

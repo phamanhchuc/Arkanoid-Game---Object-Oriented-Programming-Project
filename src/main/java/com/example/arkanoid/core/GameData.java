@@ -1,4 +1,4 @@
-package com.example.arkanoid;
+package com.example.arkanoid.core;
 
 /**
  * Lớp tĩnh đơn giản để giữ dữ liệu được chia sẻ giữa các màn hình (Scene).

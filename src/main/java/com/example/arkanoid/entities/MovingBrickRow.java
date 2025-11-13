@@ -1,4 +1,4 @@
-package com.example.arkanoid;
+package com.example.arkanoid.entities;
 
 import java.util.ArrayList;
 import java.util.List;

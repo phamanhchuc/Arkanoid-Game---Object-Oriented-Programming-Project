@@ -1,5 +1,6 @@
-package com.example.arkanoid;
+package com.example.arkanoid.entities;
 
+import com.example.arkanoid.core.GameManager;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 

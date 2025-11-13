@@ -1,9 +1,8 @@
-package com.example.arkanoid;
+package com.example.arkanoid.core;
 
 import javafx.scene.media.AudioClip; // <-- Thay đổi quan trọng
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
-import javafx.util.Duration;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package com.example.arkanoid;
+package com.example.arkanoid.data;
 
 import java.io.Serializable;
 

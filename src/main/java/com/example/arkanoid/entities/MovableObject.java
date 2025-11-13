@@ -1,4 +1,4 @@
-package com.example.arkanoid;
+package com.example.arkanoid.entities;
 
 public abstract class MovableObject extends GameObject {
     protected double dx = 0, dy = 0;

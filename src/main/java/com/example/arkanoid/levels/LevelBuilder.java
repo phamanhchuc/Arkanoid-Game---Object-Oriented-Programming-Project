@@ -1,4 +1,9 @@
-package com.example.arkanoid;
+package com.example.arkanoid.levels;
+
+import com.example.arkanoid.entities.Brick;
+import com.example.arkanoid.entities.MovingBrickRow;
+import com.example.arkanoid.entities.RotatingBrickGroup;
+import com.example.arkanoid.factory.BrickFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;

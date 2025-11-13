@@ -1,4 +1,8 @@
-package com.example.arkanoid;
+package com.example.arkanoid.strategy;
+
+import com.example.arkanoid.core.GameManager;
+import com.example.arkanoid.entities.Ball;
+import com.example.arkanoid.entities.GameObject;
 
 /**
  * Interface cho Mẫu thiết kế Strategy (Chiến lược)
