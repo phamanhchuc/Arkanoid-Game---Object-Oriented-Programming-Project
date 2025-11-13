@@ -387,6 +387,12 @@ public class GameManager {
                 break;
             case LOSE_LIFE:
                 lives--;
+                if (lives <= 0) {
+                    gameOver = true;
+                    running = false;
+                    saveCurrentScore();
+                    SoundManager.playSound(SoundManager.Sound.GAME_OVER);
+                }
                 break;
             case CROSS_BOW:
                 if (!crossBowActive) SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
@@ -411,6 +417,12 @@ public class GameManager {
             case STUN_PADDLE:
                 System.out.println("Trúng đạn Boss! Mất 1 mạng.");
                 lives--;
+                if (lives <= 0) {
+                    gameOver = true;
+                    running = false;
+                    saveCurrentScore();
+                    SoundManager.playSound(SoundManager.Sound.GAME_OVER);
+                }
                 break;
         }
     }
