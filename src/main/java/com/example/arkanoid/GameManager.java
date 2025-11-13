@@ -52,10 +52,11 @@ public class GameManager {
     private List<Image> scoreBoard = new ArrayList<>();
     private Image currentBackgroundImage, currentBorderImage, currentLeftSideImage, currentRightSideImage, currentScoreBoardImage;
 
-    // --- THÊM: ẢNH GAME OVER ---
+    // --- ẢNH GAME OVER ---
     private Image gameOverBgImage;
     private Image gameOverTitleImage;
     private Image gameOverTextImage;
+    private Image gameOverButtonImage;
 
     private HighScores highScores;
     private boolean mouseControlled = false;
@@ -78,6 +79,7 @@ public class GameManager {
     }
 
     private void loadResources() {
+        // Load Backgrounds/Borders (Giữ nguyên)
         try {
             backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_1.png")));
             backgroundImages.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/background_2.png")));
@@ -94,17 +96,31 @@ public class GameManager {
             scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board1.png")));
             scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board2.png")));
             scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board3.png")));
+        } catch (Exception e) { System.err.println("Lỗi tải ảnh giao diện chung."); }
 
-            // --- THÊM: TẢI ẢNH GAME OVER ---
-            try {
-                gameOverBgImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/game_over_screen.png"));
-                gameOverTitleImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/game_over.png"));
-                gameOverTextImage = new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/game_over_text.png"));
-            } catch (Exception e) {
-                System.err.println("Lỗi tải ảnh Game Over (Kiểm tra lại tên file!)");
+        // --- LOAD ẢNH GAME OVER & DEBUG ---
+        gameOverBgImage = loadAndCheckImage("game_over_screen.png");
+        gameOverTitleImage = loadAndCheckImage("game_over.png");
+        gameOverTextImage = loadAndCheckImage("game_over_text.png");
+
+        // QUAN TRỌNG: Kiểm tra file này
+        gameOverButtonImage = loadAndCheckImage("game_over_button.png");
+    }
+
+    // Hàm hỗ trợ load ảnh và báo lỗi rõ ràng
+    private Image loadAndCheckImage(String fileName) {
+        try {
+            String path = "/com/example/arkanoid/images/" + fileName;
+            if (getClass().getResourceAsStream(path) == null) {
+                System.err.println("❌ LỖI NGHIÊM TRỌNG: Không tìm thấy file '" + fileName + "' trong thư mục resources!");
+                return null;
             }
-
-        } catch (Exception e) { System.err.println("Lỗi tải ảnh GameManager"); }
+            System.out.println("✅ Đã tải thành công: " + fileName);
+            return new Image(getClass().getResourceAsStream(path));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     private void initializeFactories() {
@@ -139,9 +155,7 @@ public class GameManager {
 
         balls.clear(); powerUps.clear(); particles.clear(); projectiles.clear();
         currentBoss = null;
-
-        crossBowActive = false;
-        crossBowTimer = 0;
+        crossBowActive = false; crossBowTimer = 0;
 
         resetBall();
         setupBossForLevel();
@@ -239,6 +253,26 @@ public class GameManager {
             }
         }
 
+        // --- 3. Va chạm bóng với BossLevel3 ---
+        if (currentBoss instanceof BossLevel3) {
+            BossLevel3 bossL3 = (BossLevel3) currentBoss;
+            for (Ball b : balls) {
+                if (bossL3.checkCollisionWithBall(b)) {
+                    b.handleCollision(bossL3, this);
+
+                    // Chỉ gây sát thương khi tim đã bị phá
+                    if (bossL3.isHeartDestroyed()) {
+                        int damage = (b.getState() == Ball.BallState.FIRE) ? 2 : 1;
+                        if (!bossL3.takeDamage(damage)) {
+                            // Boss bị đánh bại
+                            currentBoss = null;
+                            addScore(5000);
+                        }
+                    }
+                }
+            }
+        }
+
         Iterator<Brick> brickIterator = bricks.iterator();
         while (brickIterator.hasNext()) {
             Brick b = brickIterator.next();
@@ -331,7 +365,6 @@ public class GameManager {
                 lives++; SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
                 break;
             case LOSE_LIFE:
-                System.out.println("Trúng đạn lửa! Mất 1 mạng.");
                 handleLoseLife();
                 break;
             case CROSS_BOW:
@@ -416,18 +449,11 @@ public class GameManager {
     }
 
     public void render(GraphicsContext gc) {
-        // 1. Background Game (Vẽ nền game đang chơi)
-        if (currentBackgroundImage != null) {
-            gc.drawImage(currentBackgroundImage, 0, 0, screenWidth, screenHeight);
-        } else {
-            gc.setFill(Color.BLACK);
-            gc.fillRect(0, 0, screenWidth, screenHeight);
-        }
+        // 1. Background & Game Objects (Giữ nguyên)
+        if (currentBackgroundImage != null) gc.drawImage(currentBackgroundImage, 0, 0, screenWidth, screenHeight);
+        else { gc.setFill(Color.BLACK); gc.fillRect(0, 0, screenWidth, screenHeight); }
 
-        // 2. Vẽ Boss (nếu có)
         if (currentBoss != null) currentBoss.render(gc);
-
-        // 3. Vẽ các đối tượng game
         for (Brick b : bricks) b.render(gc);
         for (PowerUp p : powerUps) p.render(gc);
         for (Projectile p : projectiles) p.render(gc);
@@ -435,13 +461,12 @@ public class GameManager {
         paddle.render(gc);
         for (Ball b : balls) b.render(gc);
 
-        // 4. Vẽ Viền & UI (Bảng điểm, khung...)
+        // UI Borders
         if (currentLeftSideImage != null) gc.drawImage(currentLeftSideImage, playAreaOffsetX - currentLeftSideImage.getWidth() - 10, 0, currentLeftSideImage.getWidth(), screenHeight);
         if (currentRightSideImage != null) gc.drawImage(currentRightSideImage, playAreaOffsetX + playAreaWidth + 10, 0, currentRightSideImage.getWidth(), screenHeight);
         if (currentBorderImage != null) gc.drawImage(currentBorderImage, 0, 0, screenWidth, screenHeight);
         if (currentScoreBoardImage != null) gc.drawImage(currentScoreBoardImage, 870, 60, 500, 840);
 
-        // Thông tin điểm số
         gc.setFill(Color.WHITE);
         gc.setFont(new Font("Arial Bold", 16));
         gc.fillText("Player: " + playerName, screenWidth - 185, 190);
@@ -454,69 +479,69 @@ public class GameManager {
         }
 
         // ============================================================
-        // 5. MÀN HÌNH GAME OVER (ĐÃ CĂN CHỈNH THEO ẢNH MẪU)
+        // VẼ MÀN HÌNH GAME OVER (ĐÃ CHỈNH SỬA VỊ TRÍ)
         // ============================================================
         if (gameOver) {
-            // --- LỚP 1: NỀN (Hình người trùm mũ bên phải) ---
+            // 1. Nền
             if (gameOverBgImage != null && !gameOverBgImage.isError()) {
-                // Vẽ full màn hình để lấp hết background game cũ
                 gc.drawImage(gameOverBgImage, 0, 0, screenWidth, screenHeight);
             } else {
-                // Dự phòng màu đen nếu chưa load được ảnh
-                gc.setFill(Color.rgb(0, 0, 0, 1.0));
+                gc.setFill(Color.rgb(0, 0, 0, 0.9));
                 gc.fillRect(0, 0, screenWidth, screenHeight);
             }
 
-            // --- LỚP 2: TEXT TIẾNG VIỆT (Ở TRÊN CÙNG) ---
-            // "MỌI THỨ DỪNG LẠI..."
+            // 2. Text trên cùng (Tiếng Việt)
             if (gameOverTextImage != null && !gameOverTextImage.isError()) {
-                double imgW = gameOverTextImage.getWidth();
-                double imgH = gameOverTextImage.getHeight();
-
-                // Tăng kích thước lên cho rõ (Rộng khoảng 900px)
-                double targetWidth = 900;
-                double targetHeight = imgH * (targetWidth / imgW); // Giữ tỉ lệ ảnh
-
-                // Vị trí: Căn giữa chiều ngang, cách đỉnh màn hình 150px
-                double x = (screenWidth - targetWidth) / 2;
-                double y = 150;
-
-                gc.drawImage(gameOverTextImage, x, y, targetWidth, targetHeight);
+                double w = gameOverTextImage.getWidth();
+                double h = gameOverTextImage.getHeight();
+                double tW = 900;
+                double tH = h * (tW / w);
+                // Vẽ ở Y = 150
+                gc.drawImage(gameOverTextImage, (screenWidth - tW)/2, 150, tW, tH);
             }
 
-            // --- LỚP 3: TIÊU ĐỀ "GAME OVER" (Ở GIỮA) ---
+            // 3. Tiêu đề GAME OVER (Giữa)
             if (gameOverTitleImage != null && !gameOverTitleImage.isError()) {
-                double imgW = gameOverTitleImage.getWidth();
-                double imgH = gameOverTitleImage.getHeight();
-
-                // Kích thước chữ GAME OVER (Rộng khoảng 600px)
-                double targetWidth = 600;
-                double targetHeight = imgH * (targetWidth / imgW);
-
-                // Vị trí: Căn giữa chiều ngang, Căn giữa chiều dọc (hơi lệch lên chút)
-                double x = (screenWidth - targetWidth) / 2;
-                double y = (screenHeight - targetHeight) / 2 + 50; // +50 để không đè lên text trên
-
-                gc.drawImage(gameOverTitleImage, x, y, targetWidth, targetHeight);
+                double w = gameOverTitleImage.getWidth();
+                double h = gameOverTitleImage.getHeight();
+                double tW = 800;
+                double tH = h * (tW / w);
+                // Vẽ ở Y = 350
+                gc.drawImage(gameOverTitleImage, (screenWidth - tW)/2, 280, tW, tH);
             } else {
-                // Fallback text nếu ảnh lỗi
-                gc.setFill(Color.RED);
-                gc.setFont(new Font("Arial Black", 80));
+                gc.setFill(Color.RED); gc.setFont(new Font("Arial", 80));
                 gc.setTextAlign(TextAlignment.CENTER);
-                gc.fillText("GAME OVER", screenWidth / 2.0, screenHeight / 2.0 + 50);
+                gc.fillText("GAME OVER", screenWidth/2.0, screenHeight/2.0);
             }
 
-            // --- LỚP 4: HƯỚNG DẪN (Ở DƯỚI CÙNG) ---
-            // "NHẤN R HOẶC SPACE ĐỂ BẮT ĐẦU LẠI"
-            gc.setFill(Color.WHITE); // Màu trắng (hoặc dùng Color.web("#ffe0b2") cho hơi vàng)
-            // Sử dụng Font to, đậm
-            gc.setFont(Font.font("Arial", javafx.scene.text.FontWeight.BOLD, 30));
-            gc.setTextAlign(TextAlignment.CENTER);
+            // 4. BUTTON "Press R..." (ĐÃ ĐẨY LÊN CAO)
+            if (gameOverButtonImage != null && !gameOverButtonImage.isError()) {
+                double w = gameOverButtonImage.getWidth();
+                double h = gameOverButtonImage.getHeight();
+                double tW = 600; // Kích thước hiển thị
+                double tH = h * (tW / w);
 
-            // Vị trí: Gần đáy màn hình (cách đáy 150px)
-            gc.fillText("NHẤN R HOẶC SPACE ĐỂ BẮT ĐẦU LẠI", screenWidth / 2.0 - 50, screenHeight - 150);
+                // ✅ CỐ ĐỊNH TỌA ĐỘ Y = 600 (Ngay dưới chữ Game Over)
+                double drawX = (screenWidth - tW) / 2 - 20;
+                double drawY = 500;
 
-            // Reset căn lề để không ảnh hưởng frame sau
+                gc.drawImage(gameOverButtonImage, drawX, drawY, tW, tH);
+
+                // 🛠 DEBUG: Vẽ khung xanh để biết ảnh nằm ở đâu
+                // (Nếu thấy khung xanh mà không thấy chữ -> Ảnh bị lỗi trong suốt hoặc màu đen trùng nền)
+                /*
+                gc.setStroke(Color.GREEN);
+                gc.setLineWidth(2);
+                gc.strokeRect(drawX, drawY, tW, tH);
+                */
+            } else {
+                // Fallback text
+                gc.setFill(Color.WHITE);
+                gc.setFont(new Font("Arial", 24));
+                gc.setTextAlign(TextAlignment.CENTER);
+                gc.fillText("Press SPACE or R to Restart", screenWidth / 2.0, 700);
+            }
+
             gc.setTextAlign(TextAlignment.LEFT);
         }
     }
