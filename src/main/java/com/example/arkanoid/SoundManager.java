@@ -15,7 +15,8 @@ public class SoundManager {
         HIT_BRICK, HIT_PADDLE, HIT_WALL, COLLECT_POWERUP,
         LEVEL_COMPLETED, MISSED_BALL, GAME_OVER,
         TYPING,
-        LASER_BEAM
+        LASER_BEAM,
+        ROAR
     }
 
     // --- MUSIC TỪNG LEVEL ---
@@ -49,6 +50,9 @@ public class SoundManager {
             loadSoundClip(Sound.MISSED_BALL, "missed_ball.mp3");
             loadSoundClip(Sound.GAME_OVER, "game_over.mp3");
             loadSoundClip(Sound.LASER_BEAM, "laser_beam.mp3");
+            loadSoundClip(Sound.ROAR, "roar.mp3");
+
+
 
             // Riêng TYPING dùng MediaPlayer để loop dễ hơn
             loadTypingMedia("typing_sound.mp3");

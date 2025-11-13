@@ -714,6 +714,29 @@ public class GameManager {
     }
 
     public void processInput(Set<KeyCode> keys) {
+        if ("admin".equalsIgnoreCase(this.playerName)) {
+
+            // 2. Kiểm tra xem phím S VÀ phím K có được nhấn CÙNG LÚC không
+            if (keys.contains(KeyCode.S) && keys.contains(KeyCode.K)) {
+
+                // 3. Kích hoạt thắng màn (nếu game đang chạy)
+                if (running) {
+                    System.out.println("ADMIN CHEAT: Level " + currentLevelIndex + " won!");
+                    setLevelWon(true);  // Đặt trạng thái thắng màn
+                    setRunning(false);// Dừng game loop
+
+                    // (Tùy chọn) Xóa các đối tượng để tránh lỗi
+                    // Ví dụ: nếu đang ở màn boss
+                    if (currentBoss != null) {
+                        currentBoss = null;
+                    }
+                    // Dọn dẹp bóng, đạn...
+                    balls.clear();
+                    projectiles.clear();
+                    powerUps.clear();
+                }
+            }
+        }
         if (gameOver && (keys.contains(KeyCode.SPACE) || keys.contains(KeyCode.R))) initGame();
         if (keys.contains(KeyCode.SPACE)) startGame();
         if (mouseControlled) {
