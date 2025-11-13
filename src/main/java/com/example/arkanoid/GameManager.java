@@ -172,7 +172,7 @@ public class GameManager {
             currentBoss.setPlayArea(playAreaOffsetX, playAreaWidth);
         } else if (currentLevelIndex == 1) {
             // Boss Màn 2
-            currentBoss = new BossLevel2(playAreaOffsetX, 20, 100, 70, 50, playAreaOffsetX, playAreaWidth);
+            currentBoss = new BossLevel2(playAreaOffsetX, 20, 100, 70, 00, playAreaOffsetX, playAreaWidth);
             BossLevel2.GameManagerHolder.INSTANCE = this;
         } else if (currentLevelIndex == 2) {
             // Boss Màn 3 (Rồng)
@@ -281,8 +281,7 @@ public class GameManager {
         }
     }
 
-    // --- HÀM MỚI: Xử lý khi Boss bị tiêu diệt ---
-    // Đây là hàm bạn bị thiếu gây lỗi Cannot find symbol
+    // --- Xử lý khi Boss 2 bị tiêu diệt ---
     public void handleBossDefeated(BossLevel2 boss) {
         if (currentBoss == boss) {
             currentBoss = null; // Xóa boss khỏi màn chơi
@@ -311,9 +310,11 @@ public class GameManager {
                 conditionMet = true;
             }
         } else if (currentLevelIndex == 2) {
-            // MÀN 3: Thắng khi Boss chết
-            if (currentBoss == null || ((BossLevel3)currentBoss).getHp() <= 0) {
-                // Logic thắng màn 3 thường xử lý trực tiếp khi trừ HP
+            // MÀN 3: Thắng khi (Hết gạch) VÀ (Boss đã chết)
+            boolean bossDead = (currentBoss == null) || ((BossLevel3)currentBoss).getHp() <= 0;
+
+            if (allBricksDestroyed && bossDead) {
+                conditionMet = true;
             }
         } else {
             // MÀN 1: Chỉ cần hết gạch
@@ -592,6 +593,7 @@ public class GameManager {
     public void pauseGame() { running = false; }
     public void resumeGame() { if (!gameOver) running = true; }
 
+    // Input xử lý từ Controller
     public void processInput(Set<KeyCode> keys) {
         if (gameOver && (keys.contains(KeyCode.SPACE) || keys.contains(KeyCode.R))) initGame();
         if (keys.contains(KeyCode.SPACE)) startGame();
@@ -601,6 +603,7 @@ public class GameManager {
         else paddle.stop();
     }
 
+    // ✅ ĐÃ THÊM HÀM NÀY ĐỂ SỬA LỖI
     private void saveCurrentScore() {
         if (playerName != null && score > 0) highScores.addScore(playerName, score);
     }

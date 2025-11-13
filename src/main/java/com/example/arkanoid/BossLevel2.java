@@ -25,8 +25,15 @@ public class BossLevel2 extends MovableObject {
 
     private double speed = 150; // pixel/giây
     private Random random = new Random();
+
+    // --- Timer cho Medicine (Hồi máu) ---
     private double medicineTimer = 0;
-    private double medicineInterval = 15 + random.nextDouble() * 5; // 15-20s
+    private double medicineInterval = 15 + random.nextDouble() * 5;
+
+    // --- THÊM: Timer cho Fball (Cầu lửa mất mạng) ---
+    private double fballTimer = 0;
+    private double fballInterval = 4.0; // Thả mỗi 4 giây (có thể chỉnh sửa)
+    // ------------------------------------------------
 
     private final double MEDICINE_WIDTH = 30;
     private final double MEDICINE_HEIGHT = 20;
@@ -38,10 +45,14 @@ public class BossLevel2 extends MovableObject {
         this.playAreaX = playAreaX;
         this.playAreaWidth = playAreaWidth;
 
-        imageLeft = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/arkanoid/images/Boss2_left.png")));
-        imageRight = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/arkanoid/images/Boss2_right.png")));
+        try {
+            imageLeft = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/arkanoid/images/Boss2_left.png")));
+            imageRight = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/arkanoid/images/Boss2_right.png")));
+        } catch (Exception e) {
+            System.err.println("Lỗi tải ảnh Boss 2");
+        }
 
-        this.dx = speed; // bắt đầu bay sang phải
+        this.dx = speed;
     }
 
     public int getHp() { return hp; }
@@ -53,7 +64,7 @@ public class BossLevel2 extends MovableObject {
 
     @Override
     public void update(double dt) {
-        // Di chuyển trái–phải
+        // 1. Di chuyển
         if (x <= playAreaX) {
             facingLeft = false;
             x = playAreaX;
@@ -61,23 +72,32 @@ public class BossLevel2 extends MovableObject {
             facingLeft = true;
             x = playAreaX + playAreaWidth - width;
         }
-
         x += (facingLeft ? -dx : dx) * dt;
 
-        // Animation
+        // 2. Animation
         frameTime += dt;
         if (frameTime >= frameDuration) {
             frameTime -= frameDuration;
             currentFrame = (currentFrame + 1) % numFrames;
         }
 
-        // Thả medicine nếu boss còn sống
+        // 3. Thả Medicine
         medicineTimer += dt;
         if (medicineTimer >= medicineInterval) {
             spawnMedicine();
             medicineTimer = 0;
             medicineInterval = 15 + random.nextDouble() * 5;
         }
+
+        // --- THÊM: Logic thả Fball (LOSE_LIFE) ---
+        fballTimer += dt;
+        if (fballTimer >= fballInterval) {
+            spawnFball();
+            fballTimer = 0;
+            // Random thời gian thả tiếp theo từ 3 đến 6 giây
+            fballInterval = 3.0 + random.nextDouble() * 3.0;
+        }
+        // -----------------------------------------
     }
 
     @Override
@@ -85,73 +105,49 @@ public class BossLevel2 extends MovableObject {
         Image img = facingLeft ? imageLeft : imageRight;
         if (img != null) {
             double frameWidth = img.getWidth() / numFrames;
-            gc.drawImage(img, frameWidth * currentFrame, 0, frameWidth, img.getHeight(),
-                    x, y, width, height);
+            gc.drawImage(img, frameWidth * currentFrame, 0, frameWidth, img.getHeight(), x, y, width, height);
         }
-        // ==========================================================
-        // ===== LOGIC RENDER THANH MÁU (HP BAR) =====
-        // ==========================================================
+
+        // Render HP Bar
         if (hp > 0) {
-            final double BAR_WIDTH = width; // Chiều rộng bằng Boss
-            final double BAR_HEIGHT = 10;
-            final double BAR_Y_OFFSET = 15; // Cách Boss 15 pixel lên trên
-
             double barX = x;
-            double barY = y - BAR_HEIGHT - BAR_Y_OFFSET;
-
-            // 1. Vẽ nền thanh máu (màu đen)
-            gc.setFill(javafx.scene.paint.Color.rgb(0, 0, 0, 0.7)); // Đen mờ
-            gc.fillRect(barX, barY, BAR_WIDTH, BAR_HEIGHT);
-
-            // 2. Tính toán máu hiện tại
+            double barY = y - 25;
+            gc.setFill(javafx.scene.paint.Color.rgb(0, 0, 0, 0.7));
+            gc.fillRect(barX, barY, width, 10);
             double hpRatio = (double) hp / maxHp;
-            double currentHpWidth = BAR_WIDTH * hpRatio;
-
-            // 3. Chọn màu (Xanh lá -> Vàng -> Đỏ)
-            if (hpRatio > 0.6) {
-                gc.setFill(javafx.scene.paint.Color.LIMEGREEN); // Xanh lá đậm
-            } else if (hpRatio > 0.3) {
-                gc.setFill(javafx.scene.paint.Color.YELLOW);
-            } else {
-                gc.setFill(javafx.scene.paint.Color.RED);
-            }
-
-            // 4. Vẽ thanh máu hiện tại
-            gc.fillRect(barX, barY, currentHpWidth, BAR_HEIGHT);
+            gc.setFill(hpRatio > 0.5 ? javafx.scene.paint.Color.LIMEGREEN : (hpRatio > 0.2 ? javafx.scene.paint.Color.YELLOW : javafx.scene.paint.Color.RED));
+            gc.fillRect(barX, barY, width * hpRatio, 10);
         }
-        // ==========================================================
-        // ===== KẾT THÚC LOGIC RENDER THANH MÁU =====
-        // ==========================================================
     }
 
     public boolean checkCollisionWithBall(Ball ball) {
         double cx = ball.getX() + ball.getWidth() / 2;
         double cy = ball.getY() + ball.getHeight() / 2;
         double radius = ball.getWidth() / 2;
-
         double closestX = Math.max(x, Math.min(cx, x + width));
         double closestY = Math.max(y, Math.min(cy, y + height));
-
         double dx = cx - closestX;
         double dy = cy - closestY;
-
         return (dx * dx + dy * dy) <= (radius * radius);
     }
 
-    /**
-     * Gọi để tạo medicine rơi xuống dưới boss.
-     * Cần gọi phương thức này của GameManager.
-     */
     private void spawnMedicine() {
-        // GameManager phải add powerUp vào list powerUps
         if (GameManagerHolder.INSTANCE != null) {
-            double mx = x + width / 2 - MEDICINE_WIDTH / 2;
-            double my = y + height;
-            GameManagerHolder.INSTANCE.spawnMedicine(mx, my);
+            GameManagerHolder.INSTANCE.spawnMedicine(x + width / 2 - MEDICINE_WIDTH / 2, y + height);
         }
     }
 
-    /** Cách giữ tham chiếu tới GameManager */
+    // --- THÊM: Hàm thả Fball ---
+    private void spawnFball() {
+        if (GameManagerHolder.INSTANCE != null) {
+            // Tạo PowerUp loại LOSE_LIFE (hình fball.png)
+            // Kích thước fball khoảng 35x60 (theo constructor PowerUp)
+            PowerUp fball = new PowerUp(x + width / 2 - 17, y + height, 35, 60, PowerUp.PowerUpType.LOSE_LIFE);
+            GameManagerHolder.INSTANCE.addPowerUp(fball);
+        }
+    }
+    // ---------------------------
+
     public static class GameManagerHolder {
         public static GameManager INSTANCE;
     }

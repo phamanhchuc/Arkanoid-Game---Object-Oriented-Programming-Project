@@ -127,19 +127,32 @@ public class MainController {
         }
     }
 
+    // --- SỬA ĐỔI: CHUYỂN SANG ĐIỀU KHIỂN BẰNG PHÍM ---
     private void setupInputHandlers() {
         gameCanvas.setFocusTraversable(true);
+
+        // Xử lý bàn phím
         gameCanvas.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.P) togglePause(!isPaused);
-            else activeKeys.add(e.getCode());
+            else {
+                activeKeys.add(e.getCode());
+                // Đảm bảo tắt chế độ chuột khi người chơi bấm phím
+                gameManager.setMouseControl(false);
+            }
         });
         gameCanvas.setOnKeyReleased(e -> activeKeys.remove(e.getCode()));
+
+        // --- ĐÃ VÔ HIỆU HÓA DI CHUYỂN BẰNG CHUỘT ---
+        /*
         gameCanvas.setOnMouseMoved(e -> {
             if (!isPaused && !gameManager.isGameOver()) {
                 gameManager.setMouseControl(true);
                 gameManager.processMouseMovement(e.getX());
             }
         });
+        */
+
+        // Vẫn giữ click chuột để Bắt đầu game (Launch Ball) cho tiện
         gameCanvas.setOnMousePressed(e -> {
             if (!isPaused && !gameManager.isGameOver() && !gameManager.hasWonLevel() && !gameManager.isRunning()) {
                 gameManager.startGame();
@@ -165,7 +178,7 @@ public class MainController {
         }
     }
 
-    // --- TỐI ƯU: HÀM PLAY VIDEO CHUNG ---
+    // --- VIDEO PLAYER ---
     private void playVideo(String videoName, Runnable onFinished) {
         try {
             String path = "/com/example/arkanoid/videos/" + videoName;
@@ -197,7 +210,7 @@ public class MainController {
             currentVideoPlayer.setOnError(() -> {
                 System.err.println("Lỗi video: " + videoName); cleanup.run();
             });
-            overlayPane.setOnMousePressed(e -> cleanup.run()); // Click to Skip
+            overlayPane.setOnMousePressed(e -> cleanup.run());
             currentVideoPlayer.play();
 
         } catch (Exception e) {
@@ -206,13 +219,12 @@ public class MainController {
         }
     }
 
-    // Wrapper
     private void playVideoMan2(Runnable onFinished) { playVideo("man2.mp4", onFinished); }
     private void playVideoMan3(Runnable onFinished) { playVideo("man3.mp4", onFinished); }
     private void playVideoKetCuoi(Runnable onFinished) { playVideo("ketcuoi.mp4", onFinished); }
     private void playVideoAfterCredit(Runnable onFinished) { playVideo("aftercredit.mp4", onFinished); }
 
-    // --- XỬ LÝ THẮNG ---
+    // --- LEVEL WIN ---
     private void handleLevelWin() {
         SoundManager.stopMusic();
         int levelWonIndex = gameManager.getCurrentLevelIndex();
@@ -240,13 +252,12 @@ public class MainController {
         }
     }
 
-    // --- CUTSCENE 1 (ĐÃ KHÔI PHỤC STYLE GỐC) ---
+    // --- CUTSCENES ---
     private void runCutscene_WinLevel1() {
         prepareCutsceneUI();
         winImageView.setImage(storyImage2);
         winImageView.setVisible(true);
 
-        // Cấu hình Text gốc
         winText.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 60) : new Font("Arial", 55));
         winText.setStyle("-fx-fill: white; -fx-stroke: #723f3f; -fx-stroke-width: 1.5;");
         winText.setTextAlignment(TextAlignment.CENTER);
@@ -266,7 +277,6 @@ public class MainController {
                 winImageView.setImage(storyImage3);
                 winText.setVisible(false);
 
-                // Cấu hình Title Text
                 winTitleText.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 70) : new Font("Arial", 70));
                 winTitleText.setTextAlignment(TextAlignment.CENTER);
                 winTitleText.setVisible(true);
@@ -274,8 +284,6 @@ public class MainController {
                 startWinTypewriter(winTitleText, t2, () -> {
                     delay(1000, () -> {
                         if (isWinSkipped) return;
-
-                        // Cấu hình Text 1
                         winText1.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 50) : new Font("Arial", 42));
                         winText1.setTextAlignment(TextAlignment.LEFT);
                         winText1.setVisible(true);
@@ -283,12 +291,9 @@ public class MainController {
                         startWinTypewriter(winText1, t3, () -> {
                             delay(800, () -> {
                                 if (isWinSkipped) return;
-
-                                // Cấu hình Text 2
                                 winText2.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 50) : new Font("Arial", 38));
                                 winText2.setTextAlignment(TextAlignment.LEFT);
                                 winText2.setVisible(true);
-
                                 startWinTypewriter(winText2, t4, () -> delay(3000, this::loadNextLevelAndRestart));
                             });
                         });
@@ -298,7 +303,6 @@ public class MainController {
         });
     }
 
-    // --- CUTSCENE 2 (ĐÃ KHÔI PHỤC STYLE GỐC) ---
     private void runCutscene_WinLevel2() {
         prepareCutsceneUI();
         winImageView.setImage(storyImage4);
@@ -312,8 +316,6 @@ public class MainController {
 
         delay(2000, () -> {
             if (isWinSkipped) return;
-
-            // Scene 1: Text 1
             winText1.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 48) : new Font("Arial", 45));
             winText1.setStyle("-fx-fill: white; -fx-stroke: #bd7244; -fx-stroke-width: 1.5;");
             winText1.setLayoutX(80); winText1.setLayoutY(150); winText1.setWrappingWidth(700);
@@ -323,8 +325,6 @@ public class MainController {
             startWinTypewriter(winText1, t1, () -> {
                 delay(1000, () -> {
                     if (isWinSkipped) return;
-
-                    // Scene 1: Text 2
                     winText2.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 46) : new Font("Arial", 43));
                     winText2.setStyle("-fx-fill: white; -fx-stroke: #821010; -fx-stroke-width: 1.5;");
                     winText2.setLayoutX(50); winText2.setLayoutY(600); winText2.setWrappingWidth(700);
@@ -334,8 +334,6 @@ public class MainController {
                     startWinTypewriter(winText2, t2, () -> {
                         delay(800, () -> {
                             if (isWinSkipped) return;
-
-                            // Scene 1: Text 3
                             winText3.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 44) : new Font("Arial", 41));
                             winText3.setStyle("-fx-fill: white; -fx-stroke: #864c39; -fx-stroke-width: 1.5;");
                             winText3.setLayoutX(750); winText3.setLayoutY(750); winText3.setWrappingWidth(450);
@@ -343,13 +341,12 @@ public class MainController {
                             winText3.setVisible(true);
 
                             startWinTypewriter(winText3, t3, () -> {
-                                playVideoMan3(() -> { // Phát video man3
+                                playVideoMan3(() -> {
                                     if (isWinSkipped) return;
-                                    winImageView.setImage(storyImage5); // Đổi ảnh nền
+                                    winImageView.setImage(storyImage5);
                                     winText1.setVisible(false); winText2.setVisible(false); winText3.setVisible(false);
 
                                     delay(200, () -> {
-                                        // Scene 2: Text 1
                                         winText1.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 48) : new Font("Arial", 45));
                                         winText1.setStyle("-fx-fill: white; -fx-stroke: #bd7244; -fx-stroke-width: 1.5;");
                                         winText1.setLayoutX(50); winText1.setLayoutY(100); winText1.setWrappingWidth(800);
@@ -357,12 +354,10 @@ public class MainController {
 
                                         startWinTypewriter(winText1, t4, () -> {
                                             delay(1000, () -> {
-                                                // Scene 2: Text 2
                                                 winText2.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 46) : new Font("Arial", 43));
                                                 winText2.setStyle("-fx-fill: white; -fx-stroke: #864c39; -fx-stroke-width: 1.5;");
                                                 winText2.setLayoutX(600); winText2.setLayoutY(650); winText2.setWrappingWidth(550);
                                                 winText2.setVisible(true);
-
                                                 startWinTypewriter(winText2, t5, () -> delay(3000, this::loadNextLevelAndRestart));
                                             });
                                         });
@@ -376,7 +371,6 @@ public class MainController {
         });
     }
 
-    // --- CUTSCENE 3 (ĐÃ KHÔI PHỤC STYLE GỐC) ---
     private void runCutscene_WinLevel3() {
         prepareCutsceneUI();
         winImageView.setImage(storyImage6);
@@ -387,8 +381,6 @@ public class MainController {
 
         delay(300, () -> {
             if (isWinSkipped) return;
-
-            // Text 1
             winText3.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 50) : new Font("Arial", 45));
             winText3.setStyle("-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;");
             winText3.setLayoutX(50); winText3.setLayoutY(100); winText3.setWrappingWidth(750);
@@ -398,8 +390,6 @@ public class MainController {
             startWinTypewriter(winText3, t1, () -> {
                 delay(1000, () -> {
                     if (isWinSkipped) return;
-
-                    // Text 2
                     winText4.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 50) : new Font("Arial", 42));
                     winText4.setStyle("-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;");
                     winText4.setLayoutX(760); winText4.setLayoutY(600); winText4.setWrappingWidth(450);
@@ -416,8 +406,6 @@ public class MainController {
             });
         });
     }
-
-    // --- UTILITIES ---
 
     private void prepareCutsceneUI() {
         gameCanvas.setVisible(false);
