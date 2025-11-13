@@ -144,7 +144,7 @@ public class GameManager {
             currentBoss = new Boss(playAreaOffsetX, 20, 80, 60);
             currentBoss.setPlayArea(playAreaOffsetX, playAreaWidth);
         } else if (currentLevelIndex == 1) {
-            currentBoss = new BossLevel2(playAreaOffsetX, 20, 100, 70, 50, playAreaOffsetX, playAreaWidth);
+            currentBoss = new BossLevel2(playAreaOffsetX, 20, 100, 70, 00, playAreaOffsetX, playAreaWidth);
         } else if (currentLevelIndex == 2) {
             double boss3Width = 280;
             double boss3Height = 250;
