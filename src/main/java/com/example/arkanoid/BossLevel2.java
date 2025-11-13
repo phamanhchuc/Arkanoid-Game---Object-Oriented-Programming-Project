@@ -2,6 +2,7 @@ package com.example.arkanoid;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+
 import java.util.Objects;
 import java.util.Random;
 
@@ -55,7 +56,9 @@ public class BossLevel2 extends MovableObject {
         this.dx = speed;
     }
 
-    public int getHp() { return hp; }
+    public int getHp() {
+        return hp;
+    }
 
     public boolean takeDamage(int dmg) {
         hp -= dmg;

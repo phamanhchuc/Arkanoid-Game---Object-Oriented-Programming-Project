@@ -51,8 +51,9 @@ public class HighScores {
 
     /**
      * Thêm một điểm mới vào danh sách, giữ danh sách được sắp xếp và giới hạn ở MAX_SCORES.
+     *
      * @param playerName Tên người chơi
-     * @param score Điểm số
+     * @param score      Điểm số
      * @return true nếu điểm được thêm vào top 5, false nếu không.
      */
     public boolean addScore(String playerName, int score) {
@@ -73,6 +74,7 @@ public class HighScores {
 
     /**
      * Lấy danh sách top điểm cao (đã được sắp xếp).
+     *
      * @return Danh sách ScoreEntry.
      */
     public List<ScoreEntry> getScores() {

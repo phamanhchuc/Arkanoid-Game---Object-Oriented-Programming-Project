@@ -45,7 +45,7 @@ public class Projectile extends MovableObject {
                 meomeoBulletImage = new Image(meomeoStream);
                 if (meomeoBulletImage.isError()) {
                     System.err.println("LỖI DEBUG: File meomeo BỊ LỖI KHI ĐỌC (file bị hỏng?): " + meomeoPath);
-                    if(meomeoBulletImage.getException() != null) meomeoBulletImage.getException().printStackTrace();
+                    if (meomeoBulletImage.getException() != null) meomeoBulletImage.getException().printStackTrace();
                 } else {
                     System.out.println("DEBUG: Tải meomeobullet.png thành công.");
                 }
@@ -80,11 +80,20 @@ public class Projectile extends MovableObject {
         }
     }
 
-    public boolean isDestroyed() { return destroyed; }
-    public void setDestroyed(boolean d) { this.destroyed = d; }
-    public boolean isPiercing() { return this.isPiercing; }
+    public boolean isDestroyed() {
+        return destroyed;
+    }
+
+    public void setDestroyed(boolean d) {
+        this.destroyed = d;
+    }
+
+    public boolean isPiercing() {
+        return this.isPiercing;
+    }
 
     // --- THÊM 2 HÀM MỚI ĐỂ SỬA LỖI ---
+
     /**
      * Kiểm tra xem đạn này đã từng va chạm gạch này chưa.
      */

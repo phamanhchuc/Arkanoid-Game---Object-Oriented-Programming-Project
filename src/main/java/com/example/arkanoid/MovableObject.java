@@ -1,4 +1,5 @@
 package com.example.arkanoid;
+
 public abstract class MovableObject extends GameObject {
     protected double dx = 0, dy = 0;
     protected double playAreaX = 0;
@@ -9,15 +10,28 @@ public abstract class MovableObject extends GameObject {
         this.playAreaWidth = playAreaWidth;
     }
 
-    public MovableObject(double x, double y, double w, double h){
+    public MovableObject(double x, double y, double w, double h) {
         super(x, y, w, h);
     }
-    public void move(double dt){
+
+    public void move(double dt) {
         x += dx * dt;
         y += dy * dt;
     }
-    public void setDx(double dx) { this.dx = dx; }
-    public void setDy(double dy) { this.dy = dy; }
-    public double getDx() { return dx; }
-    public double getDy() { return dy; }
+
+    public void setDx(double dx) {
+        this.dx = dx;
+    }
+
+    public void setDy(double dy) {
+        this.dy = dy;
+    }
+
+    public double getDx() {
+        return dx;
+    }
+
+    public double getDy() {
+        return dy;
+    }
 }

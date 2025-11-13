@@ -39,15 +39,23 @@ import java.util.Set;
 public class MainController {
 
     // --- FXML INJECTIONS ---
-    @FXML private Canvas gameCanvas;
-    @FXML private VBox pausePane;
-    @FXML private Button resumeButton;
-    @FXML private Button restartButton;
-    @FXML private Button quitButton;
-    @FXML private ImageView pauseBackground;
-    @FXML private ImageView winImageView;
+    @FXML
+    private Canvas gameCanvas;
+    @FXML
+    private VBox pausePane;
+    @FXML
+    private Button resumeButton;
+    @FXML
+    private Button restartButton;
+    @FXML
+    private Button quitButton;
+    @FXML
+    private ImageView pauseBackground;
+    @FXML
+    private ImageView winImageView;
 
-    @FXML private Text winText, winTitleText, winText1, winText2, winText3, winText4;
+    @FXML
+    private Text winText, winTitleText, winText1, winText2, winText3, winText4;
     private Text[] allWinTexts;
 
     // --- GAME LOGIC VARIABLES ---
@@ -80,9 +88,13 @@ public class MainController {
 
         gameLoop = new AnimationTimer() {
             private long lastTime = 0;
+
             @Override
             public void handle(long now) {
-                if (lastTime == 0) { lastTime = now; return; }
+                if (lastTime == 0) {
+                    lastTime = now;
+                    return;
+                }
                 double delta = (now - lastTime) / 1_000_000_000.0;
                 lastTime = now;
 
@@ -208,7 +220,8 @@ public class MainController {
 
             currentVideoPlayer.setOnEndOfMedia(cleanup);
             currentVideoPlayer.setOnError(() -> {
-                System.err.println("Lỗi video: " + videoName); cleanup.run();
+                System.err.println("Lỗi video: " + videoName);
+                cleanup.run();
             });
             overlayPane.setOnMousePressed(e -> cleanup.run());
             currentVideoPlayer.play();
@@ -219,10 +232,21 @@ public class MainController {
         }
     }
 
-    private void playVideoMan2(Runnable onFinished) { playVideo("man2.mp4", onFinished); }
-    private void playVideoMan3(Runnable onFinished) { playVideo("man3.mp4", onFinished); }
-    private void playVideoKetCuoi(Runnable onFinished) { playVideo("ketcuoi.mp4", onFinished); }
-    private void playVideoAfterCredit(Runnable onFinished) { playVideo("aftercredit.mp4", onFinished); }
+    private void playVideoMan2(Runnable onFinished) {
+        playVideo("man2.mp4", onFinished);
+    }
+
+    private void playVideoMan3(Runnable onFinished) {
+        playVideo("man3.mp4", onFinished);
+    }
+
+    private void playVideoKetCuoi(Runnable onFinished) {
+        playVideo("ketcuoi.mp4", onFinished);
+    }
+
+    private void playVideoAfterCredit(Runnable onFinished) {
+        playVideo("aftercredit.mp4", onFinished);
+    }
 
     // --- LEVEL WIN ---
     private void handleLevelWin() {
@@ -243,7 +267,8 @@ public class MainController {
         if (currentWinTimeline != null && currentWinTimeline.getStatus() == Timeline.Status.RUNNING) {
             currentWinTimeline.stop();
             SoundManager.stopTypingLoop();
-            if (currentTypingTarget != null && currentTypingContent != null) currentTypingTarget.setText(currentTypingContent);
+            if (currentTypingTarget != null && currentTypingContent != null)
+                currentTypingTarget.setText(currentTypingContent);
             if (currentTypingCallback != null) {
                 Runnable cb = currentTypingCallback;
                 currentTypingCallback = null;
@@ -318,7 +343,9 @@ public class MainController {
             if (isWinSkipped) return;
             winText1.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 48) : new Font("Arial", 45));
             winText1.setStyle("-fx-fill: white; -fx-stroke: #bd7244; -fx-stroke-width: 1.5;");
-            winText1.setLayoutX(80); winText1.setLayoutY(150); winText1.setWrappingWidth(700);
+            winText1.setLayoutX(80);
+            winText1.setLayoutY(150);
+            winText1.setWrappingWidth(700);
             winText1.setTextAlignment(TextAlignment.LEFT);
             winText1.setVisible(true);
 
@@ -327,7 +354,9 @@ public class MainController {
                     if (isWinSkipped) return;
                     winText2.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 46) : new Font("Arial", 43));
                     winText2.setStyle("-fx-fill: white; -fx-stroke: #821010; -fx-stroke-width: 1.5;");
-                    winText2.setLayoutX(50); winText2.setLayoutY(600); winText2.setWrappingWidth(700);
+                    winText2.setLayoutX(50);
+                    winText2.setLayoutY(600);
+                    winText2.setWrappingWidth(700);
                     winText2.setTextAlignment(TextAlignment.LEFT);
                     winText2.setVisible(true);
 
@@ -336,7 +365,9 @@ public class MainController {
                             if (isWinSkipped) return;
                             winText3.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 44) : new Font("Arial", 41));
                             winText3.setStyle("-fx-fill: white; -fx-stroke: #864c39; -fx-stroke-width: 1.5;");
-                            winText3.setLayoutX(750); winText3.setLayoutY(750); winText3.setWrappingWidth(450);
+                            winText3.setLayoutX(750);
+                            winText3.setLayoutY(750);
+                            winText3.setWrappingWidth(450);
                             winText3.setTextAlignment(TextAlignment.LEFT);
                             winText3.setVisible(true);
 
@@ -344,19 +375,25 @@ public class MainController {
                                 playVideoMan3(() -> {
                                     if (isWinSkipped) return;
                                     winImageView.setImage(storyImage5);
-                                    winText1.setVisible(false); winText2.setVisible(false); winText3.setVisible(false);
+                                    winText1.setVisible(false);
+                                    winText2.setVisible(false);
+                                    winText3.setVisible(false);
 
                                     delay(200, () -> {
                                         winText1.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 48) : new Font("Arial", 45));
                                         winText1.setStyle("-fx-fill: white; -fx-stroke: #bd7244; -fx-stroke-width: 1.5;");
-                                        winText1.setLayoutX(50); winText1.setLayoutY(100); winText1.setWrappingWidth(800);
+                                        winText1.setLayoutX(50);
+                                        winText1.setLayoutY(100);
+                                        winText1.setWrappingWidth(800);
                                         winText1.setVisible(true);
 
                                         startWinTypewriter(winText1, t4, () -> {
                                             delay(1000, () -> {
                                                 winText2.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 46) : new Font("Arial", 43));
                                                 winText2.setStyle("-fx-fill: white; -fx-stroke: #864c39; -fx-stroke-width: 1.5;");
-                                                winText2.setLayoutX(600); winText2.setLayoutY(650); winText2.setWrappingWidth(550);
+                                                winText2.setLayoutX(600);
+                                                winText2.setLayoutY(650);
+                                                winText2.setWrappingWidth(550);
                                                 winText2.setVisible(true);
                                                 startWinTypewriter(winText2, t5, () -> delay(3000, this::loadNextLevelAndRestart));
                                             });
@@ -383,7 +420,9 @@ public class MainController {
             if (isWinSkipped) return;
             winText3.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 50) : new Font("Arial", 45));
             winText3.setStyle("-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;");
-            winText3.setLayoutX(50); winText3.setLayoutY(100); winText3.setWrappingWidth(750);
+            winText3.setLayoutX(50);
+            winText3.setLayoutY(100);
+            winText3.setWrappingWidth(750);
             winText3.setTextAlignment(TextAlignment.LEFT);
             winText3.setVisible(true);
 
@@ -392,7 +431,9 @@ public class MainController {
                     if (isWinSkipped) return;
                     winText4.setFont(isabellaBodyFont != null ? Font.font(isabellaBodyFont.getFamily(), 50) : new Font("Arial", 42));
                     winText4.setStyle("-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;");
-                    winText4.setLayoutX(760); winText4.setLayoutY(600); winText4.setWrappingWidth(450);
+                    winText4.setLayoutX(760);
+                    winText4.setLayoutY(600);
+                    winText4.setWrappingWidth(450);
                     winText4.setTextAlignment(TextAlignment.LEFT);
                     winText4.setVisible(true);
 
@@ -410,7 +451,7 @@ public class MainController {
     private void prepareCutsceneUI() {
         gameCanvas.setVisible(false);
         isWinSkipped = false;
-        for(Text t : allWinTexts) if(t != null) t.setVisible(false);
+        for (Text t : allWinTexts) if (t != null) t.setVisible(false);
     }
 
     private void delay(int millis, Runnable action) {
@@ -420,7 +461,10 @@ public class MainController {
     }
 
     private void startWinTypewriter(Text target, String content, Runnable onFinished) {
-        if (target == null || content == null) { if (onFinished != null) onFinished.run(); return; }
+        if (target == null || content == null) {
+            if (onFinished != null) onFinished.run();
+            return;
+        }
 
         target.setText("");
         if (currentWinTimeline != null) currentWinTimeline.stop();
@@ -432,7 +476,10 @@ public class MainController {
         final int[] index = {0};
         Timeline timeline = new Timeline();
         timeline.getKeyFrames().add(new KeyFrame(Duration.millis(60), evt -> {
-            if (isWinSkipped) { timeline.stop(); return; }
+            if (isWinSkipped) {
+                timeline.stop();
+                return;
+            }
             if (index[0] < content.length()) target.setText(target.getText() + content.charAt(index[0]++));
             else {
                 timeline.stop();
@@ -456,7 +503,11 @@ public class MainController {
     private void restartGameAfterWin() {
         winImageView.setVisible(false);
         winImageView.setOnMousePressed(null);
-        for (Text t : allWinTexts) if (t != null) { t.setText(""); t.setVisible(false); }
+        for (Text t : allWinTexts)
+            if (t != null) {
+                t.setText("");
+                t.setVisible(false);
+            }
 
         gameCanvas.setVisible(true);
         gameCanvas.requestFocus();
@@ -493,7 +544,9 @@ public class MainController {
             Scene menuScene = stage.getScene();
             menuScene.setRoot(rootPane);
             MainApp.scaleToFit(menuRoot, menuScene);
-        } catch (Exception ex) { ex.printStackTrace(); }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     private void cleanupCutscenes() {
@@ -507,9 +560,11 @@ public class MainController {
     private void addClickAnimation(Button button) {
         if (button == null) return;
         ScaleTransition press = new ScaleTransition(Duration.millis(100), button);
-        press.setToX(0.9); press.setToY(0.9);
+        press.setToX(0.9);
+        press.setToY(0.9);
         ScaleTransition release = new ScaleTransition(Duration.millis(100), button);
-        release.setToX(1.0); release.setToY(1.0);
+        release.setToX(1.0);
+        release.setToY(1.0);
         button.setOnMousePressed(e -> press.playFromStart());
         button.setOnMouseReleased(e -> release.playFromStart());
     }

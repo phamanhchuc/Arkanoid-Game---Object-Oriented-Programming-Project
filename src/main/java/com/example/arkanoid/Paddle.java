@@ -86,7 +86,9 @@ public class Paddle extends MovableObject {
         dx = currentSpeed;
     }
 
-    public void stop() { dx = 0; }
+    public void stop() {
+        dx = 0;
+    }
 
     public void moveTo(double targetX) {
         this.x = targetX - (this.width / 2);

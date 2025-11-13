@@ -3,6 +3,7 @@ package com.example.arkanoid;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
+
 import java.util.Objects;
 
 public class PowerUp extends MovableObject {
@@ -126,7 +127,7 @@ public class PowerUp extends MovableObject {
 
                 if (image.isError()) {
                     System.err.println("Lỗi: Không thể tải ảnh cho PowerUp: " + imagePath);
-                    if(image.getException() != null) image.getException().printStackTrace();
+                    if (image.getException() != null) image.getException().printStackTrace();
                     image = null;
                 } else {
                     // Logic tính toán Frame
@@ -194,20 +195,15 @@ public class PowerUp extends MovableObject {
                     gc.setFill(Color.GREEN);
                 } else if (type == PowerUpType.LOSE_LIFE) {
                     gc.setFill(Color.RED);
-                }
-                else if (type == PowerUpType.CROSS_BOW) {
+                } else if (type == PowerUpType.CROSS_BOW) {
                     gc.setFill(Color.BLUE);
-                }
-                else if (type == PowerUpType.MULTI_BALL) {
+                } else if (type == PowerUpType.MULTI_BALL) {
                     gc.setFill(Color.ORANGE);
-                }
-                else if (type == PowerUpType.PIERCING_SHOT) {
+                } else if (type == PowerUpType.PIERCING_SHOT) {
                     gc.setFill(Color.PURPLE);
-                }
-                else if (type == PowerUpType.MEDICINE) {
+                } else if (type == PowerUpType.MEDICINE) {
                     gc.setFill(Color.LIGHTPINK);
-                }
-                else if (type == PowerUpType.STUN_PADDLE) {
+                } else if (type == PowerUpType.STUN_PADDLE) {
                     gc.setFill(Color.YELLOW);
                 }
                 gc.fillRect(x, y, width, height);

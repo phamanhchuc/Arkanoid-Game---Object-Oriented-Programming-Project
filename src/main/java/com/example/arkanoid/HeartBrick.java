@@ -2,6 +2,7 @@ package com.example.arkanoid;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
+
 import java.util.Objects;
 
 public class HeartBrick extends Brick {
@@ -51,7 +52,7 @@ public class HeartBrick extends Brick {
                 if (BossLevel3.GameManagerHolder.INSTANCE != null &&
                         BossLevel3.GameManagerHolder.INSTANCE.getCurrentBoss() instanceof BossLevel3) {
 
-                    ((BossLevel3)BossLevel3.GameManagerHolder.INSTANCE.getCurrentBoss()).setHeartDestroyed(true);
+                    ((BossLevel3) BossLevel3.GameManagerHolder.INSTANCE.getCurrentBoss()).setHeartDestroyed(true);
                 }
                 return true; // Bị phá hủy
             }

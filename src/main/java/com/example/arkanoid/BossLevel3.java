@@ -5,6 +5,7 @@ import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 import javafx.scene.transform.Rotate;
 import javafx.geometry.Point2D;
+
 import java.util.Objects;
 import java.util.Random;
 
@@ -103,12 +104,16 @@ public class BossLevel3 extends MovableObject {
         this.heartBrick = new HeartBrick(x + heartRelativeX, y + heartRelativeY, 100, 100, 2);
     }
 
-    public int getHp() { return hp; }
+    public int getHp() {
+        return hp;
+    }
+
     public boolean takeDamage(int dmg) {
         if (!heartDestroyed) return true;
         hp -= dmg;
         return hp > 0;
     }
+
     public void setHeartDestroyed(boolean destroyed) {
         this.heartDestroyed = destroyed;
         if (destroyed) {
@@ -122,9 +127,18 @@ public class BossLevel3 extends MovableObject {
             this.attackTimer = 0.0;
         }
     }
-    public HeartBrick getHeartBrick() { return heartBrick; }
-    public boolean isHeartDestroyed() { return heartDestroyed; }
-    public boolean isFiringLaser() { return isFiringLaser; }
+
+    public HeartBrick getHeartBrick() {
+        return heartBrick;
+    }
+
+    public boolean isHeartDestroyed() {
+        return heartDestroyed;
+    }
+
+    public boolean isFiringLaser() {
+        return isFiringLaser;
+    }
 
     @Override
     public void update(double dt) {
@@ -211,8 +225,8 @@ public class BossLevel3 extends MovableObject {
         double sinA = Math.sin(-angleRad);
 
         // Tọa độ Paddle relative với Pivot
-        double dx = obj.getX() + obj.getWidth()/2 - laserPivotX;
-        double dy = obj.getY() + obj.getHeight()/2 - laserPivotY;
+        double dx = obj.getX() + obj.getWidth() / 2 - laserPivotX;
+        double dy = obj.getY() + obj.getHeight() / 2 - laserPivotY;
 
         // Xoay tọa độ
         double localX = dx * cosA - dy * sinA;
@@ -289,19 +303,32 @@ public class BossLevel3 extends MovableObject {
     public void render(GraphicsContext gc) {
         Image currentSpriteSheet = null;
         switch (currentState) {
-            case IDLE_PHASE1: currentSpriteSheet = idlePhase1SpriteSheet; break;
-            case SPAWNING_PHASE1: currentSpriteSheet = spawningPhase1SpriteSheet; break;
-            case IDLE_PHASE2: currentSpriteSheet = idlePhase2SpriteSheet; break;
-            case SPAWNING_PHASE2: currentSpriteSheet = spawningPhase2SpriteSheet; break;
+            case IDLE_PHASE1:
+                currentSpriteSheet = idlePhase1SpriteSheet;
+                break;
+            case SPAWNING_PHASE1:
+                currentSpriteSheet = spawningPhase1SpriteSheet;
+                break;
+            case IDLE_PHASE2:
+                currentSpriteSheet = idlePhase2SpriteSheet;
+                break;
+            case SPAWNING_PHASE2:
+                currentSpriteSheet = spawningPhase2SpriteSheet;
+                break;
         }
 
         // Render tay
-        if (leftArmImage != null) drawFrame(gc, leftArmImage, x + LEFT_ARM_OFFSET_X, y + LEFT_ARM_OFFSET_Y, DEST_ARM_WIDTH, DEST_ARM_HEIGHT);
-        if (rightArmImage != null) drawFrame(gc, rightArmImage, (x + width) + RIGHT_ARM_OFFSET_X, y + RIGHT_ARM_OFFSET_Y, DEST_ARM_WIDTH, DEST_ARM_HEIGHT);
+        if (leftArmImage != null)
+            drawFrame(gc, leftArmImage, x + LEFT_ARM_OFFSET_X, y + LEFT_ARM_OFFSET_Y, DEST_ARM_WIDTH, DEST_ARM_HEIGHT);
+        if (rightArmImage != null)
+            drawFrame(gc, rightArmImage, (x + width) + RIGHT_ARM_OFFSET_X, y + RIGHT_ARM_OFFSET_Y, DEST_ARM_WIDTH, DEST_ARM_HEIGHT);
 
         // Render thân
         if (currentSpriteSheet != null) drawFrame(gc, currentSpriteSheet, x, y, width, height);
-        else { gc.setFill(Color.PURPLE); gc.fillRect(x, y, width, height); }
+        else {
+            gc.setFill(Color.PURPLE);
+            gc.fillRect(x, y, width, height);
+        }
 
         // Render Laser
         if (isFiringLaser) {
@@ -313,7 +340,8 @@ public class BossLevel3 extends MovableObject {
                 gc.drawImage(laserSpriteSheet, 0, laserCurrentFrame * frameH, laserSpriteSheet.getWidth(), frameH,
                         -LASER_PIVOT_IN_IMAGE_X, -LASER_THICKNESS / 2.0, LASER_LENGTH, LASER_THICKNESS);
             } else {
-                gc.setFill(Color.RED); gc.fillRect(0, -LASER_THICKNESS/2, LASER_LENGTH, LASER_THICKNESS);
+                gc.setFill(Color.RED);
+                gc.fillRect(0, -LASER_THICKNESS / 2, LASER_LENGTH, LASER_THICKNESS);
             }
             gc.restore();
         }
@@ -345,5 +373,7 @@ public class BossLevel3 extends MovableObject {
         gc.drawImage(img, currentFrame * fw, 0, fw, img.getHeight(), x, y, w, h);
     }
 
-    public static class GameManagerHolder { public static GameManager INSTANCE; }
+    public static class GameManagerHolder {
+        public static GameManager INSTANCE;
+    }
 }

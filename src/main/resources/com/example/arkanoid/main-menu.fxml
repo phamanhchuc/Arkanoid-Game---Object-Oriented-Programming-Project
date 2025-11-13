@@ -21,7 +21,7 @@
         <AnchorPane fx:id="mainPane" prefHeight="955.5" prefWidth="1200.0">
 
             <stylesheets>
-                <URL value="@menu-styles.css" />
+                <URL value="@menu-styles.css"/>
             </stylesheets>
 
             <children>
@@ -29,14 +29,18 @@
                 <!-- BACKGROUND -->
                 <ImageView fx:id="mainBackground" fitHeight="955.5" fitWidth="1200.0"
                            pickOnBounds="true" preserveRatio="true">
-                    <image><Image url="@images/backgroundStart.png"/></image>
+                    <image>
+                        <Image url="@images/backgroundStart.png"/>
+                    </image>
                 </ImageView>
 
                 <!-- START BUTTON IMAGE -->
                 <ImageView fx:id="startImage" fitHeight="150.0" fitWidth="499.0"
                            layoutX="379.0" layoutY="665.0" pickOnBounds="true"
                            preserveRatio="true">
-                    <image><Image url="@images/startButton.png"/></image>
+                    <image>
+                        <Image url="@images/startButton.png"/>
+                    </image>
                 </ImageView>
 
                 <!-- INTRO VIDEO -->
@@ -55,21 +59,27 @@
                       visible="false" stroke="#a14da1" strokeWidth="1.5"
                       style="-fx-font-family: 'Arial'; -fx-font-weight: bold;"
                       wrappingWidth="550.0">
-                    <font><Font size="28.0"/></font>
+                    <font>
+                        <Font size="28.0"/>
+                    </font>
                 </Text>
 
                 <Text fx:id="storyText2" layoutX="50.0" layoutY="800.0" fill="WHITE"
                       visible="false" stroke="#a14da1" strokeWidth="1.5"
                       style="-fx-font-family: 'Arial'; -fx-font-weight: bold;"
                       wrappingWidth="550.0">
-                    <font><Font size="28.0"/></font>
+                    <font>
+                        <Font size="28.0"/>
+                    </font>
                 </Text>
 
                 <Text fx:id="storyText3" layoutX="620.0" layoutY="80.0" fill="WHITE"
                       visible="false" stroke="#a14da1" strokeWidth="1.5"
                       style="-fx-font-family: 'Arial'; -fx-font-weight: bold;"
                       wrappingWidth="550.0">
-                    <font><Font size="28.0"/></font>
+                    <font>
+                        <Font size="28.0"/>
+                    </font>
                 </Text>
 
                 <!-- START BUTTON -->
@@ -82,7 +92,9 @@
                 <ImageView fx:id="settingImage" fitHeight="150.0" fitWidth="33.0"
                            layoutX="1050.0" layoutY="118.0"
                            pickOnBounds="true" preserveRatio="true">
-                    <image><Image url="@images/settingButton.png"/></image>
+                    <image>
+                        <Image url="@images/settingButton.png"/>
+                    </image>
                 </ImageView>
 
                 <Button fx:id="buttonSetting" layoutX="1031.0" layoutY="114.0"
@@ -94,7 +106,9 @@
                 <ImageView fx:id="rankingImage" fitHeight="49.0" fitWidth="62.0"
                            layoutX="1042.0" layoutY="180.0"
                            pickOnBounds="true" preserveRatio="true">
-                    <image><Image url="@images/rankingButton.png"/></image>
+                    <image>
+                        <Image url="@images/rankingButton.png"/>
+                    </image>
                 </ImageView>
 
                 <Button fx:id="buttonRanking" layoutX="1031.0" layoutY="184.0"
@@ -106,7 +120,9 @@
                 <ImageView fx:id="guideImageBtn" fitHeight="42.0" fitWidth="35.0"
                            layoutX="1050.0" layoutY="255.0"
                            pickOnBounds="true" preserveRatio="true">
-                    <image><Image url="@images/guideButton.png"/></image>
+                    <image>
+                        <Image url="@images/guideButton.png"/>
+                    </image>
                 </ImageView>
 
                 <Button fx:id="buttonGuide" layoutX="1032.0" layoutY="255.0"
@@ -128,17 +144,23 @@
 
                 <Text fx:id="rank1Text" layoutX="500.0" layoutY="520.0"
                       text="1. N/A" visible="false">
-                    <font><Font size="22.0" name="System Bold"/></font>
+                    <font>
+                        <Font size="22.0" name="System Bold"/>
+                    </font>
                 </Text>
 
                 <Text fx:id="rank2Text" layoutX="720.0" layoutY="570.0"
                       text="2. N/A" visible="false">
-                    <font><Font size="22.0" name="System Bold"/></font>
+                    <font>
+                        <Font size="22.0" name="System Bold"/>
+                    </font>
                 </Text>
 
                 <Text fx:id="rank3Text" layoutX="320.0" layoutY="630.0"
                       text="3. N/A" visible="false">
-                    <font><Font size="22.0" name="System Bold"/></font>
+                    <font>
+                        <Font size="22.0" name="System Bold"/>
+                    </font>
                 </Text>
 
                 <Button fx:id="backButtonRanking" layoutX="500.0" layoutY="860.0"

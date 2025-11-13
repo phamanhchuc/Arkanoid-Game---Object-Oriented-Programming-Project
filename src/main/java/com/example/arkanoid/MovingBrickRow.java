@@ -2,6 +2,7 @@ package com.example.arkanoid;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javafx.scene.canvas.GraphicsContext;
 
 // MovingBrickRow sẽ quản lý một nhóm các viên gạch

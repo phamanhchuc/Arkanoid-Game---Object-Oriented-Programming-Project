@@ -12,17 +12,18 @@ public class MovingBrick extends Brick {
 
     /**
      * Constructor cho MovingBrick.
-     * @param x Vị trí X ban đầu.
-     * @param y Vị trí Y ban đầu.
-     * @param w Chiều rộng.
-     * @param h Chiều cao.
-     * @param typeCode Mã loại gạch.
+     *
+     * @param x         Vị trí X ban đầu.
+     * @param y         Vị trí Y ban đầu.
+     * @param w         Chiều rộng.
+     * @param h         Chiều cao.
+     * @param typeCode  Mã loại gạch.
      * @param initialDx Vận tốc X ban đầu (ví dụ: 50.0).
      * @param initialDy Vận tốc Y ban đầu (ví dụ: 0).
-     * @param startX Giới hạn X tối thiểu.
-     * @param endX Giới hạn X tối đa.
-     * @param startY Giới hạn Y tối thiểu.
-     * @param endY Giới hạn Y tối đa.
+     * @param startX    Giới hạn X tối thiểu.
+     * @param endX      Giới hạn X tối đa.
+     * @param startY    Giới hạn Y tối thiểu.
+     * @param endY      Giới hạn Y tối đa.
      */
     public MovingBrick(double x, double y, double w, double h, int typeCode,
                        double initialDx, double initialDy,

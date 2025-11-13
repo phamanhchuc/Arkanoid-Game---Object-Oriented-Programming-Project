@@ -96,7 +96,9 @@ public class GameManager {
             scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board1.png")));
             scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board2.png")));
             scoreBoard.add(new Image(getClass().getResourceAsStream("/com/example/arkanoid/images/Score_Board3.png")));
-        } catch (Exception e) { System.err.println("Lỗi tải ảnh giao diện chung."); }
+        } catch (Exception e) {
+            System.err.println("Lỗi tải ảnh giao diện chung.");
+        }
 
         // --- LOAD ẢNH GAME OVER & DEBUG ---
         gameOverBgImage = loadAndCheckImage("game_over_screen.png");
@@ -133,7 +135,10 @@ public class GameManager {
     }
 
     public void initGame() {
-        score = 0; lives = 3; currentLevelIndex = 0; gameWon = false;
+        score = 0;
+        lives = 3;
+        currentLevelIndex = 0;
+        gameWon = false;
         loadLevelData();
         SoundManager.playMusic(SoundManager.Music.LEVEL1);
     }
@@ -141,10 +146,10 @@ public class GameManager {
     private void loadLevelData() {
         int bgIndex = Math.min(currentLevelIndex, backgroundImages.size() - 1);
         currentBackgroundImage = backgroundImages.get(bgIndex);
-        currentBorderImage = borderImage.get(Math.min(currentLevelIndex, borderImage.size()-1));
-        currentLeftSideImage = leftSideImage.get(Math.min(currentLevelIndex, leftSideImage.size()-1));
-        currentRightSideImage = rightSideImage.get(Math.min(currentLevelIndex, rightSideImage.size()-1));
-        currentScoreBoardImage = scoreBoard.get(Math.min(currentLevelIndex, scoreBoard.size()-1));
+        currentBorderImage = borderImage.get(Math.min(currentLevelIndex, borderImage.size() - 1));
+        currentLeftSideImage = leftSideImage.get(Math.min(currentLevelIndex, leftSideImage.size() - 1));
+        currentRightSideImage = rightSideImage.get(Math.min(currentLevelIndex, rightSideImage.size() - 1));
+        currentScoreBoardImage = scoreBoard.get(Math.min(currentLevelIndex, scoreBoard.size() - 1));
 
         if (currentLevelIndex < levelFiles.size()) {
             levelBuilder.buildLevelBricks(levelFiles.get(currentLevelIndex), bricks, movingBrickRows, rotatingBrickGroups);
@@ -153,13 +158,20 @@ public class GameManager {
         paddle = new Paddle(playAreaOffsetX + playAreaWidth / 2.0 - 60, screenHeight - 40, 120, 20, screenWidth);
         paddle.setPlayArea(playAreaOffsetX, playAreaWidth);
 
-        balls.clear(); powerUps.clear(); particles.clear(); projectiles.clear();
+        balls.clear();
+        powerUps.clear();
+        particles.clear();
+        projectiles.clear();
         currentBoss = null;
-        crossBowActive = false; crossBowTimer = 0;
+        crossBowActive = false;
+        crossBowTimer = 0;
 
         resetBall();
         setupBossForLevel();
-        running = false; gameOver = false; levelWon = false; mouseControlled = false;
+        running = false;
+        gameOver = false;
+        levelWon = false;
+        mouseControlled = false;
     }
 
     private void setupBossForLevel() {
@@ -176,13 +188,13 @@ public class GameManager {
             double boss3Height = 250;
             double boss3X = playAreaOffsetX + playAreaWidth / 2 - boss3Width / 2;
             currentBoss = new BossLevel3(boss3X, -20, boss3Width, boss3Height, 1000, playAreaOffsetX, playAreaWidth);
-            if (currentBoss instanceof BossLevel3) bricks.add(((BossLevel3)currentBoss).getHeartBrick());
+            if (currentBoss instanceof BossLevel3) bricks.add(((BossLevel3) currentBoss).getHeartBrick());
         }
     }
 
     private void resetBall() {
         int r = 6;
-        Ball newBall = new Ball(paddle.getX() + paddle.getWidth()/2 - r, paddle.getY() - r*2, r, screenWidth, screenHeight);
+        Ball newBall = new Ball(paddle.getX() + paddle.getWidth() / 2 - r, paddle.getY() - r * 2, r, screenWidth, screenHeight);
         newBall.setPlayArea(playAreaOffsetX, playAreaWidth);
         newBall.stickTo(paddle);
         balls.add(newBall);
@@ -297,21 +309,25 @@ public class GameManager {
         if (levelWon) return;
         boolean allBricksDestroyed = true;
         for (Brick b : bricks) {
-            if (!b.isDestroyed() && !b.isIndestructible()) { allBricksDestroyed = false; break; }
+            if (!b.isDestroyed() && !b.isIndestructible()) {
+                allBricksDestroyed = false;
+                break;
+            }
         }
 
         boolean conditionMet = false;
         if (currentLevelIndex == 1) {
             if (allBricksDestroyed && currentBoss == null) conditionMet = true;
         } else if (currentLevelIndex == 2) {
-            boolean bossDead = (currentBoss == null) || ((BossLevel3)currentBoss).getHp() <= 0;
+            boolean bossDead = (currentBoss == null) || ((BossLevel3) currentBoss).getHp() <= 0;
             if (allBricksDestroyed && bossDead) conditionMet = true;
         } else {
             if (allBricksDestroyed) conditionMet = true;
         }
 
         if (conditionMet) {
-            levelWon = true; running = false;
+            levelWon = true;
+            running = false;
             saveCurrentScore();
             SoundManager.playSound(SoundManager.Sound.LEVEL_COMPLETED);
             paddle.setCrossBowActive(false);
@@ -333,7 +349,8 @@ public class GameManager {
     private void handleLoseLife() {
         lives--;
         if (lives <= 0) {
-            gameOver = true; running = false;
+            gameOver = true;
+            running = false;
             saveCurrentScore();
             SoundManager.playSound(SoundManager.Sound.GAME_OVER);
         } else {
@@ -345,7 +362,10 @@ public class GameManager {
         for (int i = powerUps.size() - 1; i >= 0; i--) {
             if (i >= powerUps.size()) break;
             PowerUp pu = powerUps.get(i);
-            if (pu.isCollected()) { powerUps.remove(i); continue; }
+            if (pu.isCollected()) {
+                powerUps.remove(i);
+                continue;
+            }
             pu.update(dt);
 
             if (checkCollisionRectRect(pu, paddle)) {
@@ -362,7 +382,8 @@ public class GameManager {
     private void applyPowerUpEffect(PowerUp pu) {
         switch (pu.getType()) {
             case LIFE:
-                lives++; SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
+                lives++;
+                SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
                 break;
             case LOSE_LIFE:
                 handleLoseLife();
@@ -375,10 +396,12 @@ public class GameManager {
                 paddle.setCrossBowActive(true);
                 break;
             case MULTI_BALL:
-                spawnMultiBall(); SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
+                spawnMultiBall();
+                SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
                 break;
             case PIERCING_SHOT:
-                spawnPiercingShot(); SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
+                spawnPiercingShot();
+                SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
                 break;
             case MEDICINE:
                 if (random.nextBoolean()) applyBallState(Ball.BallState.ICE);
@@ -396,7 +419,7 @@ public class GameManager {
         if (!balls.isEmpty()) {
             Ball s = balls.get(0);
             for (int i = 0; i < 2; i++) {
-                Ball nb = new Ball(s.getX(), s.getY(), s.getWidth()/2, screenWidth, screenHeight);
+                Ball nb = new Ball(s.getX(), s.getY(), s.getWidth() / 2, screenWidth, screenHeight);
                 nb.setPlayArea(playAreaOffsetX, playAreaWidth);
                 nb.launchAtAngle(random.nextDouble() * 180);
                 balls.add(nb);
@@ -405,7 +428,7 @@ public class GameManager {
     }
 
     private void spawnPiercingShot() {
-        projectiles.add(new Projectile(paddle.getX()+paddle.getWidth()/2, paddle.getY(), 10, 50, true));
+        projectiles.add(new Projectile(paddle.getX() + paddle.getWidth() / 2, paddle.getY(), 10, 50, true));
     }
 
     private void applyBallState(Ball.BallState state) {
@@ -413,8 +436,12 @@ public class GameManager {
     }
 
     public void resetCurrentLevel() {
-        running = false; balls.clear(); powerUps.clear(); projectiles.clear();
-        paddle.setCrossBowActive(false); crossBowActive = false;
+        running = false;
+        balls.clear();
+        powerUps.clear();
+        projectiles.clear();
+        paddle.setCrossBowActive(false);
+        crossBowActive = false;
         resetBall();
     }
 
@@ -425,13 +452,14 @@ public class GameManager {
     }
 
     private boolean checkCollisionCircleRect(Ball ball, GameObject rect) {
-        double cx = ball.getX() + ball.getWidth()/2;
-        double cy = ball.getY() + ball.getHeight()/2;
-        double r = ball.getWidth()/2;
-        double clX = Math.max(rect.getX(), Math.min(cx, rect.getX()+rect.getWidth()));
-        double clY = Math.max(rect.getY(), Math.min(cy, rect.getY()+rect.getHeight()));
-        double dx = cx - clX; double dy = cy - clY;
-        return (dx*dx + dy*dy) <= (r*r);
+        double cx = ball.getX() + ball.getWidth() / 2;
+        double cy = ball.getY() + ball.getHeight() / 2;
+        double r = ball.getWidth() / 2;
+        double clX = Math.max(rect.getX(), Math.min(cx, rect.getX() + rect.getWidth()));
+        double clY = Math.max(rect.getY(), Math.min(cy, rect.getY() + rect.getHeight()));
+        double dx = cx - clX;
+        double dy = cy - clY;
+        return (dx * dx + dy * dy) <= (r * r);
     }
 
     private boolean checkCollisionRectRect(GameObject r1, GameObject r2) {
@@ -439,11 +467,15 @@ public class GameManager {
                 r1.getY() < r2.getY() + r2.getHeight() && r1.getY() + r1.getHeight() > r2.getY();
     }
 
-    public void addPowerUp(PowerUp pu) { powerUps.add(pu); }
+    public void addPowerUp(PowerUp pu) {
+        powerUps.add(pu);
+    }
+
     public void spawnPowerUpFromBrick(Brick b) {
         PowerUp pu = PowerUpFactory.createRandomPowerUp(b.getX(), b.getY(), 50, 50);
         if (pu != null) powerUps.add(pu);
     }
+
     public void spawnMedicine(double x, double y) {
         powerUps.add(new PowerUp(x, y, 30, 20, PowerUp.PowerUpType.MEDICINE));
     }
@@ -451,7 +483,10 @@ public class GameManager {
     public void render(GraphicsContext gc) {
         // 1. Background & Game Objects (Giữ nguyên)
         if (currentBackgroundImage != null) gc.drawImage(currentBackgroundImage, 0, 0, screenWidth, screenHeight);
-        else { gc.setFill(Color.BLACK); gc.fillRect(0, 0, screenWidth, screenHeight); }
+        else {
+            gc.setFill(Color.BLACK);
+            gc.fillRect(0, 0, screenWidth, screenHeight);
+        }
 
         if (currentBoss != null) currentBoss.render(gc);
         for (Brick b : bricks) b.render(gc);
@@ -462,8 +497,10 @@ public class GameManager {
         for (Ball b : balls) b.render(gc);
 
         // UI Borders
-        if (currentLeftSideImage != null) gc.drawImage(currentLeftSideImage, playAreaOffsetX - currentLeftSideImage.getWidth() - 10, 0, currentLeftSideImage.getWidth(), screenHeight);
-        if (currentRightSideImage != null) gc.drawImage(currentRightSideImage, playAreaOffsetX + playAreaWidth + 10, 0, currentRightSideImage.getWidth(), screenHeight);
+        if (currentLeftSideImage != null)
+            gc.drawImage(currentLeftSideImage, playAreaOffsetX - currentLeftSideImage.getWidth() - 10, 0, currentLeftSideImage.getWidth(), screenHeight);
+        if (currentRightSideImage != null)
+            gc.drawImage(currentRightSideImage, playAreaOffsetX + playAreaWidth + 10, 0, currentRightSideImage.getWidth(), screenHeight);
         if (currentBorderImage != null) gc.drawImage(currentBorderImage, 0, 0, screenWidth, screenHeight);
         if (currentScoreBoardImage != null) gc.drawImage(currentScoreBoardImage, 870, 60, 500, 840);
 
@@ -497,7 +534,7 @@ public class GameManager {
                 double tW = 900;
                 double tH = h * (tW / w);
                 // Vẽ ở Y = 150
-                gc.drawImage(gameOverTextImage, (screenWidth - tW)/2, 150, tW, tH);
+                gc.drawImage(gameOverTextImage, (screenWidth - tW) / 2, 150, tW, tH);
             }
 
             // 3. Tiêu đề GAME OVER (Giữa)
@@ -507,11 +544,12 @@ public class GameManager {
                 double tW = 800;
                 double tH = h * (tW / w);
                 // Vẽ ở Y = 350
-                gc.drawImage(gameOverTitleImage, (screenWidth - tW)/2, 280, tW, tH);
+                gc.drawImage(gameOverTitleImage, (screenWidth - tW) / 2, 280, tW, tH);
             } else {
-                gc.setFill(Color.RED); gc.setFont(new Font("Arial", 80));
+                gc.setFill(Color.RED);
+                gc.setFont(new Font("Arial", 80));
                 gc.setTextAlign(TextAlignment.CENTER);
-                gc.fillText("GAME OVER", screenWidth/2.0, screenHeight/2.0);
+                gc.fillText("GAME OVER", screenWidth / 2.0, screenHeight / 2.0);
             }
 
             // 4. BUTTON "Press R..." (ĐÃ ĐẨY LÊN CAO)
@@ -551,13 +589,16 @@ public class GameManager {
         while (it.hasNext()) {
             Projectile p = it.next();
             p.update(dt);
-            if (p.getY() < 0 || p.isDestroyed()) { it.remove(); continue; }
+            if (p.getY() < 0 || p.isDestroyed()) {
+                it.remove();
+                continue;
+            }
 
             if (currentBoss instanceof BossLevel2) {
                 if (checkCollisionRectRect(p, currentBoss)) {
                     p.setDestroyed(true);
                     int dmg = p.isPiercing() ? 5 : 1;
-                    if (!((BossLevel2)currentBoss).takeDamage(dmg)) handleBossDefeated((BossLevel2)currentBoss);
+                    if (!((BossLevel2) currentBoss).takeDamage(dmg)) handleBossDefeated((BossLevel2) currentBoss);
                 }
             }
 
@@ -565,9 +606,15 @@ public class GameManager {
                 if (b.isDestroyed()) continue;
                 if (p.isPiercing() && p.hasHitBrick(b)) continue;
                 if (checkCollisionRectRect(p, b)) {
-                    if (p.isPiercing()) { b.takeHit(); p.addHitBrick(b); }
-                    else { b.takeHit(); p.setDestroyed(true); }
-                    addScore(50); SoundManager.playSound(SoundManager.Sound.HIT_BRICK);
+                    if (p.isPiercing()) {
+                        b.takeHit();
+                        p.addHitBrick(b);
+                    } else {
+                        b.takeHit();
+                        p.setDestroyed(true);
+                    }
+                    addScore(50);
+                    SoundManager.playSound(SoundManager.Sound.HIT_BRICK);
                     if (!p.isPiercing()) break;
                 }
             }
@@ -577,38 +624,91 @@ public class GameManager {
     private void updateParticles(double dt) {
         Iterator<Particle> it = particles.iterator();
         while (it.hasNext()) {
-            Particle p = it.next(); p.update(dt);
+            Particle p = it.next();
+            p.update(dt);
             if (p.isExpired()) it.remove();
         }
         trailSpawnTimer += dt;
         if (trailSpawnTimer > 0.03) {
             for (Ball b : balls) {
-                particles.add(new Particle(b.getX()+b.getWidth()/2, b.getY()+b.getHeight()/2, b.getWidth(), b.getHeight(),
+                particles.add(new Particle(b.getX() + b.getWidth() / 2, b.getY() + b.getHeight() / 2, b.getWidth(), b.getHeight(),
                         b.getState() == Ball.BallState.ICE ? Color.CYAN : (b.getState() == Ball.BallState.FIRE ? Color.ORANGE : Color.MAGENTA), 0.5));
             }
             trailSpawnTimer = 0;
         }
     }
 
-    public void addScore(int points) { this.score += points; }
-    public MovableObject getCurrentBoss() { return currentBoss; }
-    public void setCurrentBoss(MovableObject boss) { this.currentBoss = boss; }
-    public void setLevelWon(boolean won) { this.levelWon = won; }
-    public boolean hasWonLevel() { return levelWon; }
-    public boolean hasWonGame() { return gameWon; }
-    public int getCurrentLevelIndex() { return currentLevelIndex; }
-    public boolean isRunning() { return running; }
-    public boolean isGameOver() { return gameOver; }
-    public void setRunning(boolean running) { this.running = running; }
-    public Paddle getPaddle() { return paddle; }
-    public void setMouseControl(boolean b) { this.mouseControlled = b; }
-    public void processMouseMovement(double x) { if (paddle != null) paddle.moveTo(x); }
-    public void startGame() { if (!running && !gameOver) { running = true; for(Ball b : balls) b.launch(); } }
-    public void pauseGame() { running = false; }
+    public void addScore(int points) {
+        this.score += points;
+    }
+
+    public MovableObject getCurrentBoss() {
+        return currentBoss;
+    }
+
+    public void setCurrentBoss(MovableObject boss) {
+        this.currentBoss = boss;
+    }
+
+    public void setLevelWon(boolean won) {
+        this.levelWon = won;
+    }
+
+    public boolean hasWonLevel() {
+        return levelWon;
+    }
+
+    public boolean hasWonGame() {
+        return gameWon;
+    }
+
+    public int getCurrentLevelIndex() {
+        return currentLevelIndex;
+    }
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public void setRunning(boolean running) {
+        this.running = running;
+    }
+
+    public Paddle getPaddle() {
+        return paddle;
+    }
+
+    public void setMouseControl(boolean b) {
+        this.mouseControlled = b;
+    }
+
+    public void processMouseMovement(double x) {
+        if (paddle != null) paddle.moveTo(x);
+    }
+
+    public void startGame() {
+        if (!running && !gameOver) {
+            running = true;
+            for (Ball b : balls) b.launch();
+        }
+    }
+
+    public void pauseGame() {
+        running = false;
+    }
+
     public void resumeGame() {
         if (!gameOver) {
             boolean anyMoving = false;
-            for(Ball b : balls) if (!b.isStuck()) { anyMoving = true; break; }
+            for (Ball b : balls)
+                if (!b.isStuck()) {
+                    anyMoving = true;
+                    break;
+                }
             running = anyMoving;
         }
     }
@@ -616,7 +716,10 @@ public class GameManager {
     public void processInput(Set<KeyCode> keys) {
         if (gameOver && (keys.contains(KeyCode.SPACE) || keys.contains(KeyCode.R))) initGame();
         if (keys.contains(KeyCode.SPACE)) startGame();
-        if (mouseControlled) { paddle.stop(); return; }
+        if (mouseControlled) {
+            paddle.stop();
+            return;
+        }
         if (keys.contains(KeyCode.LEFT)) paddle.moveLeft();
         else if (keys.contains(KeyCode.RIGHT)) paddle.moveRight();
         else paddle.stop();

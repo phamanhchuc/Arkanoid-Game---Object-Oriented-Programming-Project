@@ -8,51 +8,74 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-<AnchorPane prefHeight="955.5" prefWidth="1200" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.arkanoid.controllers.MainController">
+<AnchorPane prefHeight="955.5" prefWidth="1200" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.arkanoid.controllers.MainController">
 
     <children>
-        <Canvas fx:id="gameCanvas" height="955.5" width="1200" />
+        <Canvas fx:id="gameCanvas" height="955.5" width="1200"/>
 
-        <ImageView fx:id="winImageView" fitHeight="955.5" fitWidth="1200" pickOnBounds="true" preserveRatio="false" visible="false" />
+        <ImageView fx:id="winImageView" fitHeight="955.5" fitWidth="1200" pickOnBounds="true" preserveRatio="false"
+                   visible="false"/>
 
-        <Text fx:id="winText" fill="WHITE" layoutX="50.0" layoutY="100.0" stroke="#a14da1" strokeWidth="1.5" style="-fx-font-family: 'Arial'; -fx-font-weight: bold;" visible="false" wrappingWidth="1100.0" />
+        <Text fx:id="winText" fill="WHITE" layoutX="50.0" layoutY="100.0" stroke="#a14da1" strokeWidth="1.5"
+              style="-fx-font-family: 'Arial'; -fx-font-weight: bold;" visible="false" wrappingWidth="1100.0"/>
 
-        <Text fx:id="winTitleText" fill="WHITE" layoutX="0.0" layoutY="90.0" style="-fx-fill: white; -fx-stroke: #bd7244; -fx-stroke-width: 2;" visible="false" wrappingWidth="1200.0" />
+        <Text fx:id="winTitleText" fill="WHITE" layoutX="0.0" layoutY="90.0"
+              style="-fx-fill: white; -fx-stroke: #bd7244; -fx-stroke-width: 2;" visible="false"
+              wrappingWidth="1200.0"/>
 
-        <Text fx:id="winText1" fill="WHITE" layoutX="50.0" layoutY="200.0" style="-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;" visible="false" wrappingWidth="800.0" />
+        <Text fx:id="winText1" fill="WHITE" layoutX="50.0" layoutY="200.0"
+              style="-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;" visible="false"
+              wrappingWidth="800.0"/>
 
-        <Text fx:id="winText2" fill="WHITE" layoutX="300.0" layoutY="650.0" style="-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;" visible="false" wrappingWidth="900.0" />
+        <Text fx:id="winText2" fill="WHITE" layoutX="300.0" layoutY="650.0"
+              style="-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;" visible="false"
+              wrappingWidth="900.0"/>
 
-        <Text fx:id="winText3" fill="WHITE" layoutX="40.0" layoutY="100.0" style="-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;" visible="false" wrappingWidth="750.0" />
+        <Text fx:id="winText3" fill="WHITE" layoutX="40.0" layoutY="100.0"
+              style="-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;" visible="false"
+              wrappingWidth="750.0"/>
 
-        <Text fx:id="winText4" fill="WHITE" layoutX="770.0" layoutY="550.0" style="-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;" visible="false" wrappingWidth="400.0" />
+        <Text fx:id="winText4" fill="WHITE" layoutX="770.0" layoutY="550.0"
+              style="-fx-fill: white; -fx-stroke: #520d0d; -fx-stroke-width: 1.5;" visible="false"
+              wrappingWidth="400.0"/>
 
-        <ImageView fx:id="pauseBackground" fitHeight="1000.0" fitWidth="1000.0" layoutX="90.0" layoutY="150.0" pickOnBounds="true" preserveRatio="true" visible="false">
+        <ImageView fx:id="pauseBackground" fitHeight="1000.0" fitWidth="1000.0" layoutX="90.0" layoutY="150.0"
+                   pickOnBounds="true" preserveRatio="true" visible="false">
             <image>
-                <Image url="@images/menu_Pause.png" />
+                <Image url="@images/menu_Pause.png"/>
             </image>
         </ImageView>
 
         <VBox fx:id="pausePane" alignment="CENTER" layoutX="450.0" layoutY="300.0" spacing="20.0" visible="false">
             <children>
-                <Button fx:id="resumeButton" mnemonicParsing="false" style="-fx-background-color: transparent; -fx-padding: 0;">
+                <Button fx:id="resumeButton" mnemonicParsing="false"
+                        style="-fx-background-color: transparent; -fx-padding: 0;">
                     <graphic>
                         <ImageView fitHeight="80.0" preserveRatio="true">
-                            <image><Image url="@images/resume_Pause.png" /></image>
+                            <image>
+                                <Image url="@images/resume_Pause.png"/>
+                            </image>
                         </ImageView>
                     </graphic>
                 </Button>
-                <Button fx:id="restartButton" mnemonicParsing="false" style="-fx-background-color: transparent; -fx-padding: 0;">
+                <Button fx:id="restartButton" mnemonicParsing="false"
+                        style="-fx-background-color: transparent; -fx-padding: 0;">
                     <graphic>
                         <ImageView fitHeight="80.0" preserveRatio="true">
-                            <image><Image url="@images/restartGame_Pause.png" /></image>
+                            <image>
+                                <Image url="@images/restartGame_Pause.png"/>
+                            </image>
                         </ImageView>
                     </graphic>
                 </Button>
-                <Button fx:id="quitButton" mnemonicParsing="false" style="-fx-background-color: transparent; -fx-padding: 0;">
+                <Button fx:id="quitButton" mnemonicParsing="false"
+                        style="-fx-background-color: transparent; -fx-padding: 0;">
                     <graphic>
                         <ImageView fitHeight="80.0" preserveRatio="true">
-                            <image><Image url="@images/quitGame_Pause.png" /></image>
+                            <image>
+                                <Image url="@images/quitGame_Pause.png"/>
+                            </image>
                         </ImageView>
                     </graphic>
                 </Button>

@@ -47,39 +47,65 @@ import javafx.scene.media.MediaView;
 
 public class MenuController {
 
-    @FXML private AnchorPane mainPane;
-    @FXML private Button buttonStart;
-    @FXML private Button buttonSetting;
-    @FXML private Button buttonRanking;
-    @FXML private Button buttonGuide;
-    @FXML private Button backButtonGuide;
-    @FXML private Button backButtonRanking;
-    @FXML private Button backButtonSettings;
+    @FXML
+    private AnchorPane mainPane;
+    @FXML
+    private Button buttonStart;
+    @FXML
+    private Button buttonSetting;
+    @FXML
+    private Button buttonRanking;
+    @FXML
+    private Button buttonGuide;
+    @FXML
+    private Button backButtonGuide;
+    @FXML
+    private Button backButtonRanking;
+    @FXML
+    private Button backButtonSettings;
 
-    @FXML private ImageView guideImageView;
-    @FXML private ImageView startImage;
-    @FXML private ImageView settingImage;
-    @FXML private ImageView rankingImage;
-    @FXML private ImageView guideImageBtn;
-    @FXML private ImageView mainBackground;
-    @FXML private ImageView rankingImageView;
+    @FXML
+    private ImageView guideImageView;
+    @FXML
+    private ImageView startImage;
+    @FXML
+    private ImageView settingImage;
+    @FXML
+    private ImageView rankingImage;
+    @FXML
+    private ImageView guideImageBtn;
+    @FXML
+    private ImageView mainBackground;
+    @FXML
+    private ImageView rankingImageView;
 
-    @FXML private Text rank1Text;
-    @FXML private Text rank2Text;
-    @FXML private Text rank3Text;
+    @FXML
+    private Text rank1Text;
+    @FXML
+    private Text rank2Text;
+    @FXML
+    private Text rank3Text;
 
-    @FXML private VBox settingsPane;
-    @FXML private Slider volumeSlider;
-    @FXML private ImageView settingsBackground;
+    @FXML
+    private VBox settingsPane;
+    @FXML
+    private Slider volumeSlider;
+    @FXML
+    private ImageView settingsBackground;
 
     // STORY
-    @FXML private ImageView storyImageView;
-    @FXML private Text storyText1;
-    @FXML private Text storyText2;
-    @FXML private Text storyText3;
+    @FXML
+    private ImageView storyImageView;
+    @FXML
+    private Text storyText1;
+    @FXML
+    private Text storyText2;
+    @FXML
+    private Text storyText3;
 
     // ✅ VIDEO INTRO
-    @FXML private MediaView storyVideoView;
+    @FXML
+    private MediaView storyVideoView;
     private MediaPlayer introPlayer;
 
     private Image storyImage1;
@@ -241,9 +267,15 @@ public class MenuController {
         storyText3.setText("");
 
         // Bật visible + đặt layer lên trên
-        storyText1.setVisible(true); storyText1.setOpacity(1); storyText1.toFront();
-        storyText2.setVisible(true); storyText2.setOpacity(1); storyText2.toFront();
-        storyText3.setVisible(true); storyText3.setOpacity(1); storyText3.toFront();
+        storyText1.setVisible(true);
+        storyText1.setOpacity(1);
+        storyText1.toFront();
+        storyText2.setVisible(true);
+        storyText2.setOpacity(1);
+        storyText2.toFront();
+        storyText3.setVisible(true);
+        storyText3.setOpacity(1);
+        storyText3.toFront();
 
         // --- Cấu hình vị trí, font, màu sắc ---
         storyText1.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
@@ -353,12 +385,19 @@ public class MenuController {
     }
 
     private void fadeOutAndLoadGame(Stage stage, Scene scene) {
-        if (isSkipped) { loadGameSceneAndMusic(stage, scene); return; }
+        if (isSkipped) {
+            loadGameSceneAndMusic(stage, scene);
+            return;
+        }
 
-        FadeTransition f1 = new FadeTransition(Duration.millis(1000), storyImageView); f1.setToValue(0);
-        FadeTransition f2 = new FadeTransition(Duration.millis(1000), storyText1); f2.setToValue(0);
-        FadeTransition f3 = new FadeTransition(Duration.millis(1000), storyText2); f3.setToValue(0);
-        FadeTransition f4 = new FadeTransition(Duration.millis(1000), storyText3); f4.setToValue(0);
+        FadeTransition f1 = new FadeTransition(Duration.millis(1000), storyImageView);
+        f1.setToValue(0);
+        FadeTransition f2 = new FadeTransition(Duration.millis(1000), storyText1);
+        f2.setToValue(0);
+        FadeTransition f3 = new FadeTransition(Duration.millis(1000), storyText2);
+        f3.setToValue(0);
+        FadeTransition f4 = new FadeTransition(Duration.millis(1000), storyText3);
+        f4.setToValue(0);
 
         ParallelTransition fadeOut = new ParallelTransition(f1, f2, f3, f4);
         fadeOut.setOnFinished(e -> {
@@ -403,7 +442,10 @@ public class MenuController {
     }
 
     // OTHER BUTTON HANDLERS (giữ nguyên)
-    private void handleSettings() { showPanel(settingsPane); }
+    private void handleSettings() {
+        showPanel(settingsPane);
+    }
+
     private void handleRanking() {
         try {
             // ✅ SỬA LỖI: Thêm logic tải ảnh
@@ -450,9 +492,18 @@ public class MenuController {
             showPanel(null);
         }
     }
-    private void handleBackFromGuide() { showPanel(null); }
-    private void handleBackFromRanking() { showPanel(null); }
-    private void handleBackFromSettings() { showPanel(null); }
+
+    private void handleBackFromGuide() {
+        showPanel(null);
+    }
+
+    private void handleBackFromRanking() {
+        showPanel(null);
+    }
+
+    private void handleBackFromSettings() {
+        showPanel(null);
+    }
 
     private void showPanel(Node panel) {
         boolean showGuide = (panel == guideImageView);
@@ -494,10 +545,12 @@ public class MenuController {
         if (button == null || image == null) return;
 
         ScaleTransition press = new ScaleTransition(Duration.millis(100), image);
-        press.setToX(0.9); press.setToY(0.9);
+        press.setToX(0.9);
+        press.setToY(0.9);
 
         ScaleTransition release = new ScaleTransition(Duration.millis(100), image);
-        release.setToX(1.0); release.setToY(1.0);
+        release.setToX(1.0);
+        release.setToY(1.0);
 
         button.setOnMousePressed(e -> press.playFromStart());
         button.setOnMouseReleased(e -> release.playFromStart());
@@ -507,7 +560,8 @@ public class MenuController {
         if (button == null || image == null) return;
 
         ScaleTransition pressScale = new ScaleTransition(Duration.millis(100), image);
-        pressScale.setToX(0.9); pressScale.setToY(0.9);
+        pressScale.setToX(0.9);
+        pressScale.setToY(0.9);
 
         RotateTransition pressRotate = new RotateTransition(Duration.millis(100), image);
         pressRotate.setToAngle(-5);
@@ -515,7 +569,8 @@ public class MenuController {
         ParallelTransition press = new ParallelTransition(pressScale, pressRotate);
 
         ScaleTransition releaseScale = new ScaleTransition(Duration.millis(100), image);
-        releaseScale.setToX(1.0); releaseScale.setToY(1.0);
+        releaseScale.setToX(1.0);
+        releaseScale.setToY(1.0);
 
         RotateTransition releaseRotate = new RotateTransition(Duration.millis(100), image);
         releaseRotate.setToAngle(0);
@@ -530,10 +585,12 @@ public class MenuController {
         if (button == null) return;
 
         ScaleTransition press = new ScaleTransition(Duration.millis(100), button);
-        press.setToX(0.9); press.setToY(0.9);
+        press.setToX(0.9);
+        press.setToY(0.9);
 
         ScaleTransition release = new ScaleTransition(Duration.millis(100), button);
-        release.setToX(1.0); release.setToY(1.0);
+        release.setToX(1.0);
+        release.setToY(1.0);
 
         button.setOnMousePressed(e -> press.playFromStart());
         button.setOnMouseReleased(e -> release.playFromStart());

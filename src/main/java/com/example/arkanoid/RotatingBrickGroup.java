@@ -23,13 +23,13 @@ public class RotatingBrickGroup {
     /**
      * Constructor cho RotatingBrickGroup.
      *
-     * @param bricks Danh sách các viên gạch sẽ thuộc về nhóm này.
-     * Các viên gạch này nên được tạo ở vị trí ban đầu trên vòng tròn.
-     * @param centerX Tọa độ X của điểm trung tâm xoay.
-     * @param centerY Tọa độ Y của điểm trung tâm xoay.
-     * @param radius Bán kính của vòng tròn xoay.
+     * @param bricks        Danh sách các viên gạch sẽ thuộc về nhóm này.
+     *                      Các viên gạch này nên được tạo ở vị trí ban đầu trên vòng tròn.
+     * @param centerX       Tọa độ X của điểm trung tâm xoay.
+     * @param centerY       Tọa độ Y của điểm trung tâm xoay.
+     * @param radius        Bán kính của vòng tròn xoay.
      * @param rotationSpeed Tốc độ xoay của nhóm (độ/giây).
-     * @param initialAngle Góc ban đầu của cả nhóm (độ).
+     * @param initialAngle  Góc ban đầu của cả nhóm (độ).
      */
     public RotatingBrickGroup(List<Brick> bricks, double centerX, double centerY,
                               double radius, double rotationSpeed, double initialAngle) {
