@@ -172,14 +172,14 @@ public class GameManager {
             currentBoss.setPlayArea(playAreaOffsetX, playAreaWidth);
         } else if (currentLevelIndex == 1) {
             // Boss Màn 2
-            currentBoss = new BossLevel2(playAreaOffsetX, 20, 100, 70, 00, playAreaOffsetX, playAreaWidth);
+            currentBoss = new BossLevel2(playAreaOffsetX, 20, 100, 70, 10, playAreaOffsetX, playAreaWidth);
             BossLevel2.GameManagerHolder.INSTANCE = this;
         } else if (currentLevelIndex == 2) {
             // Boss Màn 3 (Rồng)
             double boss3Width = 280;
             double boss3Height = 250;
             double boss3X = playAreaOffsetX + playAreaWidth / 2 - boss3Width / 2;
-            currentBoss = new BossLevel3(boss3X, -20, boss3Width, boss3Height, 1000, playAreaOffsetX, playAreaWidth);
+            currentBoss = new BossLevel3(boss3X, -20, boss3Width, boss3Height, 100, playAreaOffsetX, playAreaWidth);
             BossLevel3.GameManagerHolder.INSTANCE = this;
 
             // Thêm tim rồng vào danh sách gạch để bóng va chạm
@@ -266,7 +266,29 @@ public class GameManager {
             }
         }
 
-        // Ball vs Bricks
+        // --- Ball vs Boss 3 ---
+        if (currentBoss instanceof BossLevel3) {
+            BossLevel3 bossL3 = (BossLevel3) currentBoss;
+            for (Ball b : balls) {
+                if (bossL3.checkCollisionWithBall(b)) {
+                    // Xử lý phản xạ bóng
+                    b.handleCollision(bossL3, this);
+
+                    // GÂY SÁT THƯƠNG HP CHÍNH
+                    if (bossL3.isHeartDestroyed()) {
+                        int damage = (b.getState() == Ball.BallState.FIRE) ? 2 : 1;
+                        // Thêm một dòng in ra để debug
+                        System.out.println("Boss 3 hit! Damage: " + damage + ". HP left: " + (bossL3.getHp() - damage));
+
+                        if (!bossL3.takeDamage(damage)) {
+                            handleBossDefeatedLevel3(bossL3);
+                        }
+                    }
+                }
+            }
+        }
+
+// Ball vs Bricks
         Iterator<Brick> brickIterator = bricks.iterator();
         while (brickIterator.hasNext()) {
             Brick b = brickIterator.next();
@@ -274,7 +296,26 @@ public class GameManager {
 
             for (Ball ball : balls) {
                 if (checkCollisionCircleRect(ball, b)) {
-                    ball.handleCollision(b, this); // Logic trừ máu gạch/cộng điểm nằm trong Strategy
+                    ball.handleCollision(b, this);
+
+                    // --- BỔ SUNG LOGIC HEARTBRICK ---
+                    if (currentBoss instanceof BossLevel3 && b instanceof HeartBrick) {
+                        BossLevel3 bossL3 = (BossLevel3) currentBoss;
+
+                        if (b.isDestroyed() && !bossL3.isHeartDestroyed()) {
+                            // Tim bị phá hủy -> Thông báo cho Boss
+                            bossL3.setHeartDestroyed(true);
+                            System.out.println("HeartBrick destroyed! Boss Phase 2 activated.");
+                        }
+                    }
+                    // --------------------------------
+
+                    // Nếu gạch bị phá hủy (bao gồm HeartBrick sau khi set Boss state)
+                    if (b.isDestroyed()) {
+                        brickIterator.remove();
+                        // Dừng vòng lặp Ball và tiếp tục vòng lặp Brick
+                    }
+
                     break;
                 }
             }
@@ -289,6 +330,17 @@ public class GameManager {
             System.out.println("Boss defeated via callback.");
         }
     }
+
+    // --- Xử lý khi Boss 3 bị tiêu diệt ---
+    public void handleBossDefeatedLevel3(BossLevel3 boss) {
+        if (currentBoss == boss) {
+            currentBoss = null; // Xóa boss khỏi màn chơi
+            addScore(10000); // Thưởng điểm cho Boss Level 3
+            System.out.println("Boss Level 3 defeated!");
+        }
+    }
+
+
 
     private void checkWinCondition() {
         if (levelWon) return;
@@ -538,6 +590,19 @@ public class GameManager {
                 }
             }
 
+            // --- Boss 3 Damage ---
+            if (currentBoss instanceof BossLevel3) {
+                BossLevel3 bossL3 = (BossLevel3) currentBoss;
+                // Va chạm chỉ có tác dụng khi Tim đã bị phá
+                if (bossL3.isHeartDestroyed() && checkCollisionRectRect(p, currentBoss)) {
+                    p.setDestroyed(true);
+                    int dmg = p.isPiercing() ? 5 : 1;
+                    if (!bossL3.takeDamage(dmg)) {
+                        handleBossDefeatedLevel3(bossL3);
+                    }
+                }
+            }
+
             // Brick Damage
             for (Brick b : bricks) {
                 if (b.isDestroyed()) continue;
@@ -550,6 +615,17 @@ public class GameManager {
                         b.takeHit(); p.setDestroyed(true);
                     }
                     addScore(50);
+
+                    // --- KIỂM TRA PHÁ HỦY HEARTBRICK (TỪ PROJECTILE) ---
+                    if (currentBoss instanceof BossLevel3 && b instanceof HeartBrick) {
+                        BossLevel3 bossL3 = (BossLevel3) currentBoss;
+                        if (b.isDestroyed() && !bossL3.isHeartDestroyed()) {
+                            bossL3.setHeartDestroyed(true);
+                            System.out.println("HeartBrick destroyed by Projectile! Boss Phase 2 activated.");
+                        }
+                    }
+                    // ---------------------------------------------------
+
                     SoundManager.playSound(SoundManager.Sound.HIT_BRICK);
                     if (!p.isPiercing()) break;
                 }

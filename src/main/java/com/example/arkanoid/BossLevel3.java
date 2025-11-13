@@ -100,7 +100,7 @@ public class BossLevel3 extends MovableObject {
 
         double heartRelativeX = (width / 2) - (40.0 / 2);
         double heartRelativeY = height - 30.0 + 200;
-        this.heartBrick = new HeartBrick(x + heartRelativeX, y + heartRelativeY, 100, 100, 15);
+        this.heartBrick = new HeartBrick(x + heartRelativeX, y + heartRelativeY, 100, 100, 2);
     }
 
     public int getHp() { return hp; }
@@ -112,8 +112,14 @@ public class BossLevel3 extends MovableObject {
     public void setHeartDestroyed(boolean destroyed) {
         this.heartDestroyed = destroyed;
         if (destroyed) {
-            if (currentState == BossState.IDLE_PHASE1) currentState = BossState.IDLE_PHASE2;
-            else if (currentState == BossState.SPAWNING_PHASE1) currentState = BossState.SPAWNING_PHASE2;
+            // LUÔN LUÔN chuyển sang trạng thái IDLE_PHASE2 ngay lập tức
+            if (currentState == BossState.IDLE_PHASE1) {
+                currentState = BossState.IDLE_PHASE2;
+            } else if (currentState == BossState.SPAWNING_PHASE1) {
+                currentState = BossState.SPAWNING_PHASE2;
+            }
+            // Đặt lại attackTimer để chu kỳ Phase 2 bắt đầu ngay lập tức
+            this.attackTimer = 0.0;
         }
     }
     public HeartBrick getHeartBrick() { return heartBrick; }
@@ -124,14 +130,15 @@ public class BossLevel3 extends MovableObject {
     public void update(double dt) {
         // 1. Logic tấn công thả item
         attackTimer += dt;
-        boolean isPhase1 = (hp > maxHp / 2);
-        double currentAttackCycle = isPhase1 ? ATTACK_CYCLE_PHASE1 : ATTACK_CYCLE_PHASE2;
+        // SỬA: Dùng heartDestroyed để xác định Phase hiện tại
+        boolean isPhase2 = heartDestroyed;
+        double currentAttackCycle = isPhase2 ? ATTACK_CYCLE_PHASE2 : ATTACK_CYCLE_PHASE1;
 
         // Chuyển sang trạng thái Spawning
         if (attackTimer >= currentAttackCycle && (currentState == BossState.IDLE_PHASE1 || currentState == BossState.IDLE_PHASE2)) {
             attackTimer = 0.0;
             currentFrame = 0;
-            currentState = isPhase1 ? BossState.SPAWNING_PHASE1 : BossState.SPAWNING_PHASE2;
+            currentState = isPhase2 ? BossState.SPAWNING_PHASE2 : BossState.SPAWNING_PHASE1;
             itemDropped = false;
             frameTime = -frameDuration / 2;
         }
@@ -148,7 +155,8 @@ public class BossLevel3 extends MovableObject {
                 }
                 if (currentFrame >= numFrames) {
                     currentFrame = 0;
-                    currentState = isPhase1 ? BossState.IDLE_PHASE1 : BossState.IDLE_PHASE2;
+                    // Chuyển về IDLE_Phase2 nếu Heart bị phá
+                    currentState = isPhase2 ? BossState.IDLE_PHASE2 : BossState.IDLE_PHASE1;
                 }
             }
         } else { // IDLE
@@ -221,6 +229,33 @@ public class BossLevel3 extends MovableObject {
         return (localX >= minX && localX <= maxX && localY >= minY && localY <= maxY);
     }
 
+    // Thêm hàm này vào lớp BossLevel3.java
+
+    public boolean checkCollisionWithBall(Ball ball) {
+
+        // Nếu Tim chưa bị phá hủy, bóng chỉ được va chạm với Tim
+        if (!heartDestroyed) {
+            // Va chạm HeartBrick được xử lý trong GameManager (vì nó là 1 Brick)
+            // Tuy nhiên, nếu muốn Boss body phản xạ (đẩy bóng) trước khi tim bị phá,
+            // ta vẫn kiểm tra va chạm thân.
+        }
+
+        // Kiểm tra va chạm giữa Bóng (Hình tròn) và Thân Boss (Hình chữ nhật)
+        double cx = ball.getX() + ball.getWidth() / 2;
+        double cy = ball.getY() + ball.getHeight() / 2;
+        double radius = ball.getWidth() / 2;
+
+        // Tìm điểm gần nhất trên thân Boss đến tâm bóng
+        double closestX = Math.max(x, Math.min(cx, x + width));
+        double closestY = Math.max(y, Math.min(cy, y + height));
+
+        double dx = cx - closestX;
+        double dy = cy - closestY;
+
+        // Kiểm tra nếu khoảng cách bình phương nhỏ hơn hoặc bằng bán kính bình phương
+        return (dx * dx + dy * dy) <= (radius * radius);
+    }
+
     private void startLaserAttack() {
         isFiringLaser = true;
         laserIntervalTimer = LASER_INTERVAL;
@@ -285,11 +320,23 @@ public class BossLevel3 extends MovableObject {
 
         if (!heartBrick.isDestroyed()) heartBrick.render(gc);
 
-        // HP bar
+// HP bar (đã xác nhận heartDestroyed = true)
         if (heartDestroyed && hp > 0) {
-            double r = (double) hp / maxHp;
-            gc.setFill(Color.BLACK); gc.fillRect(x, y-40, width, 10);
-            gc.setFill(r > 0.5 ? Color.LIME : Color.RED); gc.fillRect(x, y-40, width*r, 10);
+            // 1. TÍNH TỶ LỆ HP (r)
+            double r = (double) hp / maxHp; // Giá trị này sẽ giảm từ 1.0 xuống 0.0
+
+            // Kích thước bar
+            double barHeight = 10;
+            double barY = y + height + 15; // Tọa độ đã sửa
+
+            // 2. VẼ NỀN ĐEN (chiều rộng tối đa)
+            gc.setFill(Color.BLACK);
+            gc.fillRect(x, barY, width, barHeight);
+
+            // 3. VẼ MÁU ĐÃ SCALED (chiều rộng = width * r)
+            // SỬA: Đảm bảo phần chiều rộng là (width * r)
+            gc.setFill(r > 0.5 ? Color.LIME : Color.RED);
+            gc.fillRect(x, barY, width * r, barHeight);
         }
     }
 
@@ -300,3 +347,108 @@ public class BossLevel3 extends MovableObject {
 
     public static class GameManagerHolder { public static GameManager INSTANCE; }
 }
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
+// Day la thanh qua ngay hom nay của tôi
