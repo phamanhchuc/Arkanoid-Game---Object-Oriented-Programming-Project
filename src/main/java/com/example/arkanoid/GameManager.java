@@ -386,7 +386,7 @@ public class GameManager {
                 SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
                 break;
             case LOSE_LIFE:
-                handleLoseLife();
+                lives--;
                 break;
             case CROSS_BOW:
                 if (!crossBowActive) SoundManager.playSound(SoundManager.Sound.COLLECT_POWERUP);
@@ -410,7 +410,7 @@ public class GameManager {
                 break;
             case STUN_PADDLE:
                 System.out.println("Trúng đạn Boss! Mất 1 mạng.");
-                handleLoseLife();
+                lives--;
                 break;
         }
     }
@@ -477,6 +477,9 @@ public class GameManager {
     }
 
     public void spawnMedicine(double x, double y) {
+        if (!this.running) {
+            return; // Không làm gì cả nếu game đang dừng (ví dụ: vừa mất mạng)
+        }
         powerUps.add(new PowerUp(x, y, 30, 20, PowerUp.PowerUpType.MEDICINE));
     }
 
