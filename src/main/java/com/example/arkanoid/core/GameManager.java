@@ -759,7 +759,66 @@ public class GameManager {
                 }
             }
         }
-        if (gameOver && (keys.contains(KeyCode.SPACE) || keys.contains(KeyCode.R))) initGame();
+        // TRONG: public void processInput(Set<KeyCode> keys)
+
+        // TRONG: public void processInput(Set<KeyCode> keys)
+
+        // TRONG: public void processInput(Set<KeyCode> keys)
+
+        if (gameOver && (keys.contains(KeyCode.SPACE) || keys.contains(KeyCode.R))) {
+
+            // 1. Reset các chỉ số
+            this.lives = 3;
+            this.score = 0;
+            this.gameOver = false;
+
+            // 2. Dọn dẹp cơ bản (bóng, powerup...)
+
+            resetCurrentLevel();
+
+            // 3. Dọn dẹp gạch/boss cũ
+            bricks.clear();
+            movingBrickRows.clear();
+            rotatingBrickGroups.clear();
+            currentBoss = null;
+
+            // 4. TẠO MỚI GẠCH
+            try {
+                String levelFile = levelFiles.get(currentLevelIndex);
+                levelBuilder.buildLevelBricks(levelFile, bricks, movingBrickRows, rotatingBrickGroups);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // 5. BẮT BUỘC: TẠO MỚI LẠI BOSS (Đã thay bằng chỉ số CHUẨN)
+
+            if (currentLevelIndex == 0) { // <-- MÀN 1 (INDEX 0)
+                currentBoss = new Boss(playAreaOffsetX, 20, 80, 60);
+                currentBoss.setPlayArea(playAreaOffsetX, playAreaWidth);
+
+            } else if (currentLevelIndex == 1) { // <-- MÀN 2 (INDEX 1)
+                currentBoss = new BossLevel2(playAreaOffsetX, 20, 100, 70, 50, playAreaOffsetX, playAreaWidth);
+
+            } else if (currentLevelIndex == 2) { // <-- MÀN 3 (INDEX 2)
+                // Tính toán vị trí X để boss ra giữa
+                double boss3Width = 280;
+                double boss3Height = 250;
+                double boss3X = playAreaOffsetX + playAreaWidth / 2 - boss3Width / 2;
+
+                currentBoss = new BossLevel3(boss3X, -20, boss3Width, boss3Height, 1000, playAreaOffsetX, playAreaWidth);
+
+                if (currentBoss instanceof BossLevel3) {
+                    bricks.add(((BossLevel3) currentBoss).getHeartBrick());
+                }
+
+            } else {
+                // Các màn không có boss
+                currentBoss = null;
+            }
+
+            // 6. Dừng game chờ nhấn Space
+            setRunning(false);
+        }
         if (keys.contains(KeyCode.SPACE)) startGame();
         if (mouseControlled) {
             paddle.stop();
