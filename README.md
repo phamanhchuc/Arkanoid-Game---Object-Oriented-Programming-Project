@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Arkanoid Game - Object-Oriented Programming Project
 ---
 ## Author
@@ -194,3 +195,6 @@ Any code or ideas referenced from external sources have been adapted, understood
 -All code is written by group members with guidance from the instructor.
 -Some assets (images, sounds) may be used for educational purposes under fair use.
 -The project demonstrates practical application of OOP concepts and design patterns.
+=======
+# Arkanoid-Game---Object-Oriented-Programming-Project
+>>>>>>> fa48995cacb6f115ed3b6ac462db1b4ea1fdee0d
