@@ -25,11 +25,15 @@ public class LoginController {
     private Button buttonLogin;
 
     @FXML
+    // Gán sự kiện Login cho nút
     private void initialize() {
         buttonLogin.setOnAction(e -> handleLogin());
     }
 
+    // Hàm xử lý toàn bộ việc đăng nhập + chuyển sang menu
+    // Lấy tên người chơi -> load menu -> tạo hiệu ứng chuyển cảnh
     private void handleLogin() {
+        // Check player name
         String playerName = userNameText.getText().trim();
         if (playerName.isEmpty()) {
             userNameText.setPromptText("Please enter your name!");
@@ -38,11 +42,12 @@ public class LoginController {
         GameData.playerName = playerName;
 
         try {
+            // Lấy Stage hiện tại (cửa sổ đang hiển thị màn Login).
             Stage stage = (Stage) buttonLogin.getScene().getWindow();
 
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/arkanoid/main-menu.fxml"));
 
-            // --- SỬA LỖI Ở ĐÂY: Đổi 'Parent' thành 'Region' ---
+            // --- SỬA LỖI Ở ĐÂY: Đổi 'Parent' thành 'Region' vì setMaxSize() chỉ tồn tại ở lớp Region trở lên.  ---
             Region menuRoot = loader.load();
 
             StackPane rootPane = new StackPane();
@@ -60,6 +65,7 @@ public class LoginController {
 
             stage.setTitle("Arkanoid - Main Menu");
 
+            // Hiệu ứng Fade-in: Giao diện bắt đầu trong suốt → hiện dần trong 0.5 giây.
             menuRoot.setOpacity(0);
             FadeTransition ft = new FadeTransition(Duration.millis(500), menuRoot);
             ft.setFromValue(0.0);
@@ -72,6 +78,7 @@ public class LoginController {
         }
     }
 
+    // Tạo hiệu ứng thu/ phóng khi nhấn nút
     private void addClickAnimation(Button button) {
         ScaleTransition pressTransition = new ScaleTransition(Duration.millis(100), button);
         pressTransition.setToX(0.9);

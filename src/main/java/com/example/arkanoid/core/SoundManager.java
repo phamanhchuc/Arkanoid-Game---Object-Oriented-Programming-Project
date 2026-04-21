@@ -145,7 +145,7 @@ public class SoundManager {
         }
 
         try {
-            backgroundMusicPlayer = new MediaPlayer(media);
+            backgroundMusicPlayer = new MediaPlayer(media); // đa luồng
             backgroundMusicPlayer.setVolume(masterVolume);
             backgroundMusicPlayer.setCycleCount(MediaPlayer.INDEFINITE); // Loop vô hạn
             backgroundMusicPlayer.play();

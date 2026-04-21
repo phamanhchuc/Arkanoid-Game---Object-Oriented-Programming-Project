@@ -117,6 +117,13 @@ public class MenuController {
     private HighScores highScores;
 
     @FXML
+    /**
+     * Gán sự kiện cho tất cả nút trong menu.
+     * Gán animation cho các nút.
+     * Tải dữ liệu bảng xếp hạng.
+     * Setup slider chỉnh âm lượng + đổi màu.
+     * Load ảnh story + font chữ cho màn giới thiệu.
+     */
     private void initialize() {
 
         // --- BUTTON EVENTS ---
@@ -187,7 +194,7 @@ public class MenuController {
         try {
             String path = "/com/example/arkanoid/videos/man1.mp4";
             Media media = new Media(getClass().getResource(path).toExternalForm());
-            introPlayer = new MediaPlayer(media);
+            introPlayer = new MediaPlayer(media); // đa luồng
 
             storyVideoView.setMediaPlayer(introPlayer);
             storyVideoView.setVisible(true);
@@ -204,7 +211,7 @@ public class MenuController {
                 if (onFinished != null) onFinished.run();
             });
 
-            introPlayer.play();
+            introPlayer.play(); // đa luồng
 
             // Skip video khi click chuột
             storyVideoView.setOnMousePressed(e -> {

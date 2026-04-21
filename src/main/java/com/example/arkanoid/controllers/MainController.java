@@ -36,13 +36,35 @@ import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Đây là bộ não của gameplay. Nó chịu trách nhiệm:
+ * 1. Chạy gameplay (game loop)
+ * Vẽ game lên Canvas
+ * Update ball/paddle/bricks
+ * Nhận input từ người chơi
+ * Kiểm tra thắng/thua
+ *
+ * 2. Điều khiển Pause Menu
+ * Resume
+ * Restart
+ * Quit về Menu
+ *
+ * 3. Điều khiển Cutscene khi thắng (Level 1 → Level 2 → Level 3)
+ * Hiển thị hình ảnh story
+ * Chạy hiệu ứng typing text
+ * Chạy video cinematic
+ * Bấm skip
+ *
+ * 4. Chơi video cinematic
+ * 5. Chuyển sang level mới hoặc quay về Main Menu
+ */
 public class MainController {
 
     // --- FXML INJECTIONS ---
     @FXML
-    private Canvas gameCanvas;
+    private Canvas gameCanvas; // nơi vẽ game (ball, paddle, bricks)
     @FXML
-    private VBox pausePane;
+    private VBox pausePane; // bảng pause menu
     @FXML
     private Button resumeButton;
     @FXML
@@ -52,23 +74,25 @@ public class MainController {
     @FXML
     private ImageView pauseBackground;
     @FXML
-    private ImageView winImageView;
+    private ImageView winImageView; // khung hiển thị cutscene/ story art
 
     @FXML
     private Text winText, winTitleText, winText1, winText2, winText3, winText4;
+    // các đoạn text xuất hiện trong cutscene thắng
     private Text[] allWinTexts;
 
     // --- GAME LOGIC VARIABLES ---
-    private GameManager gameManager;
+    private GameManager gameManager; // lớp xử lý logic game (update, render, input, levels)
     private AnimationTimer gameLoop;
     private Set<KeyCode> activeKeys = new HashSet<>();
-    private boolean isPaused = false;
+    // danh sách phím đang được nhấn cùng lúc (dùng cho di chuyển mượt)
+    private boolean isPaused = false; // boolean kiểm tra trạng thái pause
 
     // --- RESOURCES & CUTSCENE VARIABLES ---
     private Image storyImage2, storyImage3, storyImage4, storyImage5, storyImage6;
     private Font isabellaBodyFont;
 
-    private Timeline currentWinTimeline;
+    private Timeline currentWinTimeline; // timeline typewriter đang chạy
     private boolean isWinSkipped = false;
 
     private Text currentTypingTarget;
@@ -78,11 +102,24 @@ public class MainController {
     private MediaPlayer currentVideoPlayer;
 
     @FXML
+    /**
+     * Hàm khởi tạo gameplay khi màn Game được load.
+     * Chức năng:
+     * Lấy GraphicsContext để vẽ game.
+     * Tạo GameManager.
+     * Tạo vòng lặp game (AnimationTimer).
+     * Gắn listener cho bàn phím + chuột.
+     * Gắn sự kiện cho nút Resume / Restart / Quit.
+     * Tải hình ảnh + font chữ cho cutscene.
+     * Bắt đầu gameLoop.
+     */
     private void initialize() {
         GraphicsContext gc = gameCanvas.getGraphicsContext2D();
         gameCanvas.setWidth(1200);
         gameCanvas.setHeight(955.5);
 
+        // GameManager chịu nhiệm vụ xử lý logic vật thể, va chạm, điểm, levels.
+        // Truyền kích thước và tên người chơi vào GameManager
         gameManager = new GameManager(1200, 956, GameData.playerName);
         allWinTexts = new Text[]{winText, winTitleText, winText1, winText2, winText3, winText4};
 
@@ -98,14 +135,41 @@ public class MainController {
                 double delta = (now - lastTime) / 1_000_000_000.0;
                 lastTime = now;
 
+                /**
+                 Nếu level đã thắng (ví dụ tất cả bricks bị phá hoặc boss die):
+                 dừng gameLoop: ngăn update/render tiếp (tránh tranh chấp trạng thái).
+                 gọi handleLevelWin() để bật cutscene/qua level/ xử lý tiếp.
+                 return để không thực hiện các bước sau.
+                 */
                 if (gameManager.hasWonLevel()) {
                     gameLoop.stop();
                     handleLevelWin();
                     return;
                 }
 
+                /**
+                 * processInput xử lí:
+                 * di chuyển paddle
+                 * start ball
+                 * trigger skill, powerup, v.v.
+                 */
                 gameManager.processInput(activeKeys);
+
+                /**
+                 * Chỉ update khi game không bị pause.
+                 * GameManager.update(delta) sẽ:
+                 * Di chuyển paddle, Di chuyển ball, Kiểm tra va chạm, Giảm máu brick,
+                 * Thêm điểm, Kiểm tra rơi ball, Spawn powerups, Update hiệu ứng
+                 */
                 if (!isPaused) gameManager.update(delta);
+
+                /**
+                 * Dù pause hay không, render vẫn chạy.
+                 * Có lý do:
+                 * Khi pause, canvas mờ đi và hiển menu
+                 * Nhưng game screen vẫn cần vẽ để thấy background bị mờ
+                 * Render vẽ: Nền, Brick, Paddle, Ball, Particles, HUD (score, lives)
+                 */
                 gameManager.render(gc);
             }
         };
@@ -113,6 +177,7 @@ public class MainController {
         gameLoop.start();
         setupInputHandlers();
 
+        // Setup nút Pause Menu
         resumeButton.setOnAction(e -> togglePause(false));
         restartButton.setOnAction(e -> handleRestart());
         quitButton.setOnAction(e -> handleQuit());
@@ -173,6 +238,14 @@ public class MainController {
         gameCanvas.requestFocus();
     }
 
+    /**
+     * Đổi trạng thái Pause ↔ Resume của game.
+     * Chức năng:
+     * Tạm dừng hoặc tiếp tục game.
+     * Giảm độ sáng canvas khi pause.
+     * Hiện/ẩn Pause Menu.
+     * Bật/tắt nhạc nền tương ứng.
+     */
     private void togglePause(boolean pause) {
         if (gameManager.isGameOver() || gameManager.hasWonLevel()) return;
         isPaused = pause;
@@ -191,6 +264,16 @@ public class MainController {
     }
 
     // --- VIDEO PLAYER ---
+
+    /**
+     * Phát video cinematic trong cutscene.
+     * Chức năng:
+     * Tạo MediaPlayer để phát video.
+     * Hiển thị video đè lên giao diện game.
+     * Cho phép click chuột để skip.
+     * Khi video kết thúc → gọi callback onFinished.
+     * Tự dọn dẹp video khỏi giao diện.
+     */
     private void playVideo(String videoName, Runnable onFinished) {
         try {
             String path = "/com/example/arkanoid/videos/" + videoName;
@@ -218,12 +301,12 @@ public class MainController {
                 if (onFinished != null) onFinished.run();
             };
 
-            currentVideoPlayer.setOnEndOfMedia(cleanup);
+            currentVideoPlayer.setOnEndOfMedia(cleanup); // khi video phát xong, gọi cleanup
             currentVideoPlayer.setOnError(() -> {
                 System.err.println("Lỗi video: " + videoName);
                 cleanup.run();
             });
-            overlayPane.setOnMousePressed(e -> cleanup.run());
+            overlayPane.setOnMousePressed(e -> cleanup.run()); // click -> skip video
             currentVideoPlayer.play();
 
         } catch (Exception e) {
@@ -249,6 +332,17 @@ public class MainController {
     }
 
     // --- LEVEL WIN ---
+    /**
+     * Xử lý khi người chơi thắng một level.
+     * Chức năng:
+     * Dừng gameLoop.
+     * Tăng level.
+     * Lựa chọn cutscene phù hợp:
+     * Level 1 → cutscene 1
+     * Level 2 → cutscene 2
+     * Level 3 → cutscene ending
+     * Nếu không có cutscene → load level mới.
+     */
     private void handleLevelWin() {
         activeKeys.clear();
         SoundManager.stopMusic();
@@ -264,6 +358,13 @@ public class MainController {
         else loadNextLevelAndRestart();
     }
 
+    /**
+     * Bỏ qua phần text đang chạy.
+     * Chức năng:
+     * Dừng typewriter timeline.
+     * Hiện toàn bộ câu ngay lập tức.
+     * Chạy tiếp cutscene.
+     */
     private void skipCurrentTextStep() {
         if (currentWinTimeline != null && currentWinTimeline.getStatus() == Timeline.Status.RUNNING) {
             currentWinTimeline.stop();
@@ -280,7 +381,7 @@ public class MainController {
 
     // --- CUTSCENES ---
     private void runCutscene_WinLevel1() {
-        prepareCutsceneUI();
+        prepareCutsceneUI(); // tắt game canvas, reset state cutscene
         winImageView.setImage(storyImage2);
         winImageView.setVisible(true);
 
@@ -495,6 +596,13 @@ public class MainController {
         timeline.play();
     }
 
+    /**
+     * Dùng sau khi kết thúc cutscene hoặc thắng level.
+     * Chức năng:
+     * Reset trạng thái game.
+     * Gọi gameManager.initGame().
+     * Bật lại gameLoop và chơi level mới.
+     */
     private void loadNextLevelAndRestart() {
         isWinSkipped = true;
         if (currentWinTimeline != null) currentWinTimeline.stop();
@@ -521,6 +629,13 @@ public class MainController {
         gameLoop.start();
     }
 
+    /**
+     * Restart lại level hiện tại.
+     * Chức năng:
+     * Xóa trạng thái pause.
+     * Reset GameManager.
+     * Bắt đầu lại gameLoop.
+     */
     private void handleRestart() {
         if (isPaused) togglePause(false);
         cleanupCutscenes();
@@ -528,6 +643,13 @@ public class MainController {
         restartGameAfterWin();
     }
 
+    /**
+     * Thoát về màn Main Menu.
+     * Chức năng:
+     * Load lại file main-menu.fxml.
+     * Dừng gameLoop.
+     * Trở về menu.
+     */
     private void handleQuit() {
         stopGameLoop();
         cleanupCutscenes();
